@@ -103,9 +103,10 @@ dnl Path settings
 dnl Check for Audacious
 
 UPSE_TARGET_AUD=""
+audplugin="no"
 PKG_CHECK_MODULES(AUDACIOUS, [audacious >= 1.3.99],
-    [ADD_PC_REQUIRES([audacious >= 1.3.99])],
-    [], [UPSE_TARGET_AUD="upse-audacious"]
+    [UPSE_TARGET_AUD="upse-audacious"
+         audplugin="yes"]
 )
 AC_SUBST(UPSE_TARGET_AUD)
 
@@ -126,4 +127,11 @@ AC_CONFIG_FILES([
 
 AC_OUTPUT
 
+echo
+echo "Features:"
+echo
+echo "   upse123: yes"
+echo "   audacious 1.4 plugin: $audplugin"
+echo
 echo "Type make to compile, and make install to install."
+echo
