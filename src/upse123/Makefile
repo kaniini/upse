@@ -1,0 +1,12 @@
+PROG = upse123${PROG_SUFFIX}
+
+SRCS = upse123_main.c
+
+include ../../buildsys.mk
+include ../../extra.mk
+
+plugindir := ${plugindir}/${INPUT_PLUGIN_DIR}
+
+CFLAGS += 
+CPPFLAGS += -I../libupse
+LIBS += -lz -L../libupse -lupse
