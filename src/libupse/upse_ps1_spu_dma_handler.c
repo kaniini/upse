@@ -1,28 +1,20 @@
-/***************************************************************************
-                            dma.c  -  description
-                             -------------------
-    begin                : Wed May 15 2002
-    copyright            : (C) 2002 by Pete Bernert
-    email                : BlackDove@addcom.de
- ***************************************************************************/
-
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version. See also the license.txt file for *
- *   additional informations.                                              *
- *                                                                         *
- ***************************************************************************/
-
-//*************************************************************************//
-// History of changes:
-//
-// 2002/05/15 - Pete
-// - generic cleanup for the Peops release
-//
-//*************************************************************************//
+/*
+ * UPSE: the unix playstation sound emulator.
+ *
+ * Filename: upse_ps1_spu_dma_handler.c
+ * Purpose: libupse: PS1 SPU DMA handling engine
+ *
+ * Copyright (c) 2007 William Pitcock <nenolod@sacredspiral.co.uk>
+ * Portions copyright (c) 2002 Pete Bernet <BlackDove@addcom.de>
+ *
+ * UPSE is free software, released under the GNU General Public License,
+ * version 2.
+ *
+ * A copy of the GNU General Public License, version 2, is included in
+ * the UPSE source kit as COPYING.
+ *
+ * UPSE is offered without any warranty of any kind, explicit or implicit.
+ */
 
 #define _IN_DMA
 
