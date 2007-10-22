@@ -538,6 +538,30 @@ int SPUasync(u32 cycles)
   // if(sr>32767 || sr < -32767) printf("Right: %d, %f\n",sl,asl);
   //}
 
+  // post-processing: interpolation
+  {
+    double ldiff, rdiff, avg, tmp, mul;
+    mul = 3.759285613;
+
+    avg = (sl + sr) / 2;
+    ldiff = sl - avg;
+    rdiff = sr - avg;
+
+    tmp = avg + ldiff * mul;
+    if (tmp < -32768)
+      tmp = -32768;
+    if (tmp > 32767)
+      tmp = 32767;
+    sl = tmp;
+
+    tmp = avg + rdiff * mul;
+    if (tmp < -32768)
+      tmp = -32768;
+    if (tmp > 32767)
+      tmp = 32767;
+    sr = tmp;
+  }
+
   if(sl>32767) sl=32767; if(sl<-32767) sl=-32767;
   if(sr>32767) sr=32767; if(sr<-32767) sr=-32767;
   *pS++=sl;
