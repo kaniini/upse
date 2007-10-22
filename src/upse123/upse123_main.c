@@ -145,6 +145,9 @@ upse123_close_audio(void)
 void
 upse123_print_field(char *field, char *data)
 {
+    if (data == NULL)
+        return;
+
     printf("\033[00;36m%-20s\033[01;36m|\033[0m %s\n", field, data);
 }
 
