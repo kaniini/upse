@@ -20,7 +20,13 @@
 #include "upse-internal.h"
 
 /* tracing */
-#define _CALL(id, idN) do { _MESSAGE("TRACE", "call<%s> %s<%p> [%d]", #id, idN[call], id[call], call); id[call](); } while(0)
+#ifdef UPSE_TRACE
+# define _TRACE(...) _MESSAGE("TRACE", __VA_ARGS__)
+#else
+# define _TRACE(...) {}
+#endif
+
+#define _CALL(id, idN) do { _TRACE("call<%s> %s<%p> [0x%x]", #id, idN[call], id[call], call); id[call](); } while(0)
 #define _UNIMPLEMENTED(id, idN) do { _WARN("call<%s> %s<%p> [unimplemented]", #id, idN[call], id[call]); } while(0)
 
 static void hleDummy()

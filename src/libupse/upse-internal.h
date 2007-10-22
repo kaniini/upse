@@ -55,6 +55,6 @@ void __Log(char *fmt, ...);
 #include "upse-ps1-counters.h"
 #include "upse-ps1-executive.h"
 #include "upse-ps1-spu-abstract.h"
-#include "spu/spu.h"
+#include "upse-ps1-spu-base.h"
 
 #endif /* __PSXCOMMON_H__ */

@@ -21,7 +21,7 @@
 #define UPSE_DEBUG
 
 #define _ENTER _DEBUG("enter")
-#define _LEAVE _DEBUG("leave"); return
+#define _LEAVE _DEBUG("leave")
 #define _MESSAGE(tag, string, ...) do { fprintf(stderr, "libupse: %s: %s:%d (%s): " string "\n", \
     tag, __FILE__, __LINE__, __PRETTY_FUNCTION__, ##__VA_ARGS__); } while(0)
 

@@ -695,6 +695,20 @@ static void bios_InitHeap()
 	pc0 = ra;
 }
 
+static void bios_printf()
+{
+#ifdef UPSE_DEBUG
+	printf(Ra0, Ra1, Ra2, Ra3);
+#endif
+}
+
+static void bios_puts()
+{
+#ifdef UPSE_DEBUG
+	_DEBUG("%s", Ra0);
+#endif
+}
+
 static void bios_FlushCache()
 {				// 44
 
@@ -1176,6 +1190,8 @@ void psxBiosInit()
 	//biosA0[0x38] = bios_realloc;
 	biosA0[0x39] = bios_InitHeap;
 	//biosA0[0x3a] = bios__exit;
+        biosA0[0x3e] = bios_puts;
+        biosA0[0x3f] = bios_printf;
 	biosA0[0x44] = bios_FlushCache;
 	//biosA0[0x45] = bios_InstallInterruptHandler;
 	//biosA0[0x4f] = bios_sys_a0_4f;
@@ -1295,6 +1311,7 @@ void psxBiosInit()
 	//biosB0[0x2f] = bios_sys_b0_2f;
 	//biosB0[0x30] = bios_sys_b0_30;
 	//biosB0[0x31] = bios_sys_b0_31;
+	biosB0[0x3f] = bios_puts;
 	biosB0[0x56] = bios_GetC0Table;
 	biosB0[0x57] = bios_GetB0Table;
 	//biosB0[0x58] = bios__card_chan;

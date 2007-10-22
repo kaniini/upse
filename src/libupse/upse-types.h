@@ -18,6 +18,11 @@
 #ifndef _UPSE__LIBUPSE__UPSE_TYPES_H__GUARD
 #define _UPSE__LIBUPSE__UPSE_TYPES_H__GUARD
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <unistd.h>
 #include <stdint.h>
 
 #define INLINE inline
