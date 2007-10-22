@@ -81,8 +81,6 @@ upse123_init_audio(void)
     int pspeed = 44100;
     int pstereo = 1;
     int format;
-    int fragsize = 0;
-    int myfrag;
     int oss_speed, oss_stereo;
 
     oss_speed = pspeed;
@@ -136,6 +134,15 @@ upse123_init_audio(void)
 }
 
 void
+upse123_close_audio(void)
+{
+    upse_set_audio_callback(NULL);
+
+    if (oss_audio_fd > 0)
+        close(oss_audio_fd);
+}
+
+void
 upse123_print_field(char *field, char *data)
 {
     printf("\033[00;36m%-20s\033[01;36m|\033[0m %s\n", field, data);
@@ -180,6 +187,8 @@ main(int argc, char *argv[])
         upse_execute();
         upse_free_psf_metadata(psf);
     }
+
+    upse123_close_audio();
 
     return 0;
 }
