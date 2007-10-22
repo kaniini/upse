@@ -1,3 +1,3 @@
-SUBDIRS = libupse-cpu libupse-spu libupse-unpacker-psf plugin
+SUBDIRS = libupse upse-audacious
 
 include ../buildsys.mk

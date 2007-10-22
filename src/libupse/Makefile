@@ -1,0 +1,24 @@
+LIB = ${LIB_PREFIX}upse${LIB_SUFFIX}
+LIB_MAJOR = 1
+LIB_MINOR = 0
+
+SRCS = upse_string.c			\
+       upse_util.c			\
+       upse_r3000_bytecode_evaluator.c	\
+       upse_r3000_abstract.c		\
+       upse_ps1_executive.c		\
+       upse_ps1_counters.c		\
+       upse_ps1_hal.c			\
+       upse_ps1_bios_base.c		\
+       upse_ps1_memory_manager.c	\
+       upse_ps1_dma_manager.c		\
+       spu/spu.c
+
+INCLUDES = upse.h upse-types.h
+
+include ../../buildsys.mk
+include ../../extra.mk
+
+CFLAGS += ${PLUGIN_CFLAGS}
+CPPFLAGS += ${PLUGIN_CPPFLAGS} -I../../intl -I../.. -Ispu/ -I.
+LIBS += -lz
