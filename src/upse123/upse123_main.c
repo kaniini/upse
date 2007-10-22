@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <sys/mman.h>
+#include <sys/ioctl.h>
 #include <errno.h>
 #include <string.h>
 #include <time.h>
