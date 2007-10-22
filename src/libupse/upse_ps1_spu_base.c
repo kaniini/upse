@@ -270,6 +270,9 @@ int upse_seek(u32 t)
  return(0);
 }
 
+static u32    _do_interpolation = 1;
+static double _interpolation_coefficient = 3.759285613;
+
 #define CLIP(_x) {if(_x>32767) _x=32767; if(_x<-32767) _x=-32767;}
 int SPUasync(u32 cycles)
 {
@@ -539,22 +542,22 @@ int SPUasync(u32 cycles)
   //}
 
   // post-processing: interpolation
+  if (_do_interpolation)
   {
-    double ldiff, rdiff, avg, tmp, mul;
-    mul = 3.759285613;
+    double ldiff, rdiff, avg, tmp;
 
     avg = (sl + sr) / 2;
     ldiff = sl - avg;
     rdiff = sr - avg;
 
-    tmp = avg + ldiff * mul;
+    tmp = avg + ldiff * _interpolation_coefficient;
     if (tmp < -32768)
       tmp = -32768;
     if (tmp > 32767)
       tmp = 32767;
     sl = tmp;
 
-    tmp = avg + rdiff * mul;
+    tmp = avg + rdiff * _interpolation_coefficient;
     if (tmp < -32768)
       tmp = -32768;
     if (tmp > 32767)
@@ -585,6 +588,24 @@ void upse_set_audio_callback(upse_audio_callback_func_t func) {
    _upse_audio_callback_f = func;
 
    _DEBUG("set audio callback function to <%p>", _upse_audio_callback_f);
+
+   _LEAVE;
+}
+
+void upse_set_interpolation_mode(u32 setting) {
+
+   _ENTER;
+
+   _do_interpolation = setting;
+
+   _LEAVE;
+}
+
+void upse_set_interpolation_coefficient(double setting) {
+
+   _ENTER;
+
+   _interpolation_coefficient = setting;
 
    _LEAVE;
 }

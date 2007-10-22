@@ -5,7 +5,8 @@ SRCS = plugin.c
 include ../../buildsys.mk
 include ../../extra.mk
 
-plugindir := ${plugindir}/${INPUT_PLUGIN_DIR}
+# XXX
+plugindir = `pkg-config audacious --variable=input_plugin_dir`
 
 CFLAGS += ${PLUGIN_CFLAGS}
 CPPFLAGS += ${PLUGIN_CPPFLAGS} ${AUDACIOUS_CFLAGS} -I../libupse

@@ -27,18 +27,14 @@
 #include <unistd.h>
 #include <upse.h>
 
+#include "../../config.h"
+
 static volatile int seek = 0;
-static volatile gboolean playing = FALSE;
-static volatile gboolean paused = FALSE;
-static volatile gboolean stop = FALSE;
-static volatile gboolean nextsong = FALSE;
 
 extern InputPlugin upse_ip;
 static gboolean audio_error = FALSE;
 
 static upse_psf_t *upse_psf = NULL;
-static gchar *fnsave = NULL;
-static GThread *dethread = NULL;
 static InputPlayback *playback = NULL;
 
 static gchar *get_title_psf(gchar *fn);
@@ -85,11 +81,11 @@ void upse_aud_update(unsigned char *buffer, long count)
         int t = playback->output->buffer_free() & mask;
         if (t > count)
             playback->pass_audio(playback,
-                          FMT_S16_NE, 2, count, buffer, NULL);
+                          FMT_S16_NE, 2, count, buffer, &playback->playing);
         else
         {
             if (t)
-                playback->pass_audio(playback, FMT_S16_NE, 2, t, buffer, NULL);
+                playback->pass_audio(playback, FMT_S16_NE, 2, t, buffer, &playback->playing);
         }
         count -= t;
         buffer += t;
@@ -107,7 +103,7 @@ void upse_aud_update(unsigned char *buffer, long count)
             return;
         }
     }
-    if (stop)
+    if (playback->playing == FALSE)
         upse_stop();
 }
 
@@ -122,13 +118,13 @@ static gpointer upse_playloop(gpointer arg)
         playback->output->buffer_free();
         playback->output->buffer_free();
 
-        if (stop)
+        if (playback->playing == FALSE)
             break;
 
         if (seek)
         {
             playback->output->flush(seek);
-            if(!(upse_psf = upse_load(fnsave, &upse_aud_iofuncs)))
+            if(!(upse_psf = upse_load(playback->filename, &upse_aud_iofuncs)))
                 break;
             upse_seek(seek); 
             seek = 0;
@@ -139,18 +135,14 @@ static gpointer upse_playloop(gpointer arg)
     }
 
     playback->output->close_audio();
-    if (!(stop)) nextsong = TRUE;
+    playback->playing = FALSE;
+    playback->eof = TRUE;
     return NULL;
 }
 
 static void upse_aud_play(InputPlayback *data)
 {
-    if (playing)
-        return;
-
     playback = data;
-    nextsong = FALSE;
-    paused = FALSE;
 
     upse_set_audio_callback(upse_aud_update);
 
@@ -160,23 +152,19 @@ static void upse_aud_play(InputPlayback *data)
         return;
     }
 
-    fnsave = malloc(strlen(data->filename)+1);
-    strcpy(fnsave, data->filename);
     if(!(upse_psf = upse_load(data->filename, &upse_aud_iofuncs)))
     {
         playback->output->close_audio();
-        nextsong = 1;
     }
     else
     {
-        stop = seek = 0;
+        seek = 0;
 
         gchar *name = get_title_psf(data->filename);
         data->set_params(data, name, upse_psf->length, 44100*2*2*8, 44100, 2);
         g_free(name);
 
-        playing = 1;
-        dethread = g_thread_self();
+        playback->playing = TRUE;
         data->set_pb_ready(data);
         upse_playloop(NULL);
     }
@@ -184,48 +172,28 @@ static void upse_aud_play(InputPlayback *data)
 
 static void upse_aud_stop(InputPlayback * playback)
 {
-    if (!playing) return;
+    if (!playback->playing)
+        return;
 
-    if (paused)
-        playback->output->pause(0);
-    paused = FALSE;
+    playback->output->pause(0);
+    playback->playing = FALSE;
+    g_thread_join(playback->thread);
 
-    stop = TRUE;
-    g_thread_join(dethread);
-    playing = FALSE;
-
-    if (fnsave)
-    {
-        free(fnsave);
-        fnsave = NULL;
-    } 
     upse_free_psf_metadata(upse_psf);
     upse_psf = NULL;
 }
 
 static void upse_aud_pause(InputPlayback *playback, short p)
 {
-    if (!playing) return;
     playback->output->pause(p);
-    paused = p;
 }
 
 static void upse_aud_seek(InputPlayback * data, int time)
 {
-    if (!playing) return;
+    if (!playback->playing)
+        return;
+
     seek = time * 1000;
-}
-
-static int upse_aud_gettime(InputPlayback *playback)
-{
-    if (audio_error)
-        return -2;
-    if (nextsong)
-        return -1;
-    if (!playing)
-        return 0;
-
-    return playback->output->output_time();
 }
 
 static void upse_aud_getsonginfo(char *fn, char **title, int *length)
@@ -278,16 +246,36 @@ static gchar *get_title_psf(gchar *fn) {
     return title;
 }
 
+static void upse_aud_about(void) {
+    audacious_info_dialog("About " PACKAGE_STRING,
+       PACKAGE " is a plugin and emulation library which produces near-bit-exact\n"
+       "output comparable to a PlayStation. It can be used to play chiptunes, and other\n"
+       "fun things.\n"
+       "\n"
+       "Find out more at http://carpathia.dereferenced.org/~nenolod/upse\n"
+       "\n"
+       PACKAGE_STRING " is licensed to you under the GNU General Public License, \n"
+       "version 2. A copy of this license is included in the " PACKAGE " source kit,\n"
+       "or on the internet at <http://www.gnu.org/licenses>.\n"
+       "\n"
+       "Talk about " PACKAGE " in it's very own forum! <http://boards.nenolod.net>\n"
+       "Report bugs in " PACKAGE " to <" PACKAGE_BUGREPORT ">.",
+       "Close",
+       FALSE,
+       G_CALLBACK(gtk_widget_destroy),
+       NULL);
+}
+
 gchar *upse_fmts[] = { "psf", "minipsf", NULL };
 
 InputPlugin upse_ip =
 {
     .description = "UNIX Playstation Sound Emulator",
+    .about = upse_aud_about,
     .play_file = upse_aud_play,
     .stop = upse_aud_stop,
     .pause = upse_aud_pause,
     .seek = upse_aud_seek,
-    .get_time = upse_aud_gettime,
     .get_song_info = upse_aud_getsonginfo,
     .get_song_tuple = get_aud_tuple_psf,
     .is_our_file_from_vfs = is_our_fd,
@@ -296,4 +284,4 @@ InputPlugin upse_ip =
 
 InputPlugin *upse_iplist[] = { &upse_ip, NULL };
 
-DECLARE_PLUGIN(upse, NULL, NULL, upse_iplist, NULL, NULL, NULL, NULL, NULL);
+SIMPLE_INPUT_PLUGIN(upse, upse_iplist);

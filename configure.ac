@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT([audacious-plugins], [1.4.0], [bugs+audacious-plugins@atheme.org])
+AC_INIT([upse], [0.4.0], [nenolod+upse@sacredspiral.co.uk])
 AC_PREREQ([2.59])
 
 AC_CANONICAL_HOST
@@ -102,10 +102,12 @@ dnl Path settings
 
 dnl Check for Audacious
 
+UPSE_TARGET_AUD=""
 PKG_CHECK_MODULES(AUDACIOUS, [audacious >= 1.3.99],
     [ADD_PC_REQUIRES([audacious >= 1.3.99])],
-    [AC_MSG_ERROR([Cannot find Audacious, have you installed audacious yet?])]
+    [], [UPSE_TARGET_AUD="upse-audacious"]
 )
+AC_SUBST(UPSE_TARGET_AUD)
 
 PKG_CHECK_MODULES(MOWGLI, [libmowgli >= 0.2.0],
     [ADD_PC_REQUIRES([libmowgli >= 0.2.0])],

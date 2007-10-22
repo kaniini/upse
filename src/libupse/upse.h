@@ -63,4 +63,19 @@ void upse_free_psf_metadata(upse_psf_t * info);
 typedef void (*upse_audio_callback_func_t) (unsigned char *, long);
 void upse_set_audio_callback(upse_audio_callback_func_t func);
 
+/*
+ * Set the interpolation mode.
+ *
+ *   1: interpolation (like a real PSX/PS2)
+ *   0: interpolation only on reverb
+ *      (PeOPS/Neill Corlett's model says interpolation always but doesn't do it)
+ */
+void upse_set_interpolation_mode(u32 setting);
+
+/*
+ * Set a custom interpolation coefficient.
+ * Implies that interpolation_mode is non-zero.
+ */
+void upse_set_interpolation_coefficient(double setting);
+
 #endif
