@@ -20,7 +20,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "PsxCommon.h"
+#include "upse-internal.h"
 
 char *psxM;
 

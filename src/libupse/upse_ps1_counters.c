@@ -19,7 +19,7 @@
 
 #include <string.h>
 
-#include "PsxCommon.h"
+#include "upse-internal.h"
 
 psxCounter psxCounters[5];
 

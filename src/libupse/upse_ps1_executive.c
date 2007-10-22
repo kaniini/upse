@@ -17,7 +17,7 @@
  * UPSE is offered without any warranty of any kind, explicit or implicit.
  */
 
-#include "PsxCommon.h"
+#include "upse-internal.h"
 
 /* tracing */
 #define _CALL(id, idN) { printf("call<%s> %s<%p> [%d]\n", #id, idN[call], id[call], call); id[call](); }

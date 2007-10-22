@@ -17,7 +17,7 @@
  * UPSE is offered without any warranty of any kind, explicit or implicit.
  */
 
-#include "PsxCommon.h"
+#include "upse-internal.h"
 
 void psxDma4(u32 madr, u32 bcr, u32 chcr)
 {				// SPU

@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "PsxCommon.h"
+#include "upse-internal.h"
 
 #define HW_DMA4_MADR (psxHu32(0x10c0))	// SPU DMA
 #define HW_DMA4_BCR  (psxHu32(0x10c4))

@@ -23,7 +23,7 @@
 #include <stdarg.h>
 #include <ctype.h>
 
-#include "PsxCommon.h"
+#include "upse-internal.h"
 #include "upse-ps1-bios-private.h"
 
 //We try to emulate bios :) HELP US :P

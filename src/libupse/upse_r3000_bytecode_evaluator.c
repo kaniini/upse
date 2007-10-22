@@ -19,7 +19,7 @@
 
 #include <stdlib.h>
 
-#include "PsxCommon.h"
+#include "upse-internal.h"
 
 static int branch;
 static int branch2;

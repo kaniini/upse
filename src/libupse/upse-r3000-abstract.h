@@ -22,7 +22,7 @@
 
 #include <stdio.h>
 
-#include "PsxCommon.h"
+#include "upse-internal.h"
 
 typedef struct
 {

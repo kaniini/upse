@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "PsxCommon.h"
+#include "upse-internal.h"
 
 psxRegisters psxRegs;
 R3000Acpu *psxCpu;

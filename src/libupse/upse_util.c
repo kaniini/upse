@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#include "PsxCommon.h"
+#include "upse-internal.h"
 #include "upse.h"
 #include "upse-string.h"
 
@@ -259,7 +259,7 @@ static upse_psf_t *LoadPSF(char *path, int level, int type)	// Type==1 for just 
 	upse_psf_t *psfi;
 	upse_psf_t *tmpi;
 
-	_ENTER
+	_ENTER;
 
 	if (!(fp = _upse_iofuncs->open_impl(path, "rb")))
 	{
