@@ -143,3 +143,11 @@
 #define H_SPU_ADSRLevel22  0x0d68
 #define H_SPU_ADSRLevel23  0x0d78
 
+void SoundOn(int start,int end,u16 val);
+void SoundOff(int start,int end,u16 val);
+void FModOn(int start,int end,u16 val);
+void NoiseOn(int start,int end,u16 val);
+void SetVolumeLR(int right, u8 ch,s16 vol);
+void SetPitch(int ch,u16 val);
+void SPUwriteRegister(u32 reg, u16 val);
+

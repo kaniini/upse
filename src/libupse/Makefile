@@ -15,6 +15,8 @@ SRCS = upse_string.c			\
        upse_ps1_spu_base.c		\
        upse_ps1_spu_dma_handler.c	\
        upse_ps1_spu_register_io.c	\
+       upse_ps1_spu_reverb.c		\
+       upse_ps1_spu_adsr_filter.c	\
 
 INCLUDES = upse.h upse-types.h
 

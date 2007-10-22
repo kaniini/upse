@@ -19,8 +19,7 @@
 #include "upse-types.h"
 #include "upse-internal.h"
 #include "upse-ps1-spu-base.h"
-#include "externals.h"
-#include "regs.h"
+#include "upse-spu-internal.h"
 #include "upse-ps1-spu-register-io.h"
 
 #include "upse.h"
