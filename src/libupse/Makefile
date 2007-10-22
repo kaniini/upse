@@ -12,7 +12,8 @@ SRCS = upse_string.c			\
        upse_ps1_bios_base.c		\
        upse_ps1_memory_manager.c	\
        upse_ps1_dma_manager.c		\
-       upse_ps1_spu_base.c
+       upse_ps1_spu_base.c		\
+       upse_ps1_spu_dma_handler.c
 
 INCLUDES = upse.h upse-types.h
 

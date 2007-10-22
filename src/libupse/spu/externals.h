@@ -175,3 +175,18 @@ typedef struct
  int IN_COEF_L;      // (coef.)
  int IN_COEF_R;      // (coef.)
 } REVERBInfo;
+
+extern u16  regArea[0x200];
+extern u16  spuMem[256*1024];
+extern u8 * spuMemC;
+extern u8 * pSpuIrq;
+extern u8 * pSpuBuffer;
+
+extern u32   dwNoiseVal;                          // global noise generator
+
+extern u16  spuCtrl;                             // some vars to store psx reg infos
+extern u16  spuStat;
+extern u16  spuIrq;
+extern u32  spuAddr;                    // address into spu mem
+extern int  bSPUIsOpen;
+

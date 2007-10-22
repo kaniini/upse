@@ -352,7 +352,7 @@ u16 SPUreadRegister(u32 reg)
 // SOUND ON register write
 ////////////////////////////////////////////////////////////////////////
 
-static void SoundOn(int start,int end,u16 val)     // SOUND ON PSX COMAND
+void SoundOn(int start,int end,u16 val)     // SOUND ON PSX COMAND
 {
  int ch;
 
@@ -370,7 +370,7 @@ static void SoundOn(int start,int end,u16 val)     // SOUND ON PSX COMAND
 // SOUND OFF register write
 ////////////////////////////////////////////////////////////////////////
 
-static void SoundOff(int start,int end,u16 val)    // SOUND OFF PSX COMMAND
+void SoundOff(int start,int end,u16 val)    // SOUND OFF PSX COMMAND
 {
  int ch;
  for(ch=start;ch<end;ch++,val>>=1)                     // loop channels
@@ -386,7 +386,7 @@ static void SoundOff(int start,int end,u16 val)    // SOUND OFF PSX COMMAND
 // FMOD register write
 ////////////////////////////////////////////////////////////////////////
 
-static void FModOn(int start,int end,u16 val)      // FMOD ON PSX COMMAND
+void FModOn(int start,int end,u16 val)      // FMOD ON PSX COMMAND
 {
  int ch;
 
@@ -411,7 +411,7 @@ static void FModOn(int start,int end,u16 val)      // FMOD ON PSX COMMAND
 // NOISE register write
 ////////////////////////////////////////////////////////////////////////
 
-static void NoiseOn(int start,int end,u16 val)     // NOISE ON PSX COMMAND
+void NoiseOn(int start,int end,u16 val)     // NOISE ON PSX COMMAND
 {
  int ch;
 
@@ -434,7 +434,7 @@ static void NoiseOn(int start,int end,u16 val)     // NOISE ON PSX COMMAND
 
 // please note: sweep is wrong.
 
-static void SetVolumeLR(int right, u8 ch,s16 vol)            // LEFT VOLUME
+void SetVolumeLR(int right, u8 ch,s16 vol)            // LEFT VOLUME
 {
  //if(vol&0xc000)
  //printf("%d %08x\n",right,vol);
@@ -476,7 +476,7 @@ static void SetVolumeLR(int right, u8 ch,s16 vol)            // LEFT VOLUME
 // PITCH register write
 ////////////////////////////////////////////////////////////////////////
 
-static void SetPitch(int ch,u16 val)               // SET PITCH
+void SetPitch(int ch,u16 val)               // SET PITCH
 {
  int NP;
  if(val>0x3fff) NP=0x3fff;                             // get pitch val

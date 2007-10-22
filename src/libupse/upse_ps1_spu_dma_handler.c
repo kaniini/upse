@@ -26,7 +26,16 @@
 
 #define _IN_DMA
 
-//#include "externals.h"
+#include "upse-types.h"
+#include "upse-internal.h"
+#include "upse-ps1-spu-base.h"
+#include "externals.h"
+#include "regs.h"
+#include "registers.h"
+
+#include "upse.h"
+#include "upse-ps1-memory-manager.h"
+
 ////////////////////////////////////////////////////////////////////////
 // READ DMA (many values)
 ////////////////////////////////////////////////////////////////////////
