@@ -555,8 +555,14 @@ void upse_stop(void)
 static upse_audio_callback_func_t _upse_audio_callback_f = NULL;
 
 void upse_set_audio_callback(upse_audio_callback_func_t func) {
-   printf("libupse: set audio callback function to <%p>\n", func);
+   
+   _ENTER;
+
    _upse_audio_callback_f = func;
+
+   _DEBUG("set audio callback function to <%p>", _upse_audio_callback_f);
+
+   _LEAVE;
 }
 
 void SPUendflush(void)

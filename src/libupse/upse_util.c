@@ -246,7 +246,7 @@ static int ccomp(const void *v1, const void *v2)
 	return (a1->num - a2->num);
 }
 
-static upse_psf_t *LoadPSF(char *path, int level, int type)	// Type==1 for just info load.
+static upse_psf_t *_upse_load(char *path, int level, int type)	// Type==1 for just info load.
 {
 	void *fp;
 	EXE_HEADER tmpHead;
@@ -357,7 +357,7 @@ static upse_psf_t *LoadPSF(char *path, int level, int type)	// Type==1 for just 
 						   the full path(directory + file name) "path"
 						 */
 						tmpfn = GetFileWithBase(path, value);
-						if (!(tmpi = LoadPSF(tmpfn, level + 1, 0)))
+						if (!(tmpi = _upse_load(tmpfn, level + 1, 0)))
 						{
 							free(key);
 							free(value);
@@ -434,7 +434,7 @@ static upse_psf_t *LoadPSF(char *path, int level, int type)	// Type==1 for just 
 				   the full path(directory + file name) "path"
 				 */
 				tmpfn = GetFileWithBase(path, cache[cur].value);
-				if (!(tmpi = LoadPSF(tmpfn, level + 1, 0)))
+				if (!(tmpi = _upse_load(tmpfn, level + 1, 0)))
 				{
 					//free(key);
 					//free(value);
@@ -473,7 +473,7 @@ upse_psf_t *upse_get_psf_metadata(char *path, upse_iofuncs_t * iofuncs)
 
 	_upse_iofuncs = iofuncs;
 
-	if (!(ret = LoadPSF(path, 0, 1)))
+	if (!(ret = _upse_load(path, 0, 1)))
 		return NULL;
 
 	if (ret->stop == (u32) ~ 0)
@@ -500,7 +500,7 @@ upse_psf_t *upse_load(char *path, upse_iofuncs_t * iofuncs)
 	SPUinit();
 	SPUopen();
 
-	if (!(ret = LoadPSF(path, 0, 0)))
+	if (!(ret = _upse_load(path, 0, 0)))
 	{
 		psxShutdown();
 
