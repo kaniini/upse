@@ -259,15 +259,17 @@ static upse_psf_t *LoadPSF(char *path, int level, int type)	// Type==1 for just 
 	upse_psf_t *psfi;
 	upse_psf_t *tmpi;
 
+	_ENTER
+
 	if (!(fp = _upse_iofuncs->open_impl(path, "rb")))
 	{
-		printf("path %s failed to load\n", path);
-		return (0);
+		_ERROR("path %s failed to load\n", path);
+		_LEAVE NULL;
 	}
 
 	_upse_iofuncs->read_impl(head, 1, 4, fp);
 	if (memcmp(head, "PSF\x01", 4))
-		return (0);
+		_LEAVE NULL;
 
 	psfi = malloc(sizeof(upse_psf_t));
 	memset(psfi, 0, sizeof(upse_psf_t));
@@ -365,7 +367,7 @@ static upse_psf_t *LoadPSF(char *path, int level, int type)	// Type==1 for just 
 							_upse_iofuncs->close_impl(fp);
 							FreeTags(psfi->taglist);
 							free(psfi);
-							return (0);
+							_LEAVE NULL;
 						}
 						FreeTags(tmpi->taglist);
 						free(tmpi);
@@ -454,7 +456,7 @@ static upse_psf_t *LoadPSF(char *path, int level, int type)	// Type==1 for just 
 
 	}			// if(!type)
 
-	return (psfi);
+	_LEAVE psfi;
 }
 
 void upse_free_psf_metadata(upse_psf_t * info)
@@ -467,22 +469,28 @@ upse_psf_t *upse_get_psf_metadata(char *path, upse_iofuncs_t * iofuncs)
 {
 	upse_psf_t *ret;
 
+	_ENTER;
+
 	_upse_iofuncs = iofuncs;
 
 	if (!(ret = LoadPSF(path, 0, 1)))
-		return (0);
+		_LEAVE NULL;
+
 	if (ret->stop == (u32) ~ 0)
 		ret->fade = 0;
+
 	ret->length = ret->stop + ret->fade;
 
 	_upse_iofuncs = NULL;
 
-	return (ret);
+	_LEAVE ret;
 }
 
 upse_psf_t *upse_load(char *path, upse_iofuncs_t * iofuncs)
 {
 	upse_psf_t *ret;
+
+	_ENTER;
 
 	_upse_iofuncs = iofuncs;
 
@@ -495,17 +503,19 @@ upse_psf_t *upse_load(char *path, upse_iofuncs_t * iofuncs)
 	if (!(ret = LoadPSF(path, 0, 0)))
 	{
 		psxShutdown();
-		return (0);
+
+		_LEAVE NULL;
 	}
 
 	if (ret->stop == (u32) ~ 0)
 		ret->fade = 0;	// Infinity+anything is still infinity...or is it?
+
 	SPUsetlength(ret->stop, ret->fade);
 	ret->length = ret->stop + ret->fade;
 
 	_upse_iofuncs = NULL;
 
-	return (ret);
+	_LEAVE ret;
 }
 
 void upse_execute(void)
