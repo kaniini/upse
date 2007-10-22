@@ -20,7 +20,8 @@
 #include "upse-internal.h"
 
 /* tracing */
-#define _CALL(id, idN) { printf("call<%s> %s<%p> [%d]\n", #id, idN[call], id[call], call); id[call](); }
+#define _CALL(id, idN) do { _MESSAGE("TRACE", "call<%s> %s<%p> [%d]", #id, idN[call], id[call], call); id[call](); } while(0)
+#define _UNIMPLEMENTED(id, idN) do { _WARN("call<%s> %s<%p> [unimplemented]", #id, idN[call], id[call]); } while(0)
 
 static void hleDummy()
 {
@@ -35,6 +36,8 @@ static void hleA0()
 
 	if (biosA0[call])
 		_CALL(biosA0, biosA0n);
+	else
+		_UNIMPLEMENTED(biosA0, biosA0n);
 
 	psxBranchTest();
 }
@@ -45,6 +48,8 @@ static void hleB0()
 
 	if (biosB0[call])
 		_CALL(biosB0, biosB0n);
+	else
+		_UNIMPLEMENTED(biosB0, biosB0n);
 
 	psxBranchTest();
 }
@@ -55,6 +60,8 @@ static void hleC0()
 
 	if (biosC0[call])
 		_CALL(biosC0, biosC0n);
+	else
+		_UNIMPLEMENTED(biosC0, biosC0n);
 
 	psxBranchTest();
 }
