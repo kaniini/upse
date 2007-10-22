@@ -456,6 +456,7 @@ static upse_psf_t *_upse_load(char *path, int level, int type)	// Type==1 for ju
 
 	}			// if(!type)
 
+	_LEAVE;
 	return psfi;
 }
 
@@ -483,6 +484,7 @@ upse_psf_t *upse_get_psf_metadata(char *path, upse_iofuncs_t * iofuncs)
 
 	_upse_iofuncs = NULL;
 
+	_LEAVE;
 	return ret;
 }
 
@@ -515,10 +517,15 @@ upse_psf_t *upse_load(char *path, upse_iofuncs_t * iofuncs)
 
 	_upse_iofuncs = NULL;
 
+	_LEAVE;
 	return ret;
 }
 
 void upse_execute(void)
 {
+	_ENTER;
+
 	psxCpu->Execute();
+
+	_LEAVE;
 }
