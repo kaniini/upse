@@ -24,7 +24,7 @@
 #include "upse-ps1-spu-base.h"
 #include "externals.h"
 #include "regs.h"
-#include "registers.h"
+#include "upse-ps1-spu-register-io.h"
 
 #include "upse.h"
 #include "upse-ps1-memory-manager.h"
@@ -46,8 +46,8 @@ static int             iVolume;
                                
 // MAIN infos struct for each channel
 
-static SPUCHAN         s_chan[MAXCHAN+1];                     // channel + 1 infos (1 is security for fmod handling)
-static REVERBInfo      rvb;
+SPUCHAN         s_chan[MAXCHAN+1];                     // channel + 1 infos (1 is security for fmod handling)
+REVERBInfo      rvb;
 
 u32   dwNoiseVal=1;                          // global noise generator
 
@@ -73,9 +73,6 @@ s16 * pS;
 
 #include "reverb.c"        
 #include "adsr.c"
-
-// Try this to increase speed.
-#include "registers.c"
 
 ////////////////////////////////////////////////////////////////////////
 // helpers for so-called "gauss interpolation"

@@ -190,3 +190,6 @@ extern u16  spuIrq;
 extern u32  spuAddr;                    // address into spu mem
 extern int  bSPUIsOpen;
 
+extern SPUCHAN         s_chan[MAXCHAN+1];                     // channel + 1 infos (1 is security for fmod handling)
+extern REVERBInfo      rvb;
+
