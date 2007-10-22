@@ -1,0 +1,30 @@
+Thanks to:
+    Michael "mf0102" Farber, for testing coefficients, and speaking up
+    when they were CLEARLY WRONG. upse would not sound the way it does
+    without his help.
+
+    Xodnizel, for writing SexyPSF, which provided for some motivation
+    for writing a PSF replayer.
+
+    CaitSith2 for explaining a lot of details on how the PSF format in
+    general works on his webpages.
+
+    Tony Vroon and Giacomo Lozito for their hard work on the plugins
+    collection in Audacious (SexyPSF would not have ever been realised
+    on Audacious without their efforts, and as such, UPSE would never
+    exist.)
+
+    Neill Corlett for a lot of research information about when to apply
+    what coefficients and filters and such. He was the first one to write
+    a somewhat accurate SPU emulation, and this one builds on his research.
+
+    Pete Bernert for writing PeOPS, which, while inaccurate, is the only
+    really complete SPU implementation that is open source. Hopefully,
+    someone will hack UPSE into a PSX/PS2 software SPU now. ;)
+
+    ||basement for hosting many esoteric PSX mod rips which can now be
+    enjoyed without the use of Highly Experimental. Check out his archive
+    at <http://tzone.org/~llin/psf/>.
+
+    If I missed somebody, I'm sorry, and you should consider yourself
+    thanked too.
