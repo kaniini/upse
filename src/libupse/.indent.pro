@@ -11,7 +11,7 @@
 --case-brace-indentation0
 --case-indentation2
 
---indent-level8
+--indent-level4
 
 /* Put while() on the brace from do... */
 --cuddle-do-while
@@ -21,9 +21,6 @@
 
 /* Disable an annoying format... */
 --dont-break-procedure-type
-
-/* Disable an annoying format... */
---no-space-after-casts
 
 --line-length200
 

@@ -31,81 +31,81 @@
 
 static void hleDummy()
 {
-	psxRegs.pc = psxRegs.GPR.n.ra;
+    psxRegs.pc = psxRegs.GPR.n.ra;
 
-	psxBranchTest();
+    psxBranchTest();
 }
 
 static void hleA0()
 {
-	u32 call = psxRegs.GPR.n.t1 & 0xff;
+    u32 call = psxRegs.GPR.n.t1 & 0xff;
 
-	if (biosA0[call])
-		_CALL(biosA0, biosA0n);
-	else
-		_UNIMPLEMENTED(biosA0, biosA0n);
+    if (biosA0[call])
+	_CALL(biosA0, biosA0n);
+    else
+	_UNIMPLEMENTED(biosA0, biosA0n);
 
-	psxBranchTest();
+    psxBranchTest();
 }
 
 static void hleB0()
 {
-	u32 call = psxRegs.GPR.n.t1 & 0xff;
+    u32 call = psxRegs.GPR.n.t1 & 0xff;
 
-	if (biosB0[call])
-		_CALL(biosB0, biosB0n);
-	else
-		_UNIMPLEMENTED(biosB0, biosB0n);
+    if (biosB0[call])
+	_CALL(biosB0, biosB0n);
+    else
+	_UNIMPLEMENTED(biosB0, biosB0n);
 
-	psxBranchTest();
+    psxBranchTest();
 }
 
 static void hleC0()
 {
-	u32 call = psxRegs.GPR.n.t1 & 0xff;
+    u32 call = psxRegs.GPR.n.t1 & 0xff;
 
-	if (biosC0[call])
-		_CALL(biosC0, biosC0n);
-	else
-		_UNIMPLEMENTED(biosC0, biosC0n);
+    if (biosC0[call])
+	_CALL(biosC0, biosC0n);
+    else
+	_UNIMPLEMENTED(biosC0, biosC0n);
 
-	psxBranchTest();
+    psxBranchTest();
 }
 
 static void hleBootstrap()
 {				// 0xbfc00000
-	//SysPrintf("hleBootstrap\n");
+    //SysPrintf("hleBootstrap\n");
 }
 
 typedef struct
 {
-	u32 _pc0;
-	u32 gp0;
-	u32 t_addr;
-	u32 t_size;
-	u32 d_addr;
-	u32 d_size;
-	u32 b_addr;
-	u32 b_size;
-	u32 S_addr;
-	u32 s_size;
-	u32 _sp, _fp, _gp, ret, base;
+    u32 _pc0;
+    u32 gp0;
+    u32 t_addr;
+    u32 t_size;
+    u32 d_addr;
+    u32 d_size;
+    u32 b_addr;
+    u32 b_size;
+    u32 S_addr;
+    u32 s_size;
+    u32 _sp, _fp, _gp, ret, base;
 } PACKSTRUCT EXEC;
 
 static void hleExecRet()
 {
-	EXEC *header = (EXEC *) PSXM(psxRegs.GPR.n.s0);
+    EXEC *header = (EXEC *) PSXM(psxRegs.GPR.n.s0);
 
-	//SysPrintf("ExecRet %x: %x\n", psxRegs.GPR.n.s0, header->ret);
+    //SysPrintf("ExecRet %x: %x\n", psxRegs.GPR.n.s0, header->ret);
 
-	psxRegs.GPR.n.ra = BFLIP32(header->ret);
-	psxRegs.GPR.n.sp = BFLIP32(header->_sp);
-	psxRegs.GPR.n.s8 = BFLIP32(header->_fp);
-	psxRegs.GPR.n.gp = BFLIP32(header->_gp);
-	psxRegs.GPR.n.s0 = BFLIP32(header->base);
+    psxRegs.GPR.n.ra = BFLIP32(header->ret);
+    psxRegs.GPR.n.sp = BFLIP32(header->_sp);
+    psxRegs.GPR.n.s8 = BFLIP32(header->_fp);
+    psxRegs.GPR.n.gp = BFLIP32(header->_gp);
+    psxRegs.GPR.n.s0 = BFLIP32(header->base);
 
-	psxRegs.GPR.n.v0 = 1;
-	psxRegs.pc = psxRegs.GPR.n.ra;
+    psxRegs.GPR.n.v0 = 1;
+    psxRegs.pc = psxRegs.GPR.n.ra;
 }
 
 void (*psxHLEt[256]) () =

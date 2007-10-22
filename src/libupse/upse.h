@@ -23,25 +23,25 @@
 
 typedef struct _upse_psftag
 {
-	struct _upse_psftag *next;
-	char *key;
-	char *value;
+    struct _upse_psftag *next;
+    char *key;
+    char *value;
 } upse_psftag_t;
 
 typedef struct
 {
-	u32 length;
-	u32 stop;
-	u32 fade;
-	char *title;
-	char *artist;
-	char *game;
-	char *year;
-	char *genre;
-	char *psfby;
-	char *comment;
-	char *copyright;
-	upse_psftag_t *taglist;
+    u32 length;
+    u32 stop;
+    u32 fade;
+    char *title;
+    char *artist;
+    char *game;
+    char *year;
+    char *genre;
+    char *psfby;
+    char *comment;
+    char *copyright;
+    upse_psftag_t *taglist;
 } upse_psf_t;
 
 int upse_seek(u32 t);
@@ -50,10 +50,10 @@ void upse_execute(void);
 
 typedef struct
 {
-	void *(*open_impl) (char *path, char *mode);
-	  size_t(*read_impl) (void *ptr, size_t size, size_t nmemb, void *file);
-	int (*seek_impl) (void *file, long offset, int whence);
-	int (*close_impl) (void *file);
+    void *(*open_impl) (char *path, char *mode);
+      size_t(*read_impl) (void *ptr, size_t size, size_t nmemb, void *file);
+    int (*seek_impl) (void *file, long offset, int whence);
+    int (*close_impl) (void *file);
 } upse_iofuncs_t;
 
 upse_psf_t *upse_load(char *path, upse_iofuncs_t * iofuncs);

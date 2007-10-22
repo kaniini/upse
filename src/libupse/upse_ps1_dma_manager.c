@@ -21,33 +21,33 @@
 
 void psxDma4(u32 madr, u32 bcr, u32 chcr)
 {				// SPU
-	switch (chcr)
-	{
-	  case 0x01000201:	//cpu to spu transfer
-		  bcr = (bcr >> 16) * (bcr & 0xffff) * 2;
+    switch (chcr)
+    {
+      case 0x01000201:		//cpu to spu transfer
+	  bcr = (bcr >> 16) * (bcr & 0xffff) * 2;
 
-		  //printf("%08x, %08x\n",madr,bcr);
-		  SPUwriteDMAMem(madr, bcr);
-		  break;
-	  case 0x01000200:	//spu to cpu transfer
-		  //printf("%08x\n",madr);
-		  SPUreadDMAMem(madr, (bcr >> 16) * (bcr & 0xffff) * 2);
-		  break;
-	}
+	  //printf("%08x, %08x\n",madr,bcr);
+	  SPUwriteDMAMem(madr, bcr);
+	  break;
+      case 0x01000200:		//spu to cpu transfer
+	  //printf("%08x\n",madr);
+	  SPUreadDMAMem(madr, (bcr >> 16) * (bcr & 0xffff) * 2);
+	  break;
+    }
 }
 
 void psxDma6(u32 madr, u32 bcr, u32 chcr)
 {
-	u32 *mem = (u32 *) PSXM(madr);
+    u32 *mem = (u32 *) PSXM(madr);
 
-	if (chcr == 0x11000002)
+    if (chcr == 0x11000002)
+    {
+	while (bcr--)
 	{
-		while (bcr--)
-		{
-			*mem-- = (madr - 4) & 0xffffff;
-			madr -= 4;
-		}
-		mem++;
-		*mem = 0xffffff;
+	    *mem-- = (madr - 4) & 0xffffff;
+	    madr -= 4;
 	}
+	mem++;
+	*mem = 0xffffff;
+    }
 }

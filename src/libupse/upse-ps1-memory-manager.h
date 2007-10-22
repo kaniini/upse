@@ -25,33 +25,33 @@
 #ifdef WORDS_BIGENDIAN
 static INLINE u16 BFLIP16(u16 x)
 {
-	return (((x >> 8) & 0xFF) | ((x & 0xFF) << 8));
+    return (((x >> 8) & 0xFF) | ((x & 0xFF) << 8));
 }
 
 static INLINE u32 BFLIP32(u32 x)
 {
-	return (((x >> 24) & 0xFF) | ((x >> 8) & 0xFF00) | ((x << 8) & 0xFF0000) | ((x << 24) & 0xFF000000));
+    return (((x >> 24) & 0xFF) | ((x >> 8) & 0xFF00) | ((x << 8) & 0xFF0000) | ((x << 24) & 0xFF000000));
 }
 #else
 static INLINE u16 BFLIP16(u16 x)
 {
-	return x;
+    return x;
 }
 
 static INLINE u32 BFLIP32(u32 x)
 {
-	return x;
+    return x;
 }
 #endif
 
 static INLINE s32 BFLIP32S(s32 x)
 {
-	return (s32) BFLIP32((u32) x);
+    return (s32) BFLIP32((u32) x);
 }
 
 static INLINE s16 BFLIP16S(s16 x)
 {
-	return (s16) BFLIP16((u16) x);
+    return (s16) BFLIP16((u16) x);
 }
 
 extern char *psxM;

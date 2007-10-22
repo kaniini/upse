@@ -21,6 +21,6 @@
 
 void InitADSR(void);
 void StartADSR(int ch);
-int  MixADSR(int ch);
+int MixADSR(int ch);
 
 #endif

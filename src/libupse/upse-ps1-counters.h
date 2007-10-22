@@ -22,8 +22,8 @@
 
 typedef struct
 {
-	u32 count, mode, target;
-	u32 sCycle, Cycle, rate, interrupt;
+    u32 count, mode, target;
+    u32 sCycle, Cycle, rate, interrupt;
 } psxCounter;
 
 extern psxCounter psxCounters[5];

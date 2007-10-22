@@ -26,12 +26,12 @@
 
 typedef struct
 {
-	int (*Init) ();
-	void (*Reset) ();
-	void (*Execute) ();	/* executes up to a break */
-	void (*ExecuteBlock) ();	/* executes up to a jump */
-	void (*Clear) (u32 Addr, u32 Size);
-	void (*Shutdown) ();
+    int (*Init) ();
+    void (*Reset) ();
+    void (*Execute) ();		/* executes up to a break */
+    void (*ExecuteBlock) ();	/* executes up to a jump */
+    void (*Clear) (u32 Addr, u32 Size);
+    void (*Shutdown) ();
 } R3000Acpu;
 
 extern R3000Acpu *psxCpu;
@@ -39,33 +39,33 @@ extern R3000Acpu psxInt;
 
 typedef union
 {
-	struct
-	{
-		u32 r0, at, v0, v1, a0, a1, a2, a3, t0, t1, t2, t3, t4, t5, t6, t7, s0, s1, s2, s3, s4, s5, s6, s7, t8, t9, k0, k1, gp, sp, s8, ra, lo, hi;
-	} n PACKSTRUCT;
-	u32 r[34];		/* Lo, Hi in r[33] and r[34] */
+    struct
+    {
+	u32 r0, at, v0, v1, a0, a1, a2, a3, t0, t1, t2, t3, t4, t5, t6, t7, s0, s1, s2, s3, s4, s5, s6, s7, t8, t9, k0, k1, gp, sp, s8, ra, lo, hi;
+    } n PACKSTRUCT;
+    u32 r[34];			/* Lo, Hi in r[33] and r[34] */
 } psxGPRRegs;
 
 typedef union
 {
-	struct
-	{
-		u32 Index, Random, EntryLo0, EntryLo1,
-			Context, PageMask, Wired, Reserved0,
-			BadVAddr, Count, EntryHi, Compare,
-			Status, Cause, EPC, PRid, Config, LLAddr, WatchLO, WatchHI, XContext, Reserved1, Reserved2, Reserved3, Reserved4, Reserved5, ECC, CacheErr, TagLo, TagHi, ErrorEPC, Reserved6;
-	} n PACKSTRUCT;
-	u32 r[32];
+    struct
+    {
+	u32 Index, Random, EntryLo0, EntryLo1,
+	    Context, PageMask, Wired, Reserved0,
+	    BadVAddr, Count, EntryHi, Compare,
+	    Status, Cause, EPC, PRid, Config, LLAddr, WatchLO, WatchHI, XContext, Reserved1, Reserved2, Reserved3, Reserved4, Reserved5, ECC, CacheErr, TagLo, TagHi, ErrorEPC, Reserved6;
+    } n PACKSTRUCT;
+    u32 r[32];
 } psxCP0Regs;
 
 typedef struct
 {
-	psxGPRRegs GPR;		/* General Purpose Registers */
-	psxCP0Regs CP0;		/* Coprocessor0 Registers */
-	u32 pc;			/* Program counter */
-	u32 code;		/* The instruction */
-	u32 cycle;
-	u32 interrupt;
+    psxGPRRegs GPR;		/* General Purpose Registers */
+    psxCP0Regs CP0;		/* Coprocessor0 Registers */
+    u32 pc;			/* Program counter */
+    u32 code;			/* The instruction */
+    u32 cycle;
+    u32 interrupt;
 } psxRegisters;
 
 extern psxRegisters psxRegs;

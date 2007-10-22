@@ -16,7 +16,7 @@
  *
  * UPSE is offered without any warranty of any kind, explicit or implicit.
  */
-	
+
 #ifndef _UPSE__LIBUPSE__UPSE_PS1_DMA_MANAGER_H__GUARD
 #define _UPSE__LIBUPSE__UPSE_PS1_DMA_MANAGER_H__GUARD
 

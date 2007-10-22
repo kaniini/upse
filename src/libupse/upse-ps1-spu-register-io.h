@@ -14,8 +14,8 @@
  * the UPSE source kit as COPYING.
  *
  * UPSE is offered without any warranty of any kind, explicit or implicit.
- */
-
+ */  
+    
 #define H_SPUReverbAddr  0x0da2
 #define H_SPUirqAddr     0x0da4
 #define H_SPUaddr        0x0da6
@@ -67,7 +67,7 @@
 #define H_SPUPitch21     0x0d54
 #define H_SPUPitch22     0x0d64
 #define H_SPUPitch23     0x0d74
-
+    
 #define H_SPUStartAdr0   0x0c06
 #define H_SPUStartAdr1   0x0c16
 #define H_SPUStartAdr2   0x0c26
@@ -92,7 +92,7 @@
 #define H_SPUStartAdr21  0x0d56
 #define H_SPUStartAdr22  0x0d66
 #define H_SPUStartAdr23  0x0d76
-
+    
 #define H_SPULoopAdr0   0x0c0e
 #define H_SPULoopAdr1   0x0c1e
 #define H_SPULoopAdr2   0x0c2e
@@ -117,7 +117,7 @@
 #define H_SPULoopAdr21  0x0d5e
 #define H_SPULoopAdr22  0x0d6e
 #define H_SPULoopAdr23  0x0d7e
-
+    
 #define H_SPU_ADSRLevel0   0x0c08
 #define H_SPU_ADSRLevel1   0x0c18
 #define H_SPU_ADSRLevel2   0x0c28
@@ -142,12 +142,11 @@
 #define H_SPU_ADSRLevel21  0x0d58
 #define H_SPU_ADSRLevel22  0x0d68
 #define H_SPU_ADSRLevel23  0x0d78
-
-void SoundOn(int start,int end,u16 val);
-void SoundOff(int start,int end,u16 val);
-void FModOn(int start,int end,u16 val);
-void NoiseOn(int start,int end,u16 val);
-void SetVolumeLR(int right, u8 ch,s16 vol);
-void SetPitch(int ch,u16 val);
-void SPUwriteRegister(u32 reg, u16 val);
-
+void SoundOn(int start, int end, u16 val);
+void SoundOff(int start, int end, u16 val);
+void FModOn(int start, int end, u16 val);
+void NoiseOn(int start, int end, u16 val);
+void SetVolumeLR(int right, u8 ch, s16 vol);
+void SetPitch(int ch, u16 val);
+void SPUwriteRegister(u32 reg, u16 val);
+

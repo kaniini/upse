@@ -16,7 +16,7 @@
  *
  * UPSE is offered without any warranty of any kind, explicit or implicit.
  */  
-	
+    
 #ifndef __PSXHLE_H__
 #define __PSXHLE_H__
 extern void (*psxHLEt[256]) ();

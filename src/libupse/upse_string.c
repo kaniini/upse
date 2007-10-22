@@ -23,30 +23,30 @@
  */
 char *upse_io_fgets(char *s, int n, void *stream, upse_iofuncs_t * iofuncs)
 {
-	int c;
-	register char *p;
+    int c;
+    register char *p;
 
-	if (n <= 0)
-		return NULL;
-
-	p = s;
-
-	while (--n)
-	{
-		if (iofuncs->read_impl(&c, 1, 1, stream) == 0)
-		{
-			break;
-		}
-		if ((*p++ = c) == '\n')
-		{
-			break;
-		}
-	}
-	if (p > s)
-	{
-		*p = 0;
-		return s;
-	}
-
+    if (n <= 0)
 	return NULL;
+
+    p = s;
+
+    while (--n)
+    {
+	if (iofuncs->read_impl(&c, 1, 1, stream) == 0)
+	{
+	    break;
+	}
+	if ((*p++ = c) == '\n')
+	{
+	    break;
+	}
+    }
+    if (p > s)
+    {
+	*p = 0;
+	return s;
+    }
+
+    return NULL;
 }

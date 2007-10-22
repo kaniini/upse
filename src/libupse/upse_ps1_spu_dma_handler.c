@@ -30,17 +30,18 @@
 // READ DMA (many values)
 ////////////////////////////////////////////////////////////////////////
 
-void SPUreadDMAMem(u32 usPSXMem,int iSize)
+void SPUreadDMAMem(u32 usPSXMem, int iSize)
 {
- int i;
+    int i;
 
- for(i=0;i<iSize;i++)
-  {
-   *(u16 *)PSXM(usPSXMem)=spuMem[spuAddr>>1];		// spu addr got by writeregister
-   usPSXMem+=2;
-   spuAddr+=2;                                         // inc spu addr
-   if(spuAddr>0x7ffff) spuAddr=0;                      // wrap
-  }
+    for (i = 0; i < iSize; i++)
+    {
+	*(u16 *) PSXM(usPSXMem) = spuMem[spuAddr >> 1];	// spu addr got by writeregister
+	usPSXMem += 2;
+	spuAddr += 2;		// inc spu addr
+	if (spuAddr > 0x7ffff)
+	    spuAddr = 0;	// wrap
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -55,18 +56,18 @@ void SPUreadDMAMem(u32 usPSXMem,int iSize)
 // WRITE DMA (many values)
 ////////////////////////////////////////////////////////////////////////
 
-void SPUwriteDMAMem(u32 usPSXMem,int iSize)
+void SPUwriteDMAMem(u32 usPSXMem, int iSize)
 {
- int i;
+    int i;
 
- for(i=0;i<iSize;i++)
-  {
-   spuMem[spuAddr>>1] = *(u16 *)PSXM(usPSXMem);
-   usPSXMem+=2;                  			// spu addr got by writeregister
-   spuAddr+=2;                                         // inc spu addr
-   if(spuAddr>0x7ffff) spuAddr=0;                      // wrap
-  }
+    for (i = 0; i < iSize; i++)
+    {
+	spuMem[spuAddr >> 1] = *(u16 *) PSXM(usPSXMem);
+	usPSXMem += 2;		// spu addr got by writeregister
+	spuAddr += 2;		// inc spu addr
+	if (spuAddr > 0x7ffff)
+	    spuAddr = 0;	// wrap
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
-
