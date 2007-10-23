@@ -30,8 +30,6 @@
 
 #include "../../config.h"
 
-#define HAVE_AO
-
 #ifdef HAVE_AO
 # include <ao/ao.h>
 #endif
@@ -133,20 +131,24 @@ upse123_write_audio(unsigned char* data, long bytes)
     decode_position += ((bytes / 4 * 1000) / 44100);
     remaining = psf->length - decode_position;
 
-    printf("\033[00;36mTime:\033[0m %02d:%02d.%02d",
+    printf("\033[00;36mTime:\033[0m %02d:%02d.%02d%s",
          (int)(decode_position / 1000.0) / 60,
          (int)(decode_position / 1000.0) % 60,
-         (int)(decode_position / 10.0) % 100);
+         (int)(decode_position / 10.0) % 100,
+	 !psf->length ? "\r" : "");
 
-    printf(" [-%02d:%02d.%02d]",
-         (int)(remaining / 1000.0) / 60,
-         (int)(remaining / 1000.0) % 60,
-         (int)(remaining / 10.0) % 100);
+    if (psf->length)
+    {
+        printf(" [-%02d:%02d.%02d]",
+             (int)(remaining / 1000.0) / 60,
+             (int)(remaining / 1000.0) % 60,
+             (int)(remaining / 10.0) % 100);
 
-    printf(" of %02d:%02d.%02d\r",
-         (int)(psf->length / 1000.0) / 60,
-         (int)(psf->length / 1000.0) % 60,
-         (int)(psf->length / 10.0) % 100);
+        printf(" of %02d:%02d.%02d\r",
+             (int)(psf->length / 1000.0) / 60,
+             (int)(psf->length / 1000.0) % 60,
+             (int)(psf->length / 10.0) % 100);
+    }
 
     fflush(stdout);
 }
