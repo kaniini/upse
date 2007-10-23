@@ -28,6 +28,14 @@
 #include <sys/soundcard.h>
 #include <upse.h>
 
+#include "../../config.h"
+
+#define HAVE_AO
+
+#ifdef HAVE_AO
+# include <ao/ao.h>
+#endif
+
 static void *
 upse123_open_impl(char *path, char *mode)
 {
@@ -65,19 +73,62 @@ static upse_iofuncs_t upse123_iofuncs = {
     upse123_close_impl
 };
 
+#ifndef HAVE_AO
 static int oss_audio_fd = -1;
+#else
+static ao_device *ao_dev_ = NULL;
+static ao_option *ao_opts_ = NULL;
+#endif
+static char *audio_dev_ = NULL;
+
 static int decode_position = 0;
 static upse_psf_t *psf;
+
+#ifdef HAVE_AO
+int
+upse123_ao_add_option(ao_option **optv, const char *string)
+{
+    char *key, *value;
+    int ret;
+
+    if (string == NULL)
+        return 0;
+
+    key = strdup(string);
+    if (key == NULL)
+        return 0;
+
+    value = strchr(key, ':');
+    if (value == NULL)
+    {
+        free(key);
+        return 0;
+    }
+
+    *value++ = '\0';
+    ret = ao_append_option(optv, key, value);
+    free(key);
+
+    return ret;
+}
+#endif
 
 void 
 upse123_write_audio(unsigned char* data, long bytes)
 {
     int remaining;
 
+#ifndef HAVE_AO
     if (oss_audio_fd == -1)
         return;
 
     write(oss_audio_fd, data, bytes);
+#else
+    if (ao_dev_ == NULL)
+        return;
+
+    ao_play(ao_dev_, (char *) data, bytes);
+#endif
 
     decode_position += ((bytes / 4 * 1000) / 44100);
     remaining = psf->length - decode_position;
@@ -103,6 +154,7 @@ upse123_write_audio(unsigned char* data, long bytes)
 void
 upse123_init_audio(void)
 {
+#ifndef HAVE_AO
     int pspeed = 44100;
     int pstereo = 1;
     int format;
@@ -111,9 +163,7 @@ upse123_init_audio(void)
     oss_speed = pspeed;
     oss_stereo = pstereo;
 
-    decode_position = 0;
-
-    if ((oss_audio_fd = open("/dev/dsp1", O_WRONLY, 0)) == -1)
+    if ((oss_audio_fd = open(audio_dev_ != NULL ? audio_dev_ : "/dev/dsp", O_WRONLY, 0)) == -1)
     {
         printf("Sound device not available!\n");
         exit(EXIT_FAILURE);
@@ -156,6 +206,15 @@ upse123_init_audio(void)
         printf("Sound frequency not supported\n");
         exit(EXIT_FAILURE);
     }
+#else
+    ao_initialize();
+
+    {
+        ao_sample_format format_ = { 16, 44100, 2, AO_FMT_NATIVE };
+        ao_dev_ = ao_open_live(audio_dev_ != NULL ? ao_driver_id(audio_dev_) : ao_default_driver_id(),
+                               &format_, ao_opts_);
+    }
+#endif
 
     upse_set_audio_callback(upse123_write_audio);
 }
@@ -165,8 +224,20 @@ upse123_close_audio(void)
 {
     upse_set_audio_callback(NULL);
 
+#ifndef HAVE_AO
     if (oss_audio_fd > 0)
         close(oss_audio_fd);
+
+    oss_audio_fd = -1;
+#else
+    ao_close(ao_dev_);
+    ao_dev_ = NULL;
+
+    ao_free_options(ao_opts_);
+    ao_opts_ = NULL;
+
+    ao_shutdown();
+#endif
 }
 
 void
@@ -178,30 +249,69 @@ upse123_print_field(char *field, char *data)
     printf("\033[00;36m%-20s\033[01;36m|\033[0m %s\n", field, data);
 }
 
+void
+usage(const char *progname)
+{
+    printf("\nUsage: %s [options] files - plays PSF files\n\n", progname);
+#ifdef HAVE_AO
+    printf("  -o        Sets an audio device option.\n");
+#endif
+    printf("  -d        Sets the audio output device to use.\n");
+#ifdef HAVE_AO
+    printf("            Use a sound system name like 'oss', 'alsa' or 'esd' here.\n");
+#else
+    printf("            Use a path to your OSS /dev/dsp here. (default: /dev/dsp)\n");
+#endif
+    printf("  -h        Displays this message.\n");
+    printf("\nReport bugs to <" PACKAGE_BUGREPORT ">.\n");
+
+    exit(EXIT_SUCCESS);
+}
+
 int
 main(int argc, char *argv[])
 {
     int i;
-
-    if (argc < 2)
-    {
-        printf("%s: usage: %s <psf file>\n", argv[0], argv[0]);
-        return -1;
-    }
+    char r;
 
     printf("\033[K\033[01;36mUPSE123\033[00;36m: High quality PSF player.\033[0m\n");
     printf("\033[K\033[00;36mCopyright (C) 2007 William Pitcock <nenolod@sacredspiral.co.uk>\033[0m\n");
     printf("\n\033[01mUPSE123 is free software; licensed under the GNU GPL version 2.\nAs such, NO WARRANTY IS PROVIDED. USE AT YOUR OWN RISK!\033[0m\n");
 
-    for (i = 1; i < argc; i++)
+    while ((r = getopt(argc, argv, "ho:d:")) >= 0)
     {
-        upse123_init_audio();
+        switch(r) {
+            case 'h':
+                usage(argv[0]);
+                return 0;
+                break;
+#ifdef HAVE_AO
+            case 'o':
+                upse123_ao_add_option(&ao_opts_, optarg);
+                break;
+#endif
+            case 'd':
+                audio_dev_ = strdup(optarg);
+                break;
+            default:
+                break;
+        }
+    }
 
+    upse123_init_audio();
+
+    if (argc - optind <= 0)
+        usage(argv[0]);
+
+    for (i = optind; i < argc; i++)
+    {
         if ((psf = upse_load(argv[i], &upse123_iofuncs)) == NULL)
         {
             printf("%s: failed to load `%s'\n", argv[0], argv[1]);
             continue;
         }
+
+        decode_position = 0;
 
         printf("\nInformation about \033[01m%s\033[00;0m:\n\n", argv[i]);
 
@@ -217,9 +327,9 @@ main(int argc, char *argv[])
 
         upse_execute();
         upse_free_psf_metadata(psf);
-
-        upse123_close_audio();
     }
+
+    upse123_close_audio();
 
     return 0;
 }

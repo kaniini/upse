@@ -8,5 +8,5 @@ include ../../extra.mk
 plugindir := ${plugindir}/${INPUT_PLUGIN_DIR}
 
 CFLAGS += 
-CPPFLAGS += -I../libupse
-LIBS += -lz -L../libupse -lupse
+CPPFLAGS += $(AO_CFLAGS) -I../libupse
+LIBS += -lz -L../libupse -lupse $(AO_LIBS)

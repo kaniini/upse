@@ -110,6 +110,10 @@ PKG_CHECK_MODULES(AUDACIOUS, [audacious >= 1.3.99],
 )
 AC_SUBST(UPSE_TARGET_AUD)
 
+PKG_CHECK_MODULES(AO, [audacious >= 1.3.99],
+    [AC_DEFINE(HAVE_AO, 1, [Define this if you have AO.])]
+)
+
 PKG_CHECK_MODULES(MOWGLI, [libmowgli >= 0.2.0],
     [ADD_PC_REQUIRES([libmowgli >= 0.2.0])],
     [AC_MSG_ERROR([Cannot find libmowgli >= 0.2.0])]
