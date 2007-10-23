@@ -1,0 +1,46 @@
+list of things to do...
+
+libupse (emulation core):
+   - seperate public API into their own files
+   - lots of stuff is in various static variables littered around
+     the source, turn that into a struct upse_state_t so that multiple
+     upse sessions can run at once
+   - implement ADSR filter dithering for 44100->22050kHZ transcoding,
+     interpolation SUCKS here -- many bits are simply lost
+   - make it possible to trap CPU and SPU instructions at runtime,
+     and expose public APIs for doing so
+   - implement config parser, and support for .upserc
+   - check my math on the differential interpolation phase (is it
+     different on PSone than it is on PS2/PSX? some say PSone uses
+     a logarhythmic method...)
+   - find out why crash bandicoot sets fail
+   - improve tracing
+   - PSone MIDI extensions
+   - lots of dead code: find and kill
+   - document the public API (doxygen)
+
+wishlist:
+   - code-level debugger?
+   - PSF autoripping tool
+   - implement missing PS2 bits from PCSX2 (lu_zero says he is possibly
+     interested in this) -- but this isn't so big as most PS2 games use
+     AAC or ATRAC files -- only like 20 games actually use mods
+   - winamp and/or foobar2000 plugins?
+
+upse123:
+   - handle audio system errors better (right now we lock up solid)
+
+upse-audacious:
+   - find out why libupse chews CPU like bollocks here but not in upse123
+   - configuration dialog
+
+upse-xmms:
+   - implement once upse-audacious is complete
+
+upse-xmms2:
+   - implement? is it worth it?
+
+gst-upse:
+   - implement so that gst users get quality PSF playback!
+     + pick deadchip's brain on how best to handle upse's callback design
+
