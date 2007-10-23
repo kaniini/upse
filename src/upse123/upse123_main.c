@@ -66,14 +66,38 @@ static upse_iofuncs_t upse123_iofuncs = {
 };
 
 static int oss_audio_fd = -1;
+static int decode_position = 0;
+static upse_psf_t *psf;
 
 void 
 upse123_write_audio(unsigned char* data, long bytes)
 {
+    int remaining;
+
     if (oss_audio_fd == -1)
         return;
 
     write(oss_audio_fd, data, bytes);
+
+    decode_position += ((bytes / 4 * 1000) / 44100);
+    remaining = psf->length - decode_position;
+
+    printf("\033[00;36mTime:\033[0m %02d:%02d.%02d",
+         (int)(decode_position / 1000.0) / 60,
+         (int)(decode_position / 1000.0) % 60,
+         (int)(decode_position / 10.0) % 100);
+
+    printf(" [-%02d:%02d.%02d]",
+         (int)(remaining / 1000.0) / 60,
+         (int)(remaining / 1000.0) % 60,
+         (int)(remaining / 10.0) % 100);
+
+    printf(" of %02d:%02d.%02d\r",
+         (int)(psf->length / 1000.0) / 60,
+         (int)(psf->length / 1000.0) % 60,
+         (int)(psf->length / 10.0) % 100);
+
+    fflush(stdout);
 }
 
 void
@@ -86,6 +110,8 @@ upse123_init_audio(void)
 
     oss_speed = pspeed;
     oss_stereo = pstereo;
+
+    decode_position = 0;
 
     if ((oss_audio_fd = open("/dev/dsp1", O_WRONLY, 0)) == -1)
     {
@@ -155,7 +181,6 @@ upse123_print_field(char *field, char *data)
 int
 main(int argc, char *argv[])
 {
-    upse_psf_t *psf;
     int i;
 
     if (argc < 2)
@@ -168,10 +193,10 @@ main(int argc, char *argv[])
     printf("\033[K\033[00;36mCopyright (C) 2007 William Pitcock <nenolod@sacredspiral.co.uk>\033[0m\n");
     printf("\n\033[01mUPSE123 is free software; licensed under the GNU GPL version 2.\nAs such, NO WARRANTY IS PROVIDED. USE AT YOUR OWN RISK!\033[0m\n");
 
-    upse123_init_audio();
-
     for (i = 1; i < argc; i++)
     {
+        upse123_init_audio();
+
         if ((psf = upse_load(argv[i], &upse123_iofuncs)) == NULL)
         {
             printf("%s: failed to load `%s'\n", argv[0], argv[1]);
@@ -188,11 +213,13 @@ main(int argc, char *argv[])
         upse123_print_field("Ripper", psf->psfby);
         upse123_print_field("Copyright", psf->copyright);
 
+	printf("\n");
+
         upse_execute();
         upse_free_psf_metadata(psf);
-    }
 
-    upse123_close_audio();
+        upse123_close_audio();
+    }
 
     return 0;
 }
