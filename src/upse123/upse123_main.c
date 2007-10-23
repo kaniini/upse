@@ -264,6 +264,7 @@ usage(const char *progname)
 #else
     printf("            Use a path to your OSS /dev/dsp here. (default: /dev/dsp)\n");
 #endif
+    printf("  -p [secs] Pauses [secs] between songs.\n");
     printf("  -h        Displays this message.\n");
     printf("\nReport bugs to <" PACKAGE_BUGREPORT ">.\n");
 
@@ -275,6 +276,7 @@ main(int argc, char *argv[])
 {
     int i;
     char r;
+    int sleep_value_ = 0;
 
     printf("\033[K\033[01;36mUPSE123\033[00;36m: High quality PSF player.\033[0m\n");
     printf("\033[K\033[00;36mCopyright (C) 2007 William Pitcock <nenolod@sacredspiral.co.uk>\033[0m\n");
@@ -294,6 +296,9 @@ main(int argc, char *argv[])
 #endif
             case 'd':
                 audio_dev_ = strdup(optarg);
+                break;
+            case 's':
+                sleep_value_ = atoi(optarg);
                 break;
             default:
                 break;
@@ -329,6 +334,9 @@ main(int argc, char *argv[])
 
         upse_execute();
         upse_free_psf_metadata(psf);
+
+        if (sleep_value_)
+            sleep(sleep_value_);
     }
 
     upse123_close_audio();
