@@ -135,9 +135,9 @@ upse123_write_audio(unsigned char* data, long bytes)
          (int)(decode_position / 1000.0) / 60,
          (int)(decode_position / 1000.0) % 60,
          (int)(decode_position / 10.0) % 100,
-	 !psf->length ? "\r" : "");
+	 psf->length == -1 ? "\r" : "");
 
-    if (psf->length)
+    if (psf->length != -1)
     {
         printf(" [-%02d:%02d.%02d]",
              (int)(remaining / 1000.0) / 60,
