@@ -271,8 +271,7 @@ static upse_psf_t *_upse_load(char *path, int level, int type)	// Type==1 for ju
     if (memcmp(head, "PSF\x01", 4))
 	return NULL;
 
-    psfi = malloc(sizeof(upse_psf_t));
-    memset(psfi, 0, sizeof(upse_psf_t));
+    psfi = calloc(sizeof(upse_psf_t), 1);
     psfi->stop = ~0;
     psfi->fade = 0;
 
