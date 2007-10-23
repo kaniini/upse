@@ -110,7 +110,7 @@ PKG_CHECK_MODULES(AUDACIOUS, [audacious >= 1.3.99],
 )
 AC_SUBST(UPSE_TARGET_AUD)
 
-PKG_CHECK_MODULES(AO, [audacious >= 1.3.99],
+PKG_CHECK_MODULES(AO, [ao],
     [AC_DEFINE(HAVE_AO, 1, [Define this if you have AO.])]
 )
 
