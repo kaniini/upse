@@ -1,7 +1,8 @@
 Thanks to:
     Michael "mf0102" Farber, for testing coefficients, and speaking up
-    when they were CLEARLY WRONG. upse would not sound the way it does
-    without his help.
+    when they were CLEARLY WRONG, writing patches and trying to break
+    the emulation code. upse would not sound the way it does without
+    his help, and probably would not be nearly as accurate.
 
     Xodnizel, for writing SexyPSF, which provided for some motivation
     for writing a PSF replayer.
