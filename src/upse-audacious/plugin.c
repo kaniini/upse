@@ -32,7 +32,6 @@
 static volatile int seek = 0;
 
 extern InputPlugin upse_ip;
-static gboolean audio_error = FALSE;
 
 static upse_psf_t *upse_psf = NULL;
 static InputPlayback *playback = NULL;
@@ -154,7 +153,7 @@ static void upse_aud_play(InputPlayback *data)
 
     if (!playback->output->open_audio(FMT_S16_NE, 44100, 2))
     {
-        audio_error = TRUE;
+        playback->error = TRUE;
         return;
     }
 
