@@ -86,6 +86,9 @@ void upse_aud_update(unsigned char *buffer, long count)
         {
             if (t)
                 playback->pass_audio(playback, FMT_S16_NE, 2, t, buffer, &playback->playing);
+
+            /* XXX: wait for the buffer to drain */
+            g_usleep((count - t)*1000*5/441/2);
         }
         count -= t;
         buffer += t;
