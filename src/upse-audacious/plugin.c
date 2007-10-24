@@ -118,7 +118,6 @@ static gpointer upse_playloop(gpointer arg)
         upse_execute();
 
         /* we have reached the end of the song or a command was issued */
-
         playback->output->buffer_free();
         playback->output->buffer_free();
 
@@ -135,8 +134,9 @@ static gpointer upse_playloop(gpointer arg)
             continue;
         }
 
-        // timeout at the end of a file
-        sleep(4);
+        while (playback->output->buffer_playing())
+             g_usleep(10000);
+
         break;
     }
 
