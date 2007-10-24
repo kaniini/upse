@@ -90,6 +90,7 @@ void upse_aud_update(unsigned char *buffer, long count)
             /* XXX: wait for the buffer to drain */
             g_usleep((count - t)*1000*5/441/2);
         }
+
         count -= t;
         buffer += t;
     }
@@ -134,6 +135,8 @@ static gpointer upse_playloop(gpointer arg)
             continue;
         }
 
+        // timeout at the end of a file
+        sleep(4);
         break;
     }
 
@@ -216,10 +219,10 @@ static Tuple *get_aud_tuple_psf(gchar *fn) {
 
     if (tmp->length) {
         tuple = aud_tuple_new_from_filename(fn);
-	aud_tuple_associate_int(tuple, FIELD_LENGTH, NULL, tmp->length);
-	aud_tuple_associate_string(tuple, FIELD_ARTIST, NULL, tmp->artist);
-	aud_tuple_associate_string(tuple, FIELD_ALBUM, NULL, tmp->game);
-	aud_tuple_associate_string(tuple, -1, "game", tmp->game);
+        aud_tuple_associate_int(tuple, FIELD_LENGTH, NULL, tmp->length);
+        aud_tuple_associate_string(tuple, FIELD_ARTIST, NULL, tmp->artist);
+        aud_tuple_associate_string(tuple, FIELD_ALBUM, NULL, tmp->game);
+        aud_tuple_associate_string(tuple, -1, "game", tmp->game);
         aud_tuple_associate_string(tuple, FIELD_TITLE, NULL, tmp->title);
         aud_tuple_associate_string(tuple, FIELD_GENRE, NULL, tmp->genre);
         aud_tuple_associate_string(tuple, FIELD_COPYRIGHT, NULL, tmp->copyright);
@@ -251,22 +254,22 @@ static gchar *get_title_psf(gchar *fn) {
 
 static void upse_aud_about(void) {
     audacious_info_dialog("About " PACKAGE_STRING,
-       PACKAGE " is a plugin and emulation library which produces near-bit-exact\n"
-       "output comparable to a PlayStation. It can be used to play chiptunes, and other\n"
-       "fun things.\n"
-       "\n"
-       "Find out more at http://carpathia.dereferenced.org/~nenolod/upse\n"
-       "\n"
-       PACKAGE_STRING " is licensed to you under the GNU General Public License, \n"
-       "version 2. A copy of this license is included in the " PACKAGE " source kit,\n"
-       "or on the internet at <http://www.gnu.org/licenses>.\n"
-       "\n"
-       "Talk about " PACKAGE " in it's very own forum! <http://boards.nenolod.net>\n"
-       "Report bugs in " PACKAGE " to <" PACKAGE_BUGREPORT ">.",
-       "Close",
-       FALSE,
-       G_CALLBACK(gtk_widget_destroy),
-       NULL);
+                          PACKAGE " is a plugin and emulation library which produces near-bit-exact\n"
+                          "output comparable to a PlayStation. It can be used to play chiptunes, and other\n"
+                          "fun things.\n"
+                          "\n"
+                          "Find out more at http://carpathia.dereferenced.org/~nenolod/upse\n"
+                          "\n"
+                          PACKAGE_STRING " is licensed to you under the GNU General Public License, \n"
+                          "version 2. A copy of this license is included in the " PACKAGE " source kit,\n"
+                          "or on the internet at <http://www.gnu.org/licenses>.\n"
+                          "\n"
+                          "Talk about " PACKAGE " in it's very own forum! <http://boards.nenolod.net>\n"
+                          "Report bugs in " PACKAGE " to <" PACKAGE_BUGREPORT ">.",
+                          "Close",
+                          FALSE,
+                          G_CALLBACK(gtk_widget_destroy),
+                          NULL);
 }
 
 gchar *upse_fmts[] = { "psf", "minipsf", NULL };
