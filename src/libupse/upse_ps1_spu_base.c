@@ -607,15 +607,18 @@ void upse_stop(void)
 }
 
 static upse_audio_callback_func_t _upse_audio_callback_f = NULL;
+static void *_upse_audio_cb_user_data = NULL;
 
-void upse_set_audio_callback(upse_audio_callback_func_t func)
+void upse_set_audio_callback(upse_audio_callback_func_t func, void *user_data)
 {
 
     _ENTER;
 
     _upse_audio_callback_f = func;
+    _upse_audio_cb_user_data = user_data;
 
     _DEBUG("set audio callback function to <%p>", _upse_audio_callback_f);
+    _DEBUG("set audio callback userdata to <%p>", _upse_audio_cb_user_data);
 
     _LEAVE;
 }
@@ -647,12 +650,12 @@ void SPUendflush(void)
 	pS = (s16 *) pSpuBuffer;
 
 	if (_upse_audio_callback_f)
-	    _upse_audio_callback_f(0, 0);
+	    _upse_audio_callback_f(0, 0, _upse_audio_cb_user_data);
     }
     else if ((u8 *) pS > ((u8 *) pSpuBuffer + 1024))
     {
 	if (_upse_audio_callback_f)
-	    _upse_audio_callback_f((u8 *) pSpuBuffer, (u8 *) pS - (u8 *) pSpuBuffer);
+	    _upse_audio_callback_f((u8 *) pSpuBuffer, (u8 *) pS - (u8 *) pSpuBuffer, _upse_audio_cb_user_data);
 
 	pS = (s16 *) pSpuBuffer;
     }
