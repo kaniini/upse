@@ -5,8 +5,6 @@
  * Purpose: Glue to Audacious' 1.4 Component API.
  *
  * Copyright (c) 2007 William Pitcock <nenolod@sacredspiral.co.uk>
- * Portions copyright (c) 1999-2002 Pcsx Team
- * Portions copyright (c) 2004 "Xodnizel"
  *
  * UPSE is free software, released under the GNU General Public License,
  * version 2.
@@ -32,9 +30,6 @@
 static volatile int seek = 0;
 
 extern InputPlugin upse_ip;
-
-static upse_psf_t *upse_psf = NULL;
-static InputPlayback *playback = NULL;
 
 static gchar *get_title_psf(gchar *fn);
 
@@ -71,8 +66,9 @@ static int is_our_fd(gchar *filename, VFSFile *file) {
     return 0;
 }
 
-void upse_aud_update(unsigned char *buffer, long count)
+void upse_aud_update(unsigned char *buffer, long count, gpointer data)
 {
+    InputPlayback *playback = (InputPlayback *) data;
     const int mask = ~((((16 / 8) * 2)) - 1);
 
     while (count > 0)
@@ -93,6 +89,7 @@ void upse_aud_update(unsigned char *buffer, long count)
         count -= t;
         buffer += t;
     }
+
     if (seek)
     {
         if(upse_seek(seek))
@@ -106,13 +103,41 @@ void upse_aud_update(unsigned char *buffer, long count)
             return;
         }
     }
+
     if (playback->playing == FALSE)
         upse_stop();
 }
 
-static gpointer upse_playloop(gpointer arg)
+static void upse_aud_play(InputPlayback *playback)
 {
-    while (TRUE)
+    upse_psf_t *psf;
+    gchar *name;
+
+    if(!(playback->data = upse_load(playback->filename, &upse_aud_iofuncs)))
+        return;
+
+    psf = (upse_psf_t *) playback->data;
+
+    seek = 0;
+
+    /* XXX */
+    name = get_title_psf(playback->filename);
+    playback->set_params(playback, name, psf->length, 44100 * 2 * 2 * 8, 44100, 2);
+    g_free(name);
+
+    if (!playback->output->open_audio(FMT_S16_NE, 44100, 2))
+    {
+        upse_free_psf_metadata(psf);
+        playback->error = TRUE;
+        return;
+    }
+
+    upse_set_audio_callback(upse_aud_update, playback);
+
+    playback->playing = TRUE;
+    playback->set_pb_ready(playback);
+
+    for (;;)
     {
         upse_execute();
 
@@ -126,15 +151,17 @@ static gpointer upse_playloop(gpointer arg)
         if (seek)
         {
             playback->output->flush(seek);
-            if(!(upse_psf = upse_load(playback->filename, &upse_aud_iofuncs)))
+
+            if(!(playback->data = upse_load(playback->filename, &upse_aud_iofuncs)))
                 break;
+
             upse_seek(seek); 
             seek = 0;
             continue;
         }
 
         while (playback->output->buffer_playing())
-             g_usleep(10000);
+            g_usleep(10000);
 
         break;
     }
@@ -142,40 +169,9 @@ static gpointer upse_playloop(gpointer arg)
     playback->output->close_audio();
     playback->playing = FALSE;
     playback->eof = TRUE;
-    return NULL;
 }
 
-static void upse_aud_play(InputPlayback *data)
-{
-    playback = data;
-
-    upse_set_audio_callback(upse_aud_update);
-
-    if (!playback->output->open_audio(FMT_S16_NE, 44100, 2))
-    {
-        playback->error = TRUE;
-        return;
-    }
-
-    if(!(upse_psf = upse_load(data->filename, &upse_aud_iofuncs)))
-    {
-        playback->output->close_audio();
-    }
-    else
-    {
-        seek = 0;
-
-        gchar *name = get_title_psf(data->filename);
-        data->set_params(data, name, upse_psf->length, 44100*2*2*8, 44100, 2);
-        g_free(name);
-
-        playback->playing = TRUE;
-        data->set_pb_ready(data);
-        upse_playloop(NULL);
-    }
-}
-
-static void upse_aud_stop(InputPlayback * playback)
+static void upse_aud_stop(InputPlayback *playback)
 {
     if (!playback->playing)
         return;
@@ -184,8 +180,7 @@ static void upse_aud_stop(InputPlayback * playback)
     playback->playing = FALSE;
     g_thread_join(playback->thread);
 
-    upse_free_psf_metadata(upse_psf);
-    upse_psf = NULL;
+    upse_free_psf_metadata(playback->data);
 }
 
 static void upse_aud_pause(InputPlayback *playback, short p)
@@ -193,7 +188,7 @@ static void upse_aud_pause(InputPlayback *playback, short p)
     playback->output->pause(p);
 }
 
-static void upse_aud_seek(InputPlayback * data, int time)
+static void upse_aud_seek(InputPlayback *playback, int time)
 {
     if (!playback->playing)
         return;

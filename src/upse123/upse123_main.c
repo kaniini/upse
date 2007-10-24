@@ -112,7 +112,7 @@ upse123_ao_add_option(ao_option **optv, const char *string)
 #endif
 
 void 
-upse123_write_audio(unsigned char* data, long bytes)
+upse123_write_audio(unsigned char* data, long bytes, void *unused)
 {
     int remaining;
 
@@ -218,13 +218,13 @@ upse123_init_audio(void)
     }
 #endif
 
-    upse_set_audio_callback(upse123_write_audio);
+    upse_set_audio_callback(upse123_write_audio, NULL);
 }
 
 void
 upse123_close_audio(void)
 {
-    upse_set_audio_callback(NULL);
+    upse_set_audio_callback(NULL, NULL);
 
 #ifndef HAVE_AO
     if (oss_audio_fd > 0)
