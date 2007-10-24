@@ -18,6 +18,8 @@ libupse (emulation core):
    - PSone MIDI extensions
    - lots of dead code: find and kill
    - document the public API (doxygen)
+   - gaussian curve used to start post-mix interpolation is probably
+     wrong
 
 wishlist:
    - code-level debugger?
@@ -31,8 +33,9 @@ upse123:
    - handle audio system errors better (right now we lock up solid)
 
 upse-audacious:
-   - find out why libupse chews CPU like bollocks here but not in upse123
    - configuration dialog
+   - something in libupse is not thread safe (well, duh, it's an emulator)
+     guard with a mutex until state is not global?
 
 upse-xmms:
    - implement once upse-audacious is complete
