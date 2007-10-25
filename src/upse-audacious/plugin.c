@@ -29,9 +29,8 @@
 
 static volatile int seek = 0;
 
-extern InputPlugin upse_ip;
-
-static gchar *get_title_psf(gchar *fn);
+static Tuple *upse_aud_get_tuple_psf(const gchar *fn, upse_psf_t *psf);
+static gchar *upse_aud_get_title_psf(const gchar *fn, upse_psf_t *psf);
 
 static void *upse_aud_open_impl(gchar *path, gchar *mode) {
     return aud_vfs_fopen(path, mode);
@@ -121,7 +120,7 @@ static void upse_aud_play(InputPlayback *playback)
     seek = 0;
 
     /* XXX */
-    name = get_title_psf(playback->filename);
+    name = upse_aud_get_title_psf(playback->filename, psf);
     playback->set_params(playback, name, psf->length, 44100 * 2 * 2 * 8, 44100, 2);
     g_free(name);
 
@@ -202,39 +201,48 @@ static void upse_aud_getsonginfo(char *fn, char **title, int *length)
 
     if((tmp = upse_get_psf_metadata(fn, &upse_aud_iofuncs))) {
         *length = tmp->length;
-        *title = get_title_psf(fn);
+        *title = upse_aud_get_title_psf(fn, tmp);
         upse_free_psf_metadata(tmp);
     }
 }
 
-static Tuple *get_aud_tuple_psf(gchar *fn) {
+static Tuple *upse_aud_get_tuple_psf(const gchar *fn, upse_psf_t *psf) {
     Tuple *tuple = NULL;
-    upse_psf_t *tmp = upse_get_psf_metadata(fn, &upse_aud_iofuncs);
 
-    if (tmp->length) {
+    if (psf->length) {
         tuple = aud_tuple_new_from_filename(fn);
-        aud_tuple_associate_int(tuple, FIELD_LENGTH, NULL, tmp->length);
-        aud_tuple_associate_string(tuple, FIELD_ARTIST, NULL, tmp->artist);
-        aud_tuple_associate_string(tuple, FIELD_ALBUM, NULL, tmp->game);
-        aud_tuple_associate_string(tuple, -1, "game", tmp->game);
-        aud_tuple_associate_string(tuple, FIELD_TITLE, NULL, tmp->title);
-        aud_tuple_associate_string(tuple, FIELD_GENRE, NULL, tmp->genre);
-        aud_tuple_associate_string(tuple, FIELD_COPYRIGHT, NULL, tmp->copyright);
+        aud_tuple_associate_int(tuple, FIELD_LENGTH, NULL, psf->length);
+        aud_tuple_associate_string(tuple, FIELD_ARTIST, NULL, psf->artist);
+        aud_tuple_associate_string(tuple, FIELD_ALBUM, NULL, psf->game);
+        aud_tuple_associate_string(tuple, -1, "game", psf->game);
+        aud_tuple_associate_string(tuple, FIELD_TITLE, NULL, psf->title);
+        aud_tuple_associate_string(tuple, FIELD_GENRE, NULL, psf->genre);
+        aud_tuple_associate_string(tuple, FIELD_COPYRIGHT, NULL, psf->copyright);
         aud_tuple_associate_string(tuple, FIELD_QUALITY, NULL, "sequenced");
         aud_tuple_associate_string(tuple, FIELD_CODEC, NULL, "PlayStation Audio");
         aud_tuple_associate_string(tuple, -1, "console", "PlayStation");
-        aud_tuple_associate_string(tuple, -1, "dumper", tmp->psfby);
-        aud_tuple_associate_string(tuple, FIELD_COMMENT, NULL, tmp->comment);
-
-        upse_free_psf_metadata(tmp);
+        aud_tuple_associate_string(tuple, -1, "dumper", psf->psfby);
+        aud_tuple_associate_string(tuple, FIELD_COMMENT, NULL, psf->comment);
     }
 
     return tuple;
 }   
 
-static gchar *get_title_psf(gchar *fn) {
+static Tuple *get_tuple_psf(gchar *fn) {
+    upse_psf_t *psf = upse_get_psf_metadata(fn, &upse_aud_iofuncs);
+
+    if (psf != NULL) {
+        Tuple *ret = upse_aud_get_tuple_psf(fn, psf);
+        upse_free_psf_metadata(psf);
+        return ret;
+    }
+
+    return NULL;
+}
+
+static gchar *upse_aud_get_title_psf(const gchar *fn, upse_psf_t *psf) {
     gchar *title = NULL;
-    Tuple *tuple = get_aud_tuple_psf(fn);
+    Tuple *tuple = upse_aud_get_tuple_psf(fn, psf);
 
     if (tuple != NULL) {
         title = aud_tuple_formatter_make_title_string(tuple, aud_get_gentitle_format());
@@ -277,7 +285,7 @@ InputPlugin upse_ip =
     .pause = upse_aud_pause,
     .seek = upse_aud_seek,
     .get_song_info = upse_aud_getsonginfo,
-    .get_song_tuple = get_aud_tuple_psf,
+    .get_song_tuple = get_tuple_psf,
     .is_our_file_from_vfs = is_our_fd,
     .vfs_extensions = upse_fmts,
 };
