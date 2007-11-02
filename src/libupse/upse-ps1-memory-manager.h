@@ -78,9 +78,9 @@ extern char **upse_ps1_memory_LUT;
 #define PSXMuR8(mem)        (PSXM(mem)?PSXMu8(mem):0)
 #define PSXMuW8(mem,val)    (PSXM(mem)?PSXMu8(mem)=val:;)
 
-int upse_ps1_memory_Init();
-void upse_ps1_memory_Reset();
-void upse_ps1_memory_Shutdown();
+int upse_ps1_memory_init();
+void upse_ps1_memory_reset();
+void upse_ps1_memory_shutdown();
 
 u8 upse_ps1_memory_read_8(u32 mem);
 u16 upse_ps1_memory_read_16(u32 mem);

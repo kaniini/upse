@@ -29,7 +29,7 @@
 #define HW_DMA_PCR   (psxHu32(0x10f0))
 #define HW_DMA_ICR   (psxHu32(0x10f4))
 
-void upse_ps1_hal_Reset()
+void upse_ps1_hal_reset()
 {
     memset(psxH, 0, 0x10000);
     psxRcntInit();

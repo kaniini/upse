@@ -60,7 +60,7 @@ void LoadPSXMem(u32 address, s32 length, unsigned char *data)
 }
 
 static int writeok;
-int upse_ps1_memory_Init()
+int upse_ps1_memory_init()
 {
     int i;
 
@@ -97,13 +97,13 @@ int upse_ps1_memory_Init()
     return 0;
 }
 
-void upse_ps1_memory_Reset()
+void upse_ps1_memory_reset()
 {
     memset(psxM, 0, 0x00200000);
     memset(psxP, 0, 0x00010000);
 }
 
-void upse_ps1_memory_Shutdown()
+void upse_ps1_memory_shutdown()
 {
     if (psxM)
 	free(psxM);
