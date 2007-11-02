@@ -193,7 +193,7 @@ static INLINE void softCall(u32 pc)
     pc0 = pc;
     ra = 0x80001000;
     while (pc0 != 0x80001000)
-	psxCpu->ExecuteBlock();
+	upse_r3000_cpu_execute_block();
 }
 
 static INLINE void softCall2(u32 pc)
@@ -202,7 +202,7 @@ static INLINE void softCall2(u32 pc)
     pc0 = pc;
     ra = 0x80001000;
     while (pc0 != 0x80001000)
-	psxCpu->ExecuteBlock();
+	upse_r3000_cpu_execute_block();
     ra = sra;
 }
 

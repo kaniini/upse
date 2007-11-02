@@ -1061,17 +1061,17 @@ psxMFC0, psxNULL, psxCFC0, psxNULL, psxMTC0, psxNULL, psxCTC0, psxNULL,
 
 ///////////////////////////////////////////
 
-static int intInit()
+int upse_r3000_cpu_init(void)
 {
     return 0;
 }
 
-static void intReset()
+void upse_r3000_cpu_reset(void)
 {
     branch = branch2 = 0;
 }
 
-static void intExecute()
+void upse_r3000_cpu_execute(void)
 {
     for (;;)
     {
@@ -1085,26 +1085,17 @@ static void intExecute()
     }
 }
 
-static void intExecuteBlock()
+void upse_r3000_cpu_execute_block(void)
 {
     branch2 = 0;
     while (!branch2)
 	execI();
 }
 
-static void intClear(u32 Addr, u32 Size)
+void upse_r3000_cpu_clear(u32 Addr, u32 Size)
 {
 }
 
-static void intShutdown()
+void upse_r3000_cpu_shutdown(void)
 {
 }
-
-upse_r3000_cpu_t psxInt = {
-    intInit,
-    intReset,
-    intExecute,
-    intExecuteBlock,
-    intClear,
-    intShutdown
-};

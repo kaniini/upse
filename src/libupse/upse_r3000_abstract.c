@@ -24,22 +24,18 @@
 #include "upse-internal.h"
 
 upse_r3000_cpu_registers_t upse_r3000_cpu_regs;
-upse_r3000_cpu_t *psxCpu;
 
 int psxInit()
 {
-
-    psxCpu = &psxInt;
-
     if (psxMemInit() == -1)
 	return -1;
 
-    return psxCpu->Init();
+    return upse_r3000_cpu_init();
 }
 
 void psxReset()
 {
-    psxCpu->Reset();
+    upse_r3000_cpu_reset();
     psxMemReset();
 
     memset(&upse_r3000_cpu_regs, 0, sizeof(upse_r3000_cpu_regs));
@@ -57,7 +53,7 @@ void psxShutdown()
     psxMemShutdown();
     psxBiosShutdown();
 
-    psxCpu->Shutdown();
+    upse_r3000_cpu_shutdown();
     SPUclose();
 }
 
@@ -107,5 +103,5 @@ void psxBranchTest()
 void psxExecuteBios()
 {
     while (upse_r3000_cpu_regs.pc != 0x80030000)
-	psxCpu->ExecuteBlock();
+        upse_r3000_cpu_execute_block();
 }

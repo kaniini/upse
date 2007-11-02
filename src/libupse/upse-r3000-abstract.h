@@ -24,19 +24,6 @@
 
 #include "upse-internal.h"
 
-typedef struct
-{
-    int (*Init) ();
-    void (*Reset) ();
-    void (*Execute) ();		/* executes up to a break */
-    void (*ExecuteBlock) ();	/* executes up to a jump */
-    void (*Clear) (u32 Addr, u32 Size);
-    void (*Shutdown) ();
-} upse_r3000_cpu_t;
-
-extern upse_r3000_cpu_t *psxCpu;
-extern upse_r3000_cpu_t psxInt;
-
 typedef union
 {
     struct
@@ -118,5 +105,12 @@ void psxShutdown();
 void psxException(u32 code, u32 bd);
 void psxBranchTest();
 void psxExecuteBios();
+
+int upse_r3000_cpu_init(void);
+void upse_r3000_cpu_reset(void);
+void upse_r3000_cpu_execute(void);
+void upse_r3000_cpu_execute_block(void);
+void upse_r3000_cpu_clear(u32 Addr, u32 Size);
+void upse_r3000_cpu_shutdown(void);
 
 #endif /* __R3000A_H__ */

@@ -524,7 +524,7 @@ void upse_execute(void)
 {
     _ENTER;
 
-    psxCpu->Execute();
+    upse_r3000_cpu_execute();
 
     _LEAVE;
 }
