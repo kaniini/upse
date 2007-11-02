@@ -1112,7 +1112,7 @@ void (*biosA0[256]) ();
 void (*biosB0[256]) ();
 void (*biosC0[256]) ();
 
-void psxBiosInit()
+void upse_ps1_bios_init()
 {
     u32 base, size;
     u32 *ptr;
@@ -1397,7 +1397,7 @@ void psxBiosInit()
     psxMu32(0x0894) = BFLIP32((0x3b << 26) | 0);
 }
 
-void psxBiosShutdown()
+void upse_ps1_bios_shutdown()
 {
 }
 
@@ -1438,7 +1438,7 @@ static INLINE void SaveRegs()
     regs[34] = upse_r3000_cpu_regs.pc;
 }
 
-void psxBiosException()
+void upse_ps1_bios_exception()
 {
     int i;
 

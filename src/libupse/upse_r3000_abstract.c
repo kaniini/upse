@@ -45,13 +45,13 @@ void psxReset()
     upse_r3000_cpu_regs.CP0.r[15] = 0x00000002;	// PRevID = Revision ID, same as R3000A
 
     upse_ps1_hal_reset();
-    psxBiosInit();
+    upse_ps1_bios_init();
 }
 
 void psxShutdown()
 {
     upse_ps1_memory_shutdown();
-    psxBiosShutdown();
+    upse_ps1_bios_shutdown();
 
     upse_r3000_cpu_shutdown();
     SPUclose();
@@ -83,7 +83,7 @@ void psxException(u32 code, u32 bd)
     // Set the Status
     upse_r3000_cpu_regs.CP0.n.Status = (upse_r3000_cpu_regs.CP0.n.Status & ~0x3f) | ((upse_r3000_cpu_regs.CP0.n.Status & 0xf) << 2);
 
-    psxBiosException();
+    upse_ps1_bios_exception();
 }
 
 void psxBranchTest()

@@ -25,9 +25,9 @@ extern char *biosA0n[256];
 extern char *biosB0n[256];
 extern char *biosC0n[256];
 
-void psxBiosInit(void);
-void psxBiosShutdown(void);
-void psxBiosException(void);
+void upse_ps1_bios_init(void);
+void upse_ps1_bios_shutdown(void);
+void upse_ps1_bios_exception(void);
 
 extern void (*biosA0[256]) (void);
 extern void (*biosB0[256]) (void);
