@@ -31,14 +31,14 @@
 
 static void hleDummy()
 {
-    psxRegs.pc = psxRegs.GPR.n.ra;
+    upse_r3000_cpu_regs.pc = upse_r3000_cpu_regs.GPR.n.ra;
 
     psxBranchTest();
 }
 
 static void hleA0()
 {
-    u32 call = psxRegs.GPR.n.t1 & 0xff;
+    u32 call = upse_r3000_cpu_regs.GPR.n.t1 & 0xff;
 
     if (biosA0[call])
 	_CALL(biosA0, biosA0n);
@@ -50,7 +50,7 @@ static void hleA0()
 
 static void hleB0()
 {
-    u32 call = psxRegs.GPR.n.t1 & 0xff;
+    u32 call = upse_r3000_cpu_regs.GPR.n.t1 & 0xff;
 
     if (biosB0[call])
 	_CALL(biosB0, biosB0n);
@@ -62,7 +62,7 @@ static void hleB0()
 
 static void hleC0()
 {
-    u32 call = psxRegs.GPR.n.t1 & 0xff;
+    u32 call = upse_r3000_cpu_regs.GPR.n.t1 & 0xff;
 
     if (biosC0[call])
 	_CALL(biosC0, biosC0n);
@@ -94,18 +94,18 @@ typedef struct
 
 static void hleExecRet()
 {
-    EXEC *header = (EXEC *) PSXM(psxRegs.GPR.n.s0);
+    EXEC *header = (EXEC *) PSXM(upse_r3000_cpu_regs.GPR.n.s0);
 
-    //SysPrintf("ExecRet %x: %x\n", psxRegs.GPR.n.s0, header->ret);
+    //SysPrintf("ExecRet %x: %x\n", upse_r3000_cpu_regs.GPR.n.s0, header->ret);
 
-    psxRegs.GPR.n.ra = BFLIP32(header->ret);
-    psxRegs.GPR.n.sp = BFLIP32(header->_sp);
-    psxRegs.GPR.n.s8 = BFLIP32(header->_fp);
-    psxRegs.GPR.n.gp = BFLIP32(header->_gp);
-    psxRegs.GPR.n.s0 = BFLIP32(header->base);
+    upse_r3000_cpu_regs.GPR.n.ra = BFLIP32(header->ret);
+    upse_r3000_cpu_regs.GPR.n.sp = BFLIP32(header->_sp);
+    upse_r3000_cpu_regs.GPR.n.s8 = BFLIP32(header->_fp);
+    upse_r3000_cpu_regs.GPR.n.gp = BFLIP32(header->_gp);
+    upse_r3000_cpu_regs.GPR.n.s0 = BFLIP32(header->base);
 
-    psxRegs.GPR.n.v0 = 1;
-    psxRegs.pc = psxRegs.GPR.n.ra;
+    upse_r3000_cpu_regs.GPR.n.v0 = 1;
+    upse_r3000_cpu_regs.pc = upse_r3000_cpu_regs.GPR.n.ra;
 }
 
 void (*psxHLEt[256]) () =

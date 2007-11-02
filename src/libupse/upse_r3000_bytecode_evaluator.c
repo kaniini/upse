@@ -27,16 +27,16 @@ static u32 branchPC;
 
 // These macros are used to assemble the repassembler functions
 
-//        if(!PSXM(psxRegs.pc)) puts("Whoops");   
+//        if(!PSXM(upse_r3000_cpu_regs.pc)) puts("Whoops");   
 //        Fix this...
 
-//        printf("%08x ", psxRegs.pc);
+//        printf("%08x ", upse_r3000_cpu_regs.pc);
 
 #define execI() { \
-	psxRegs.code = BFLIP32(PSXMu32(psxRegs.pc)); \
+	upse_r3000_cpu_regs.code = BFLIP32(PSXMu32(upse_r3000_cpu_regs.pc)); \
         	\
-	psxRegs.pc+= 4; psxRegs.cycle++; \
-	psxBSC[psxRegs.code >> 26](); \
+	upse_r3000_cpu_regs.pc+= 4; upse_r3000_cpu_regs.cycle++; \
+	psxBSC[upse_r3000_cpu_regs.code >> 26](); \
 }
 
 // Subsets
@@ -49,19 +49,19 @@ static void delayRead(int reg, u32 bpc)
 {
     u32 rold, rnew;
 
-//      SysPrintf("delayRead at %x!\n", psxRegs.pc);
+//      SysPrintf("delayRead at %x!\n", upse_r3000_cpu_regs.pc);
 
-    rold = psxRegs.GPR.r[reg];
-    psxBSC[psxRegs.code >> 26] ();	// branch delay load
-    rnew = psxRegs.GPR.r[reg];
+    rold = upse_r3000_cpu_regs.GPR.r[reg];
+    psxBSC[upse_r3000_cpu_regs.code >> 26] ();	// branch delay load
+    rnew = upse_r3000_cpu_regs.GPR.r[reg];
 
-    psxRegs.pc = bpc;
+    upse_r3000_cpu_regs.pc = bpc;
 
     psxBranchTest();
 
-    psxRegs.GPR.r[reg] = rold;
+    upse_r3000_cpu_regs.GPR.r[reg] = rold;
     execI();			// first branch opcode
-    psxRegs.GPR.r[reg] = rnew;
+    upse_r3000_cpu_regs.GPR.r[reg] = rnew;
 
     branch = 0;
 }
@@ -69,17 +69,17 @@ static void delayRead(int reg, u32 bpc)
 static void delayWrite(int reg, u32 bpc)
 {
 
-/*	SysPrintf("delayWrite at %x!\n", psxRegs.pc);
+/*	SysPrintf("delayWrite at %x!\n", upse_r3000_cpu_regs.pc);
 
-//	SysPrintf("%s\n", disR3000AF(psxRegs.code, psxRegs.pc-4));
+//	SysPrintf("%s\n", disR3000AF(upse_r3000_cpu_regs.code, upse_r3000_cpu_regs.pc-4));
 //	SysPrintf("%s\n", disR3000AF(PSXMu32(bpc), bpc));*/
 
     // no changes from normal behavior
 
-    psxBSC[psxRegs.code >> 26] ();
+    psxBSC[upse_r3000_cpu_regs.code >> 26] ();
 
     branch = 0;
-    psxRegs.pc = bpc;
+    upse_r3000_cpu_regs.pc = bpc;
 
     psxBranchTest();
 }
@@ -87,12 +87,12 @@ static void delayWrite(int reg, u32 bpc)
 static void delayReadWrite(int reg, u32 bpc)
 {
 
-//      SysPrintf("delayReadWrite at %x!\n", psxRegs.pc);
+//      SysPrintf("delayReadWrite at %x!\n", upse_r3000_cpu_regs.pc);
 
     // the branch delay load is skipped
 
     branch = 0;
-    psxRegs.pc = bpc;
+    upse_r3000_cpu_regs.pc = bpc;
 
     psxBranchTest();
 }
@@ -393,10 +393,10 @@ static void psxDelayTest(u32 reg, u32 bpc)
 	  }
 	  break;
     }
-    psxBSC[psxRegs.code >> 26] ();
+    psxBSC[upse_r3000_cpu_regs.code >> 26] ();
 
     branch = 0;
-    psxRegs.pc = bpc;
+    upse_r3000_cpu_regs.pc = bpc;
 
     psxBranchTest();
 }
@@ -410,13 +410,13 @@ static INLINE void doBranch(u32 tar)
     branch2 = branch = 1;
     branchPC = tar;
 
-    psxRegs.code = BFLIP32(PSXMu32(psxRegs.pc));
+    upse_r3000_cpu_regs.code = BFLIP32(PSXMu32(upse_r3000_cpu_regs.pc));
 
-    psxRegs.pc += 4;
-    psxRegs.cycle++;
+    upse_r3000_cpu_regs.pc += 4;
+    upse_r3000_cpu_regs.cycle++;
 
     // check for load delay
-    tmp = psxRegs.code >> 26;
+    tmp = upse_r3000_cpu_regs.code >> 26;
     switch (tmp)
     {
       case 0x10:		// COP0
@@ -440,15 +440,15 @@ static INLINE void doBranch(u32 tar)
 	  break;
     }
 
-    psxBSC[psxRegs.code >> 26] ();
+    psxBSC[upse_r3000_cpu_regs.code >> 26] ();
 
-    if ((psxRegs.pc - 8) == branchPC && !(psxRegs.code >> 26))
+    if ((upse_r3000_cpu_regs.pc - 8) == branchPC && !(upse_r3000_cpu_regs.code >> 26))
     {
-	//printf("%08x\n",psxRegs.code>>26);
+	//printf("%08x\n",upse_r3000_cpu_regs.code>>26);
 	CounterDeadLoopSkip();
     }
     branch = 0;
-    psxRegs.pc = branchPC;
+    upse_r3000_cpu_regs.pc = branchPC;
 
     psxBranchTest();
 }
@@ -591,16 +591,16 @@ static void psxMULT()
 {
     u64 res = (s64) ((s64) _i32(_rRs_) * (s64) _i32(_rRt_));
 
-    psxRegs.GPR.n.lo = (u32) (res & 0xffffffff);
-    psxRegs.GPR.n.hi = (u32) ((res >> 32) & 0xffffffff);
+    upse_r3000_cpu_regs.GPR.n.lo = (u32) (res & 0xffffffff);
+    upse_r3000_cpu_regs.GPR.n.hi = (u32) ((res >> 32) & 0xffffffff);
 }
 
 static void psxMULTU()
 {
     u64 res = (u64) ((u64) _u32(_rRs_) * (u64) _u32(_rRt_));
 
-    psxRegs.GPR.n.lo = (u32) (res & 0xffffffff);
-    psxRegs.GPR.n.hi = (u32) ((res >> 32) & 0xffffffff);
+    upse_r3000_cpu_regs.GPR.n.lo = (u32) (res & 0xffffffff);
+    upse_r3000_cpu_regs.GPR.n.hi = (u32) ((res >> 32) & 0xffffffff);
 }
 
 /*********************************************************
@@ -683,7 +683,7 @@ static void psxLUI()
 {
     if (!_Rt_)
 	return;
-    _rRt_ = psxRegs.code << 16;
+    _rRt_ = upse_r3000_cpu_regs.code << 16;
 }				// Upper halfword of Rt = Im
 
 /*********************************************************
@@ -727,13 +727,13 @@ static void psxBREAK()
 
 static void psxSYSCALL()
 {
-    psxRegs.pc -= 4;
+    upse_r3000_cpu_regs.pc -= 4;
     psxException(0x20, branch);
 }
 
 static void psxRFE()
 {
-    psxRegs.CP0.n.Status = (psxRegs.CP0.n.Status & 0xfffffff0) | ((psxRegs.CP0.n.Status & 0x3c) >> 2);
+    upse_r3000_cpu_regs.CP0.n.Status = (upse_r3000_cpu_regs.CP0.n.Status & 0xfffffff0) | ((upse_r3000_cpu_regs.CP0.n.Status & 0x3c) >> 2);
 }
 
 /*********************************************************
@@ -969,18 +969,18 @@ static INLINE void MTC0(int reg, u32 val)
     switch (reg)
     {
       case 13:			// Cause
-	  psxRegs.CP0.n.Cause = val & ~(0xfc00);
+	  upse_r3000_cpu_regs.CP0.n.Cause = val & ~(0xfc00);
 
 	  // the next code is untested, if u know please
 	  // tell me if it works ok or not (linuzappz)
-	  if (psxRegs.CP0.n.Cause & psxRegs.CP0.n.Status & 0x0300 && psxRegs.CP0.n.Status & 0x1)
+	  if (upse_r3000_cpu_regs.CP0.n.Cause & upse_r3000_cpu_regs.CP0.n.Status & 0x0300 && upse_r3000_cpu_regs.CP0.n.Status & 0x1)
 	  {
-	      psxException(psxRegs.CP0.n.Cause, 0);
+	      psxException(upse_r3000_cpu_regs.CP0.n.Cause, 0);
 	  }
 	  break;
 
       default:
-	  psxRegs.CP0.r[reg] = val;
+	  upse_r3000_cpu_regs.CP0.r[reg] = val;
 	  break;
     }
 }
@@ -1001,7 +1001,7 @@ static void psxCTC0()
 static void psxNULL()
 {
 #ifdef PSXCPU_LOG
-    PSXCPU_LOG("psx: Unimplemented op %x\n", psxRegs.code);
+    PSXCPU_LOG("psx: Unimplemented op %x\n", upse_r3000_cpu_regs.code);
 #endif
 }
 
@@ -1022,7 +1022,7 @@ static void psxCOP0()
 
 static void psxHLE()
 {
-    psxHLEt[psxRegs.code & 0xff] ();
+    psxHLEt[upse_r3000_cpu_regs.code & 0xff] ();
 }
 
 static void (*psxBSC[64]) () =

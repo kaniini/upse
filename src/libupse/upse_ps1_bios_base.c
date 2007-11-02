@@ -270,7 +270,7 @@ static void bios_setjmp()
     jmp_buf[1] = BFLIP32(sp);
     jmp_buf[2] = BFLIP32(fp);
     for (i = 0; i < 8; i++)	// s0-s7
-	jmp_buf[3 + i] = BFLIP32(psxRegs.GPR.r[16 + i]);
+	jmp_buf[3 + i] = BFLIP32(upse_r3000_cpu_regs.GPR.r[16 + i]);
     jmp_buf[11] = BFLIP32(gp);
 
     v0 = 0;
@@ -286,7 +286,7 @@ static void bios_longjmp()
     sp = BFLIP32(jmp_buf[1]);	/* sp */
     fp = BFLIP32(jmp_buf[2]);	/* fp */
     for (i = 0; i < 8; i++)	// s0-s7
-	psxRegs.GPR.r[16 + i] = BFLIP32(jmp_buf[3 + i]);
+	upse_r3000_cpu_regs.GPR.r[16 + i] = BFLIP32(jmp_buf[3 + i]);
     gp = BFLIP32(jmp_buf[11]);	/* gp */
 
     v0 = a1;
@@ -998,10 +998,10 @@ static void bios_ChangeTh()
 	{
 	    Thread[CurThread].status = BFLIP32S(1);
 	    Thread[CurThread].func = BFLIP32(ra);
-	    memcpy(Thread[CurThread].reg, psxRegs.GPR.r, 32 * 4);
+	    memcpy(Thread[CurThread].reg, upse_r3000_cpu_regs.GPR.r, 32 * 4);
 	}
 
-	memcpy(psxRegs.GPR.r, Thread[th].reg, 32 * 4);
+	memcpy(upse_r3000_cpu_regs.GPR.r, Thread[th].reg, 32 * 4);
 	pc0 = BFLIP32(Thread[th].func);
 	Thread[th].status = BFLIP32(2);
 	CurThread = th;
@@ -1010,15 +1010,15 @@ static void bios_ChangeTh()
 
 static void bios_ReturnFromException()
 {				// 17
-    memcpy(psxRegs.GPR.r, regs, 32 * 4);
-    psxRegs.GPR.n.lo = regs[32];
-    psxRegs.GPR.n.hi = regs[33];
+    memcpy(upse_r3000_cpu_regs.GPR.r, regs, 32 * 4);
+    upse_r3000_cpu_regs.GPR.n.lo = regs[32];
+    upse_r3000_cpu_regs.GPR.n.hi = regs[33];
 
-    pc0 = psxRegs.CP0.n.EPC;
-    if (psxRegs.CP0.n.Cause & 0x80000000)
+    pc0 = upse_r3000_cpu_regs.CP0.n.EPC;
+    if (upse_r3000_cpu_regs.CP0.n.Cause & 0x80000000)
 	pc0 += 4;
 
-    psxRegs.CP0.n.Status = (psxRegs.CP0.n.Status & 0xfffffff0) | ((psxRegs.CP0.n.Status & 0x3c) >> 2);
+    upse_r3000_cpu_regs.CP0.n.Status = (upse_r3000_cpu_regs.CP0.n.Status & 0xfffffff0) | ((upse_r3000_cpu_regs.CP0.n.Status & 0x3c) >> 2);
 }
 
 static void bios_ResetEntryInt()
@@ -1099,7 +1099,7 @@ static void bios_ChangeClearRCnt()
     v0 = BFLIP32(*ptr);
     *ptr = BFLIP32(a1);
 
-//      psxRegs.CP0.n.Status|= 0x404;
+//      upse_r3000_cpu_regs.CP0.n.Status|= 0x404;
     pc0 = ra;
 }
 
@@ -1432,17 +1432,17 @@ void biosInterrupt()
 
 static INLINE void SaveRegs()
 {
-    memcpy(regs, psxRegs.GPR.r, 32 * 4);
-    regs[32] = psxRegs.GPR.n.lo;
-    regs[33] = psxRegs.GPR.n.hi;
-    regs[34] = psxRegs.pc;
+    memcpy(regs, upse_r3000_cpu_regs.GPR.r, 32 * 4);
+    regs[32] = upse_r3000_cpu_regs.GPR.n.lo;
+    regs[33] = upse_r3000_cpu_regs.GPR.n.hi;
+    regs[34] = upse_r3000_cpu_regs.pc;
 }
 
 void psxBiosException()
 {
     int i;
 
-    switch (psxRegs.CP0.n.Cause & 0x3c)
+    switch (upse_r3000_cpu_regs.CP0.n.Cause & 0x3c)
     {
       case 0x00:		// Interrupt
 #ifdef PSXCPU_LOG
@@ -1473,7 +1473,7 @@ void psxBiosException()
 	      sp = BFLIP32(jmp_int[1]);
 	      fp = BFLIP32(jmp_int[2]);
 	      for (i = 0; i < 8; i++)	// s0-s7
-		  psxRegs.GPR.r[16 + i] = BFLIP32(jmp_int[3 + i]);
+		  upse_r3000_cpu_regs.GPR.r[16 + i] = BFLIP32(jmp_int[3 + i]);
 	      gp = BFLIP32(jmp_int[11]);
 
 	      v0 = 1;
@@ -1489,15 +1489,15 @@ void psxBiosException()
 	  switch (a0)
 	  {
 	    case 1:		// EnterCritical - disable irq's
-		psxRegs.CP0.n.Status &= ~0x404;
+		upse_r3000_cpu_regs.CP0.n.Status &= ~0x404;
 		break;
 	    case 2:		// ExitCritical - enable irq's
-		psxRegs.CP0.n.Status |= 0x404;
+		upse_r3000_cpu_regs.CP0.n.Status |= 0x404;
 		break;
 	  }
-	  pc0 = psxRegs.CP0.n.EPC + 4;
+	  pc0 = upse_r3000_cpu_regs.CP0.n.EPC + 4;
 
-	  psxRegs.CP0.n.Status = (psxRegs.CP0.n.Status & 0xfffffff0) | ((psxRegs.CP0.n.Status & 0x3c) >> 2);
+	  upse_r3000_cpu_regs.CP0.n.Status = (upse_r3000_cpu_regs.CP0.n.Status & 0xfffffff0) | ((upse_r3000_cpu_regs.CP0.n.Status & 0x3c) >> 2);
 	  return;
       default:
 #ifdef PSXCPU_LOG
@@ -1506,9 +1506,9 @@ void psxBiosException()
 	  break;
     }
 
-    pc0 = psxRegs.CP0.n.EPC;
-    if (psxRegs.CP0.n.Cause & 0x80000000)
+    pc0 = upse_r3000_cpu_regs.CP0.n.EPC;
+    if (upse_r3000_cpu_regs.CP0.n.Cause & 0x80000000)
 	pc0 += 4;
 
-    psxRegs.CP0.n.Status = (psxRegs.CP0.n.Status & 0xfffffff0) | ((psxRegs.CP0.n.Status & 0x3c) >> 2);
+    upse_r3000_cpu_regs.CP0.n.Status = (upse_r3000_cpu_regs.CP0.n.Status & 0xfffffff0) | ((upse_r3000_cpu_regs.CP0.n.Status & 0x3c) >> 2);
 }

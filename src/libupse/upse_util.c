@@ -295,11 +295,11 @@ static upse_psf_t *_upse_load(char *path, int level, int type)	// Type==1 for ju
 	uncompress(out, &outlen, in, complen);
 	free(in);
 	memcpy(&tmpHead, out, sizeof(EXE_HEADER));
-	psxRegs.pc = BFLIP32(tmpHead.pc0);
-	psxRegs.GPR.n.gp = BFLIP32(tmpHead.gp0);
-	psxRegs.GPR.n.sp = BFLIP32(tmpHead.S_addr);
-	if (psxRegs.GPR.n.sp == 0)
-	    psxRegs.GPR.n.sp = 0x801fff00;
+	upse_r3000_cpu_regs.pc = BFLIP32(tmpHead.pc0);
+	upse_r3000_cpu_regs.GPR.n.gp = BFLIP32(tmpHead.gp0);
+	upse_r3000_cpu_regs.GPR.n.sp = BFLIP32(tmpHead.S_addr);
+	if (upse_r3000_cpu_regs.GPR.n.sp == 0)
+	    upse_r3000_cpu_regs.GPR.n.sp = 0x801fff00;
 
 	if (level)
 	{
@@ -425,9 +425,9 @@ static upse_psf_t *_upse_load(char *path, int level, int type)	// Type==1 for ju
 		if (cache[cur].num < 2)
 		    continue;
 
-		ba[0] = psxRegs.pc;
-		ba[1] = psxRegs.GPR.n.gp;
-		ba[2] = psxRegs.GPR.n.sp;
+		ba[0] = upse_r3000_cpu_regs.pc;
+		ba[1] = upse_r3000_cpu_regs.GPR.n.gp;
+		ba[2] = upse_r3000_cpu_regs.GPR.n.sp;
 
 		/* Load file name "value" from the directory specified in
 		   the full path(directory + file name) "path"
@@ -445,9 +445,9 @@ static upse_psf_t *_upse_load(char *path, int level, int type)	// Type==1 for ju
 		FreeTags(tmpi->taglist);
 		free(tmpi);
 
-		psxRegs.pc = ba[0];
-		psxRegs.GPR.n.gp = ba[1];
-		psxRegs.GPR.n.sp = ba[2];
+		upse_r3000_cpu_regs.pc = ba[0];
+		upse_r3000_cpu_regs.GPR.n.gp = ba[1];
+		upse_r3000_cpu_regs.GPR.n.sp = ba[2];
 	    }
 	    free(cache);
 

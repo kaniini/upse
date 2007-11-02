@@ -30,7 +30,7 @@ static u32 last = 0;
 
 static void psxRcntUpd(u32 index)
 {
-    psxCounters[index].sCycle = psxRegs.cycle;
+    psxCounters[index].sCycle = upse_r3000_cpu_regs.cycle;
     if (((!(psxCounters[index].mode & 1)) || (index != 2)) && psxCounters[index].mode & 0x30)
     {
 	if (psxCounters[index].mode & 0x10)
@@ -63,7 +63,7 @@ static void psxRcntSet()
     int i;
 
     psxNextCounter = 0x7fffffff;
-    psxNextsCounter = psxRegs.cycle;
+    psxNextsCounter = upse_r3000_cpu_regs.cycle;
 
     for (i = 0; i < cnts; i++)
     {
@@ -72,7 +72,7 @@ static void psxRcntSet()
 	if (psxCounters[i].Cycle == 0xffffffff)
 	    continue;
 
-	count = psxCounters[i].Cycle - (psxRegs.cycle - psxCounters[i].sCycle);
+	count = psxCounters[i].Cycle - (upse_r3000_cpu_regs.cycle - psxCounters[i].sCycle);
 
 	if (count < 0)
 	{
@@ -119,19 +119,19 @@ int CounterSPURun(void)
 {
     u32 cycles;
 
-    if (psxRegs.cycle < last)
+    if (upse_r3000_cpu_regs.cycle < last)
     {
 	cycles = 0xFFFFFFFF - last;
-	cycles += psxRegs.cycle;
+	cycles += upse_r3000_cpu_regs.cycle;
     }
     else
-	cycles = psxRegs.cycle - last;
+	cycles = upse_r3000_cpu_regs.cycle - last;
 
     if (cycles >= 16)
     {
 	if (!SPUasync(cycles))
 	    return (0);
-	last = psxRegs.cycle;
+	last = upse_r3000_cpu_regs.cycle;
     }
     return (1);
 }
@@ -153,7 +153,7 @@ void CounterDeadLoopSkip()
 	if (psxCounters[x].Cycle != 0xffffffff)
 	{
 	    min = psxCounters[x].Cycle;
-	    min -= (psxRegs.cycle - psxCounters[x].sCycle);
+	    min -= (upse_r3000_cpu_regs.cycle - psxCounters[x].sCycle);
 	    if (min < lmin)
 		lmin = min;
 //        if(min<0) exit();
@@ -164,7 +164,7 @@ void CounterDeadLoopSkip()
     if (lmin > 0)
     {
 //       printf("skip %u\n",lmin);
-	psxRegs.cycle += lmin;
+	upse_r3000_cpu_regs.cycle += lmin;
     }
 }
 
@@ -178,23 +178,23 @@ void psxUpdateVSyncRate()
 
 void psxRcntUpdate()
 {
-    if ((psxRegs.cycle - psxCounters[3].sCycle) >= psxCounters[3].Cycle)
+    if ((upse_r3000_cpu_regs.cycle - psxCounters[3].sCycle) >= psxCounters[3].Cycle)
     {
-	//printf("%d\n",(psxRegs.cycle - psxCounters[3].sCycle)- psxCounters[3].Cycle);
+	//printf("%d\n",(upse_r3000_cpu_regs.cycle - psxCounters[3].sCycle)- psxCounters[3].Cycle);
 	psxRcntUpd(3);
 	psxHu32(0x1070) |= BFLIP32(1);
     }
-    if ((psxRegs.cycle - psxCounters[0].sCycle) >= psxCounters[0].Cycle)
+    if ((upse_r3000_cpu_regs.cycle - psxCounters[0].sCycle) >= psxCounters[0].Cycle)
     {
 	psxRcntReset(0);
     }
 
-    if ((psxRegs.cycle - psxCounters[1].sCycle) >= psxCounters[1].Cycle)
+    if ((upse_r3000_cpu_regs.cycle - psxCounters[1].sCycle) >= psxCounters[1].Cycle)
     {
 	psxRcntReset(1);
     }
 
-    if ((psxRegs.cycle - psxCounters[2].sCycle) >= psxCounters[2].Cycle)
+    if ((upse_r3000_cpu_regs.cycle - psxCounters[2].sCycle) >= psxCounters[2].Cycle)
     {
 	psxRcntReset(2);
     }
@@ -272,22 +272,22 @@ u32 psxRcntRcount(u32 index)
     if (psxCounters[index].mode & 0x08)
     {				// Wrap at target
 	//if (Config.RCntFix) { // Parasite Eve 2
-	//      ret = (psxCounters[index].count + /*BIAS **/ ((psxRegs.cycle - psxCounters[index].sCycle) / psxCounters[index].rate)) & 0xffff;
+	//      ret = (psxCounters[index].count + /*BIAS **/ ((upse_r3000_cpu_regs.cycle - psxCounters[index].sCycle) / psxCounters[index].rate)) & 0xffff;
 	//} else {
-	ret = (psxCounters[index].count + BIAS * ((psxRegs.cycle - psxCounters[index].sCycle) / psxCounters[index].rate)) & 0xffff;
+	ret = (psxCounters[index].count + BIAS * ((upse_r3000_cpu_regs.cycle - psxCounters[index].sCycle) / psxCounters[index].rate)) & 0xffff;
 	//}
     }
     else
     {				// Wrap at 0xffff
-	ret = (psxCounters[index].count + BIAS * (psxRegs.cycle / psxCounters[index].rate)) & 0xffff;
+	ret = (psxCounters[index].count + BIAS * (upse_r3000_cpu_regs.cycle / psxCounters[index].rate)) & 0xffff;
 	//if (Config.RCntFix) { // Vandal Hearts 1/2
 	//      ret/= 16;
 	//}
     }
-//              return (psxCounters[index].count + BIAS * ((psxRegs.cycle - psxCounters[index].sCycle) / psxCounters[index].rate)) & 0xffff;
+//              return (psxCounters[index].count + BIAS * ((upse_r3000_cpu_regs.cycle - psxCounters[index].sCycle) / psxCounters[index].rate)) & 0xffff;
 //      } else return 0;
 
-//      SysPrintf("readCcount[%ld] = %lx (mode %lx, target %lx, cycle %lx)\n", index, ret, psxCounters[index].mode, psxCounters[index].target, psxRegs.cycle);
+//      SysPrintf("readCcount[%ld] = %lx (mode %lx, target %lx, cycle %lx)\n", index, ret, psxCounters[index].mode, psxCounters[index].target, upse_r3000_cpu_regs.cycle);
 
     return ret;
 }

@@ -66,9 +66,9 @@ typedef struct
     u32 code;			/* The instruction */
     u32 cycle;
     u32 interrupt;
-} psxRegisters;
+} upse_r3000_cpu_registers_t;
 
-extern psxRegisters psxRegs;
+extern upse_r3000_cpu_registers_t upse_r3000_cpu_regs;
 
 #define _i32(x) (s32)x
 #define _u32(x) (u32)x
@@ -80,37 +80,37 @@ extern psxRegisters psxRegs;
 #define _u8(x) (u8)x
 
 /**** R3000A Instruction Macros ****/
-#define _PC_       psxRegs.pc	// The next PC to be executed
+#define _PC_       upse_r3000_cpu_regs.pc	// The next PC to be executed
 
-#define _Funct_  ((psxRegs.code      ) & 0x3F)	// The funct part of the instruction register
-#define _Rd_     ((psxRegs.code >> 11) & 0x1F)	// The rd part of the instruction register
-#define _Rt_     ((psxRegs.code >> 16) & 0x1F)	// The rt part of the instruction register
-#define _Rs_     ((psxRegs.code >> 21) & 0x1F)	// The rs part of the instruction register
-#define _Sa_     ((psxRegs.code >>  6) & 0x1F)	// The sa part of the instruction register
-#define _Im_     ((u16)psxRegs.code)	// The immediate part of the instruction register
-#define _Target_ (psxRegs.code & 0x03ffffff)	// The target part of the instruction register
+#define _Funct_  ((upse_r3000_cpu_regs.code      ) & 0x3F)	// The funct part of the instruction register
+#define _Rd_     ((upse_r3000_cpu_regs.code >> 11) & 0x1F)	// The rd part of the instruction register
+#define _Rt_     ((upse_r3000_cpu_regs.code >> 16) & 0x1F)	// The rt part of the instruction register
+#define _Rs_     ((upse_r3000_cpu_regs.code >> 21) & 0x1F)	// The rs part of the instruction register
+#define _Sa_     ((upse_r3000_cpu_regs.code >>  6) & 0x1F)	// The sa part of the instruction register
+#define _Im_     ((u16)upse_r3000_cpu_regs.code)	// The immediate part of the instruction register
+#define _Target_ (upse_r3000_cpu_regs.code & 0x03ffffff)	// The target part of the instruction register
 
-#define _Imm_	((s16)psxRegs.code)	// sign-extended immediate
-#define _ImmU_	(psxRegs.code&0xffff)	// zero-extended immediate
+#define _Imm_	((s16)upse_r3000_cpu_regs.code)	// sign-extended immediate
+#define _ImmU_	(upse_r3000_cpu_regs.code&0xffff)	// zero-extended immediate
 
-#define _rRs_   psxRegs.GPR.r[_Rs_]	// Rs register
-#define _rRt_   psxRegs.GPR.r[_Rt_]	// Rt register
-#define _rRd_   psxRegs.GPR.r[_Rd_]	// Rd register
-#define _rSa_   psxRegs.GPR.r[_Sa_]	// Sa register
-#define _rFs_   psxRegs.CP0.r[_Rd_]	// Fs register
+#define _rRs_   upse_r3000_cpu_regs.GPR.r[_Rs_]	// Rs register
+#define _rRt_   upse_r3000_cpu_regs.GPR.r[_Rt_]	// Rt register
+#define _rRd_   upse_r3000_cpu_regs.GPR.r[_Rd_]	// Rd register
+#define _rSa_   upse_r3000_cpu_regs.GPR.r[_Sa_]	// Sa register
+#define _rFs_   upse_r3000_cpu_regs.CP0.r[_Rd_]	// Fs register
 
-#define _c2dRs_ psxRegs.CP2D.r[_Rs_]	// Rs cop2 data register
-#define _c2dRt_ psxRegs.CP2D.r[_Rt_]	// Rt cop2 data register
-#define _c2dRd_ psxRegs.CP2D.r[_Rd_]	// Rd cop2 data register
-#define _c2dSa_ psxRegs.CP2D.r[_Sa_]	// Sa cop2 data register
+#define _c2dRs_ upse_r3000_cpu_regs.CP2D.r[_Rs_]	// Rs cop2 data register
+#define _c2dRt_ upse_r3000_cpu_regs.CP2D.r[_Rt_]	// Rt cop2 data register
+#define _c2dRd_ upse_r3000_cpu_regs.CP2D.r[_Rd_]	// Rd cop2 data register
+#define _c2dSa_ upse_r3000_cpu_regs.CP2D.r[_Sa_]	// Sa cop2 data register
 
-#define _rHi_   psxRegs.GPR.n.hi	// The HI register
-#define _rLo_   psxRegs.GPR.n.lo	// The LO register
+#define _rHi_   upse_r3000_cpu_regs.GPR.n.hi	// The HI register
+#define _rLo_   upse_r3000_cpu_regs.GPR.n.lo	// The LO register
 
 #define _JumpTarget_    ((_Target_ * 4) + (_PC_ & 0xf0000000))	// Calculates the target during a jump instruction
 #define _BranchTarget_  ((s16)_Im_ * 4 + _PC_)	// Calculates the target during a branch instruction
 
-#define _SetLink(x)     psxRegs.GPR.r[x] = _PC_ + 4;	// Sets the return address in the link register
+#define _SetLink(x)     upse_r3000_cpu_regs.GPR.r[x] = _PC_ + 4;	// Sets the return address in the link register
 
 int psxInit();
 void psxReset();

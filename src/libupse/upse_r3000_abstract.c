@@ -23,7 +23,7 @@
 
 #include "upse-internal.h"
 
-psxRegisters psxRegs;
+upse_r3000_cpu_registers_t upse_r3000_cpu_regs;
 R3000Acpu *psxCpu;
 
 int psxInit()
@@ -42,11 +42,11 @@ void psxReset()
     psxCpu->Reset();
     psxMemReset();
 
-    memset(&psxRegs, 0, sizeof(psxRegs));
+    memset(&upse_r3000_cpu_regs, 0, sizeof(upse_r3000_cpu_regs));
 
-    psxRegs.pc = 0xbfc00000;	// Start in bootstrap
-    psxRegs.CP0.r[12] = 0x10900000;	// COP0 enabled | BEV = 1 | TS = 1
-    psxRegs.CP0.r[15] = 0x00000002;	// PRevID = Revision ID, same as R3000A
+    upse_r3000_cpu_regs.pc = 0xbfc00000;	// Start in bootstrap
+    upse_r3000_cpu_regs.CP0.r[12] = 0x10900000;	// COP0 enabled | BEV = 1 | TS = 1
+    upse_r3000_cpu_regs.CP0.r[15] = 0x00000002;	// PRevID = Revision ID, same as R3000A
 
     psxHwReset();
     psxBiosInit();
@@ -64,7 +64,7 @@ void psxShutdown()
 void psxException(u32 code, u32 bd)
 {
     // Set the Cause
-    psxRegs.CP0.n.Cause = code;
+    upse_r3000_cpu_regs.CP0.n.Cause = code;
 
 #ifdef PSXCPU_LOG
     if (bd)
@@ -73,31 +73,31 @@ void psxException(u32 code, u32 bd)
     // Set the EPC & PC
     if (bd)
     {
-	psxRegs.CP0.n.Cause |= 0x80000000;
-	psxRegs.CP0.n.EPC = (psxRegs.pc - 4);
+	upse_r3000_cpu_regs.CP0.n.Cause |= 0x80000000;
+	upse_r3000_cpu_regs.CP0.n.EPC = (upse_r3000_cpu_regs.pc - 4);
     }
     else
-	psxRegs.CP0.n.EPC = (psxRegs.pc);
+	upse_r3000_cpu_regs.CP0.n.EPC = (upse_r3000_cpu_regs.pc);
 
-    if (psxRegs.CP0.n.Status & 0x400000)
-	psxRegs.pc = 0xbfc00180;
+    if (upse_r3000_cpu_regs.CP0.n.Status & 0x400000)
+	upse_r3000_cpu_regs.pc = 0xbfc00180;
     else
-	psxRegs.pc = 0x80000080;
+	upse_r3000_cpu_regs.pc = 0x80000080;
 
     // Set the Status
-    psxRegs.CP0.n.Status = (psxRegs.CP0.n.Status & ~0x3f) | ((psxRegs.CP0.n.Status & 0xf) << 2);
+    upse_r3000_cpu_regs.CP0.n.Status = (upse_r3000_cpu_regs.CP0.n.Status & ~0x3f) | ((upse_r3000_cpu_regs.CP0.n.Status & 0xf) << 2);
 
     psxBiosException();
 }
 
 void psxBranchTest()
 {
-    if ((psxRegs.cycle - psxNextsCounter) >= psxNextCounter)
+    if ((upse_r3000_cpu_regs.cycle - psxNextsCounter) >= psxNextCounter)
 	psxRcntUpdate();
 
     if (psxHu32(0x1070) & psxHu32(0x1074))
     {
-	if ((psxRegs.CP0.n.Status & 0x401) == 0x401)
+	if ((upse_r3000_cpu_regs.CP0.n.Status & 0x401) == 0x401)
 	{
 	    psxException(0x400, 0);
 	}
@@ -106,6 +106,6 @@ void psxBranchTest()
 }
 void psxExecuteBios()
 {
-    while (psxRegs.pc != 0x80030000)
+    while (upse_r3000_cpu_regs.pc != 0x80030000)
 	psxCpu->ExecuteBlock();
 }
