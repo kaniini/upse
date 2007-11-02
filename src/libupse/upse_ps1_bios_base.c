@@ -1408,7 +1408,7 @@ void biosInterrupt()
 	if (RcEV[3][1].status == BFLIP32S(EvStACTIVE))
 	{
 	    softCall(BFLIP32(RcEV[3][1].fhandler));
-//                      hwWrite32(0x1f801070, ~(1));
+//                      hwwrite_32(0x1f801070, ~(1));
 	}
     }
 
@@ -1423,7 +1423,7 @@ void biosInterrupt()
 		if (RcEV[i][1].status == BFLIP32S(EvStACTIVE))
 		{
 		    softCall(BFLIP32(RcEV[i][1].fhandler));
-		    psxHwWrite32(0x1f801070, ~(1 << (i + 4)));
+		    upse_ps1_hal_write_32(0x1f801070, ~(1 << (i + 4)));
 		}
 	    }
 	}
@@ -1467,7 +1467,7 @@ void psxBiosException()
 	  {
 	      int i;
 
-	      psxHwWrite32(0x1f801070, 0xffffffff);
+	      upse_ps1_hal_write_32(0x1f801070, 0xffffffff);
 
 	      ra = BFLIP32(jmp_int[0]);
 	      sp = BFLIP32(jmp_int[1]);
@@ -1480,7 +1480,7 @@ void psxBiosException()
 	      pc0 = ra;
 	      return;
 	  }
-	  psxHwWrite16(0x1f801070, 0);
+	  upse_ps1_hal_write_16(0x1f801070, 0);
 	  break;
       case 0x20:		// Syscall
 #ifdef PSXCPU_LOG

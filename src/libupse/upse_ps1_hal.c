@@ -29,13 +29,13 @@
 #define HW_DMA_PCR   (psxHu32(0x10f0))
 #define HW_DMA_ICR   (psxHu32(0x10f4))
 
-void psxHwReset()
+void upse_ps1_hal_Reset()
 {
     memset(psxH, 0, 0x10000);
     psxRcntInit();
 }
 
-u8 psxHwRead8(u32 add)
+u8 upse_ps1_hal_read_8(u32 add)
 {
     u8 hard;
 
@@ -48,7 +48,7 @@ u8 psxHwRead8(u32 add)
     return hard;
 }
 
-u16 psxHwRead16(u32 add)
+u16 upse_ps1_hal_read_16(u32 add)
 {
     u16 hard;
 
@@ -96,7 +96,7 @@ u16 psxHwRead16(u32 add)
     return hard;
 }
 
-u32 psxHwRead32(u32 add)
+u32 upse_ps1_hal_read_32(u32 add)
 {
     u32 hard;
 
@@ -138,7 +138,7 @@ u32 psxHwRead32(u32 add)
     return hard;
 }
 
-void psxHwWrite8(u32 add, u8 value)
+void upse_ps1_hal_write_8(u32 add, u8 value)
 {
     switch (add)
     {
@@ -149,7 +149,7 @@ void psxHwWrite8(u32 add, u8 value)
     psxHu8(add) = value;
 }
 
-void psxHwWrite16(u32 add, u16 value)
+void upse_ps1_hal_write_16(u32 add, u16 value)
 {
     switch (add)
     {
@@ -214,7 +214,7 @@ void psxHwWrite16(u32 add, u16 value)
 	} \
 }
 
-void psxHwWrite32(u32 add, u32 value)
+void upse_ps1_hal_write_32(u32 add, u32 value)
 {
     switch (add)
     {

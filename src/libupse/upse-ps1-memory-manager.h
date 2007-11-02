@@ -68,9 +68,9 @@ extern char *psxH;
 #define psxHu16(mem)   	(*(u16*)&psxH[(mem) & 0xffff])
 #define psxHu32(mem)   	(*(u32*)&psxH[(mem) & 0xffff])
 
-extern char **psxMemLUT;
+extern char **upse_ps1_memory_LUT;
 
-#define PSXM(mem)		(psxMemLUT[(mem) >> 16] == 0 ? NULL : (void*)(psxMemLUT[(mem) >> 16] + ((mem) & 0xffff)))
+#define PSXM(mem)		(upse_ps1_memory_LUT[(mem) >> 16] == 0 ? NULL : (void*)(upse_ps1_memory_LUT[(mem) >> 16] + ((mem) & 0xffff)))
 
 #define PSXMu8(mem)	(*(u8 *)PSXM(mem))
 #define PSXMu32(mem)    (*(u32*)PSXM(mem))
@@ -78,16 +78,16 @@ extern char **psxMemLUT;
 #define PSXMuR8(mem)        (PSXM(mem)?PSXMu8(mem):0)
 #define PSXMuW8(mem,val)    (PSXM(mem)?PSXMu8(mem)=val:;)
 
-int psxMemInit();
-void psxMemReset();
-void psxMemShutdown();
+int upse_ps1_memory_Init();
+void upse_ps1_memory_Reset();
+void upse_ps1_memory_Shutdown();
 
-u8 psxMemRead8(u32 mem);
-u16 psxMemRead16(u32 mem);
-u32 psxMemRead32(u32 mem);
-void psxMemWrite8(u32 mem, u8 value);
-void psxMemWrite16(u32 mem, u16 value);
-void psxMemWrite32(u32 mem, u32 value);
+u8 upse_ps1_memory_read_8(u32 mem);
+u16 upse_ps1_memory_read_16(u32 mem);
+u32 upse_ps1_memory_read_32(u32 mem);
+void upse_ps1_memory_write_8(u32 mem, u8 value);
+void upse_ps1_memory_write_16(u32 mem, u16 value);
+void upse_ps1_memory_write_32(u32 mem, u32 value);
 
 void LoadPSXMem(u32 address, s32 length, unsigned char *data);
 

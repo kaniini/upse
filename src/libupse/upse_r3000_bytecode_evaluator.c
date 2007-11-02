@@ -791,11 +791,11 @@ static void psxLB()
 {
     if (_Rt_)
     {
-	_rRt_ = (s8) psxMemRead8(_oB_);
+	_rRt_ = (s8) upse_ps1_memory_read_8(_oB_);
     }
     else
     {
-	psxMemRead8(_oB_);
+	upse_ps1_memory_read_8(_oB_);
     }
 }
 
@@ -803,11 +803,11 @@ static void psxLBU()
 {
     if (_Rt_)
     {
-	_rRt_ = psxMemRead8(_oB_);
+	_rRt_ = upse_ps1_memory_read_8(_oB_);
     }
     else
     {
-	psxMemRead8(_oB_);
+	upse_ps1_memory_read_8(_oB_);
     }
 }
 
@@ -815,11 +815,11 @@ static void psxLH()
 {
     if (_Rt_)
     {
-	_rRt_ = (s16) psxMemRead16(_oB_);
+	_rRt_ = (s16) upse_ps1_memory_read_16(_oB_);
     }
     else
     {
-	psxMemRead16(_oB_);
+	upse_ps1_memory_read_16(_oB_);
     }
 }
 
@@ -827,11 +827,11 @@ static void psxLHU()
 {
     if (_Rt_)
     {
-	_rRt_ = psxMemRead16(_oB_);
+	_rRt_ = upse_ps1_memory_read_16(_oB_);
     }
     else
     {
-	psxMemRead16(_oB_);
+	upse_ps1_memory_read_16(_oB_);
     }
 }
 
@@ -839,11 +839,11 @@ static void psxLW()
 {
     if (_Rt_)
     {
-	_rRt_ = psxMemRead32(_oB_);
+	_rRt_ = upse_ps1_memory_read_32(_oB_);
     }
     else
     {
-	psxMemRead32(_oB_);
+	upse_ps1_memory_read_32(_oB_);
     }
 }
 
@@ -854,7 +854,7 @@ static void psxLWL()
 {
     u32 addr = _oB_;
     u32 shift = addr & 3;
-    u32 mem = psxMemRead32(addr & ~3);
+    u32 mem = upse_ps1_memory_read_32(addr & ~3);
 
     if (!_Rt_)
 	return;
@@ -877,7 +877,7 @@ static void psxLWR()
 {
     u32 addr = _oB_;
     u32 shift = addr & 3;
-    u32 mem = psxMemRead32(addr & ~3);
+    u32 mem = upse_ps1_memory_read_32(addr & ~3);
 
     if (!_Rt_)
 	return;
@@ -895,15 +895,15 @@ static void psxLWR()
 
 static void psxSB()
 {
-    psxMemWrite8(_oB_, _u8(_rRt_));
+    upse_ps1_memory_write_8(_oB_, _u8(_rRt_));
 }
 static void psxSH()
 {
-    psxMemWrite16(_oB_, _u16(_rRt_));
+    upse_ps1_memory_write_16(_oB_, _u16(_rRt_));
 }
 static void psxSW()
 {
-    psxMemWrite32(_oB_, _u32(_rRt_));
+    upse_ps1_memory_write_32(_oB_, _u32(_rRt_));
 }
 
 static const u32 SWL_MASK[4] = { 0xffffff00, 0xffff0000, 0xff000000, 0 };
@@ -913,9 +913,9 @@ static void psxSWL()
 {
     u32 addr = _oB_;
     u32 shift = addr & 3;
-    u32 mem = psxMemRead32(addr & ~3);
+    u32 mem = upse_ps1_memory_read_32(addr & ~3);
 
-    psxMemWrite32(addr & ~3, (_u32(_rRt_) >> SWL_SHIFT[shift]) | (mem & SWL_MASK[shift]));
+    upse_ps1_memory_write_32(addr & ~3, (_u32(_rRt_) >> SWL_SHIFT[shift]) | (mem & SWL_MASK[shift]));
     /*
        Mem = 1234.  Reg = abcd
 
@@ -933,9 +933,9 @@ static void psxSWR()
 {
     u32 addr = _oB_;
     u32 shift = addr & 3;
-    u32 mem = psxMemRead32(addr & ~3);
+    u32 mem = upse_ps1_memory_read_32(addr & ~3);
 
-    psxMemWrite32(addr & ~3, (_u32(_rRt_) << SWR_SHIFT[shift]) | (mem & SWR_MASK[shift]));
+    upse_ps1_memory_write_32(addr & ~3, (_u32(_rRt_) << SWR_SHIFT[shift]) | (mem & SWR_MASK[shift]));
 
     /*
        Mem = 1234.  Reg = abcd

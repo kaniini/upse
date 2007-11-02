@@ -50,7 +50,7 @@ typedef struct
     u32 SavedGP;
     u32 SavedRA;
     u32 SavedS0;
-} PACKSTRUCT EXE_HEADER;
+} PACKSTRUCT upse_exe_header_t;
 
 static long TimeToMS(const char *str)
 {
@@ -249,7 +249,7 @@ static int ccomp(const void *v1, const void *v2)
 static upse_psf_t *_upse_load(char *path, int level, int type)	// Type==1 for just info load.
 {
     void *fp;
-    EXE_HEADER tmpHead;
+    upse_exe_header_t tmpHead;
     unsigned char *in, *out = 0;
     u8 head[4];
     u32 reserved;
@@ -294,7 +294,7 @@ static upse_psf_t *_upse_load(char *path, int level, int type)	// Type==1 for ju
 	outlen = 1024 * 1024 * 2;
 	uncompress(out, &outlen, in, complen);
 	free(in);
-	memcpy(&tmpHead, out, sizeof(EXE_HEADER));
+	memcpy(&tmpHead, out, sizeof(upse_exe_header_t));
 	upse_r3000_cpu_regs.pc = BFLIP32(tmpHead.pc0);
 	upse_r3000_cpu_regs.GPR.n.gp = BFLIP32(tmpHead.gp0);
 	upse_r3000_cpu_regs.GPR.n.sp = BFLIP32(tmpHead.S_addr);
