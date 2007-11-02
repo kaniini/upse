@@ -1100,7 +1100,7 @@ static void intShutdown()
 {
 }
 
-R3000Acpu psxInt = {
+upse_r3000_cpu_t psxInt = {
     intInit,
     intReset,
     intExecute,

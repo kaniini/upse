@@ -32,10 +32,10 @@ typedef struct
     void (*ExecuteBlock) ();	/* executes up to a jump */
     void (*Clear) (u32 Addr, u32 Size);
     void (*Shutdown) ();
-} R3000Acpu;
+} upse_r3000_cpu_t;
 
-extern R3000Acpu *psxCpu;
-extern R3000Acpu psxInt;
+extern upse_r3000_cpu_t *psxCpu;
+extern upse_r3000_cpu_t psxInt;
 
 typedef union
 {

@@ -24,7 +24,7 @@
 #include "upse-internal.h"
 
 upse_r3000_cpu_registers_t upse_r3000_cpu_regs;
-R3000Acpu *psxCpu;
+upse_r3000_cpu_t *psxCpu;
 
 int psxInit()
 {
