@@ -19,6 +19,7 @@
 
 #include "upse-types.h"
 #include "upse-spu-internal.h"
+#include "upse-debug.h"
 
 ////////////////////////////////////////////////////////////////////////
 // globals
@@ -73,12 +74,27 @@ static INLINE void s_buffer1(int iOff, int iVal)	// set_buffer (+1 sample) conte
     *(p + iOff) = (s16) BFLIP16((s16) iVal);
 }
 
-/*
- * this is fairly accurate, but probably only 99.5% accurate.
- * there's also a post processing step which must be done, to restore
- * channel coefficients and Neill does not do it in his emulation.
- *    -nenolod
- */
+static u32 _do_reverb = 1;
+static u32 _reverb_no_downsample = 0;
+
+void upse_set_reverb_mode(u32 setting)
+{
+    _ENTER;
+
+    _do_reverb = setting;
+
+    _LEAVE;
+}
+
+void upse_set_reverb_no_downsample(u32 setting)
+{
+    _ENTER;
+
+    _reverb_no_downsample = setting;
+
+    _LEAVE;
+}
+
 void MixREVERBLeftRight(s32 * oleft, s32 * oright, s32 inleft, s32 inright)
 {
     static s32 downbuf[2][8];
@@ -90,7 +106,7 @@ void MixREVERBLeftRight(s32 * oleft, s32 * oright, s32 inleft, s32 inright)
     };
     int x;
 
-    if (!rvb.StartAddr)		// reverb is off
+    if (!rvb.StartAddr || !_do_reverb)	// reverb is off or forcefully disabled
     {
 	rvb.iRVBLeft = rvb.iRVBRight = 0;
 	return;
@@ -102,7 +118,7 @@ void MixREVERBLeftRight(s32 * oleft, s32 * oright, s32 inleft, s32 inright)
     downbuf[1][dbpos] = inright;
     dbpos = (dbpos + 1) & 7;
 
-    if (dbpos & 1)		// we work on every second left value: downsample to 22 khz
+    if (dbpos & 1 || _reverb_no_downsample)	// we work on every second left value: downsample to 22 khz
     {
 	if (spuCtrl & 0x80)	// -> reverb on? oki
 	{
@@ -120,6 +136,7 @@ void MixREVERBLeftRight(s32 * oleft, s32 * oright, s32 inleft, s32 inright)
 
 	    INPUT_SAMPLE_L >>= (16 - 8);
 	    INPUT_SAMPLE_R >>= (16 - 8);
+
 	    {
 		const s64 IIR_INPUT_A0 = ((g_buffer(rvb.IIR_SRC_A0) * rvb.IIR_COEF) >> 15) + ((INPUT_SAMPLE_L * rvb.IN_COEF_L) >> 15);
 		const s64 IIR_INPUT_A1 = ((g_buffer(rvb.IIR_SRC_A1) * rvb.IIR_COEF) >> 15) + ((INPUT_SAMPLE_R * rvb.IN_COEF_R) >> 15);
@@ -160,7 +177,7 @@ void MixREVERBLeftRight(s32 * oleft, s32 * oright, s32 inleft, s32 inright)
 		upbuf[0][ubpos] = rvb.iRVBLeft;
 		upbuf[1][ubpos] = rvb.iRVBRight;
 		ubpos = (ubpos + 1) & 7;
-	    }			// Bracket hack(et).
+	    }
 	}
 	else			// -> reverb off
 	{

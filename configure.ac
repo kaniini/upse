@@ -114,11 +114,6 @@ PKG_CHECK_MODULES(AO, [ao],
     [AC_DEFINE(HAVE_AO, 1, [Define this if you have AO.])]
 )
 
-PKG_CHECK_MODULES(MOWGLI, [libmowgli >= 0.2.0],
-    [ADD_PC_REQUIRES([libmowgli >= 0.2.0])],
-    [AC_MSG_ERROR([Cannot find libmowgli >= 0.2.0])]
-)
-
 BUILDSYS_SHARED_LIB
 BUILDSYS_PROG_IMPLIB
 

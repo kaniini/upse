@@ -264,7 +264,9 @@ usage(const char *progname)
 #else
     printf("            Use a path to your OSS /dev/dsp here. (default: /dev/dsp)\n");
 #endif
-    printf("  -p [secs] Pauses [secs] between songs.\n");
+    printf("  -s [secs] Pauses [secs] between songs.\n");
+    printf("  -R        Disables reverb.\n");
+    printf("  -q        Enables non-resampled reverb. [experimental]\n");
     printf("  -h        Displays this message.\n");
     printf("\nReport bugs to <" PACKAGE_BUGREPORT ">.\n");
 
@@ -282,7 +284,7 @@ main(int argc, char *argv[])
     printf("\033[K\033[00;36mCopyright (C) 2007 William Pitcock <nenolod@sacredspiral.co.uk>\033[0m\n");
     printf("\n\033[01mUPSE123 is free software; licensed under the GNU GPL version 2.\nAs such, NO WARRANTY IS PROVIDED. USE AT YOUR OWN RISK!\033[0m\n");
 
-    while ((r = getopt(argc, argv, "ho:d:")) >= 0)
+    while ((r = getopt(argc, argv, "ho:d:s:Rq")) >= 0)
     {
         switch(r) {
             case 'h':
@@ -299,6 +301,12 @@ main(int argc, char *argv[])
                 break;
             case 's':
                 sleep_value_ = atoi(optarg);
+                break;
+            case 'R':
+                upse_set_reverb_mode(0);
+                break;
+            case 'q':
+                upse_set_reverb_no_downsample(1);
                 break;
             default:
                 break;

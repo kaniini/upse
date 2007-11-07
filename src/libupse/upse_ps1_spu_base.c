@@ -548,20 +548,6 @@ int SPUasync(u32 cycles)
 	sl = (sl * volmul) >> 8;
 	sr = (sr * volmul) >> 8;
 
-	//{
-	// static double asl=0;
-	// static double asr=0;
-
-	// asl+=(sl-asl)/5;
-	// asr+=(sl-asr)/5;
-
-	//sl-=asl;
-	//sr-=asr;
-
-	// if(sl>32767 || sl < -32767) printf("Left: %d, %f\n",sl,asl);
-	// if(sr>32767 || sr < -32767) printf("Right: %d, %f\n",sl,asl);
-	//}
-
 	// post-processing: interpolation
 	if (_do_interpolation)
 	{
@@ -611,7 +597,6 @@ static void *_upse_audio_cb_user_data = NULL;
 
 void upse_set_audio_callback(upse_audio_callback_func_t func, void *user_data)
 {
-
     _ENTER;
 
     _upse_audio_callback_f = func;
@@ -625,7 +610,6 @@ void upse_set_audio_callback(upse_audio_callback_func_t func, void *user_data)
 
 void upse_set_interpolation_mode(u32 setting)
 {
-
     _ENTER;
 
     _do_interpolation = setting;
@@ -635,7 +619,6 @@ void upse_set_interpolation_mode(u32 setting)
 
 void upse_set_interpolation_coefficient(double setting)
 {
-
     _ENTER;
 
     _interpolation_coefficient = setting;

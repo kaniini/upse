@@ -78,4 +78,14 @@ void upse_set_interpolation_mode(u32 setting);
  */
 void upse_set_interpolation_coefficient(double setting);
 
+/*
+ * Enable or disable reverb.
+ */
+void upse_set_reverb_mode(u32 setting);
+
+/*
+ * Enable or disable non-downsampled reverb. [EXPERIMENTAL]
+ */
+void upse_set_reverb_no_downsample(u32 setting);
+
 #endif
