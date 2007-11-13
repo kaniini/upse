@@ -29,14 +29,14 @@
 #define _CALL(id, idN) do { _TRACE("call<%s> %s<%p> [0x%x]", #id, idN[call], id[call], call); id[call](); } while(0)
 #define _UNIMPLEMENTED(id, idN) do { _WARN("call<%s> %s<%p> [unimplemented]", #id, idN[call], id[call]); } while(0)
 
-static void hleDummy()
+static void upse_ps1_executive_dummy(void)
 {
     upse_r3000_cpu_regs.pc = upse_r3000_cpu_regs.GPR.n.ra;
 
     psxBranchTest();
 }
 
-static void hleA0()
+static void upse_ps1_executive_run_bios_A0(void)
 {
     u32 call = upse_r3000_cpu_regs.GPR.n.t1 & 0xff;
 
@@ -48,7 +48,7 @@ static void hleA0()
     psxBranchTest();
 }
 
-static void hleB0()
+static void upse_ps1_executive_run_bios_B0(void)
 {
     u32 call = upse_r3000_cpu_regs.GPR.n.t1 & 0xff;
 
@@ -60,7 +60,7 @@ static void hleB0()
     psxBranchTest();
 }
 
-static void hleC0()
+static void upse_ps1_executive_run_bios_C0()
 {
     u32 call = upse_r3000_cpu_regs.GPR.n.t1 & 0xff;
 
@@ -72,9 +72,8 @@ static void hleC0()
     psxBranchTest();
 }
 
-static void hleBootstrap()
+static void upse_ps1_executive_bootstrap(void)
 {				// 0xbfc00000
-    //SysPrintf("hleBootstrap\n");
 }
 
 typedef struct
@@ -90,11 +89,11 @@ typedef struct
     u32 S_addr;
     u32 s_size;
     u32 _sp, _fp, _gp, ret, base;
-} PACKSTRUCT EXEC;
+} PACKSTRUCT upse_ps1_executive_exec_record_t;
 
-static void hleExecRet()
+static void upse_ps1_executive_task_switch(void)
 {
-    EXEC *header = (EXEC *) PSXM(upse_r3000_cpu_regs.GPR.n.s0);
+    upse_ps1_executive_exec_record_t *header = (upse_ps1_executive_exec_record_t *) PSXM(upse_r3000_cpu_regs.GPR.n.s0);
 
     //SysPrintf("ExecRet %x: %x\n", upse_r3000_cpu_regs.GPR.n.s0, header->ret);
 
@@ -108,6 +107,12 @@ static void hleExecRet()
     upse_r3000_cpu_regs.pc = upse_r3000_cpu_regs.GPR.n.ra;
 }
 
-void (*psxHLEt[256]) () =
+void (*psxHLEt[256])(void) =
 {
-hleDummy, hleA0, hleB0, hleC0, hleBootstrap, hleExecRet};
+    upse_ps1_executive_dummy,
+    upse_ps1_executive_run_bios_A0,
+    upse_ps1_executive_run_bios_B0,
+    upse_ps1_executive_run_bios_C0,
+    upse_ps1_executive_bootstrap,
+    upse_ps1_executive_task_switch
+};
