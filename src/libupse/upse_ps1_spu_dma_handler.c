@@ -5,7 +5,7 @@
  * Purpose: libupse: PS1 SPU DMA handling engine
  *
  * Copyright (c) 2007 William Pitcock <nenolod@sacredspiral.co.uk>
- * Portions copyright (c) 2002 Pete Bernet <BlackDove@addcom.de>
+ * Portions copyright (c) 2002 Pete Bernert <BlackDove@addcom.de>
  *
  * UPSE is free software, released under the GNU General Public License,
  * version 2.
