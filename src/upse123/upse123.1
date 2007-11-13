@@ -1,0 +1,41 @@
+.TH UPSE123 "1" "November 2007" "upse" "User Commands"
+.SH NAME
+upse123 \- commandline player for PSF files
+.SH SYNOPSIS
+.B upse123
+[\fIoptions\fR] \fIfiles\fR
+.SH DESCRIPTION
+upse123 is a commandline player of PSF files. It's semantics are 
+comparable to other commandline players like ogg123 and mpg123. Unlike 
+those players, upse123 uses the libupse library to play PSF files. PSF 
+files are sound modules ripped from various PlayStation games and demos.
+.SH "COMMANDLINE OPTIONS"
+.TP
+\fB\-o\fR
+Sets an audio device option.
+.TP
+\fB\-d\fR
+Sets the audio output device to use.
+Use a sound system name like 'oss', 'alsa' or 'esd' here.
+.HP
+\fB\-s\fR [secs] Pauses [secs] between songs.
+.TP
+\fB\-R\fR
+Disables reverb.
+.TP
+\fB\-q\fR
+Enables non\-resampled reverb. [experimental]
+.TP
+\fB\-h\fR
+Displays a help message.
+.TP
+\fB\-v\fR
+Displays upse123's version.
+.SH "SEE ALSO"
+If you are interested in more information about UPSE or the PSF sound 
+format, visit the UPSE website at <http://www.nenolod.net/upse>.
+
+Also for further information about the PSF sound format, visit 
+<http://www.neillcorlett.com/psf>.
+.SH "REPORTING BUGS"
+Report bugs to <nenolod+upse@sacredspiral.co.uk>.

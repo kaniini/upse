@@ -2,6 +2,8 @@ PROG = upse123${PROG_SUFFIX}
 
 SRCS = upse123_main.c
 
+MAN = upse123.1
+
 include ../../buildsys.mk
 include ../../extra.mk
 

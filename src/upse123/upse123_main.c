@@ -268,9 +268,16 @@ usage(const char *progname)
     printf("  -R        Disables reverb.\n");
     printf("  -q        Enables non-resampled reverb. [experimental]\n");
     printf("  -h        Displays this message.\n");
+    printf("  -v        Displays upse123's version.\n");
     printf("\nReport bugs to <" PACKAGE_BUGREPORT ">.\n");
 
     exit(EXIT_SUCCESS);
+}
+
+void
+version(const char *progname)
+{
+    printf("%s " PACKAGE_VERSION "\n", progname);
 }
 
 int
@@ -280,15 +287,15 @@ main(int argc, char *argv[])
     char r;
     int sleep_value_ = 0;
 
-    printf("\033[K\033[01;36mUPSE123\033[00;36m: High quality PSF player.\033[0m\n");
-    printf("\033[K\033[00;36mCopyright (C) 2007 William Pitcock <nenolod@sacredspiral.co.uk>\033[0m\n");
-    printf("\n\033[01mUPSE123 is free software; licensed under the GNU GPL version 2.\nAs such, NO WARRANTY IS PROVIDED. USE AT YOUR OWN RISK!\033[0m\n");
-
-    while ((r = getopt(argc, argv, "ho:d:s:Rq")) >= 0)
+    while ((r = getopt(argc, argv, "hvo:d:s:Rq")) >= 0)
     {
         switch(r) {
             case 'h':
                 usage(argv[0]);
+                return 0;
+                break;
+            case 'v':
+                version(argv[0]);
                 return 0;
                 break;
 #ifdef HAVE_AO
@@ -312,6 +319,10 @@ main(int argc, char *argv[])
                 break;
         }
     }
+
+    printf("\033[K\033[01;36mUPSE123\033[00;36m: High quality PSF player.\033[0m\n");
+    printf("\033[K\033[00;36mCopyright (C) 2007 William Pitcock <nenolod@sacredspiral.co.uk>\033[0m\n");
+    printf("\n\033[01mUPSE123 is free software; licensed under the GNU GPL version 2.\nAs such, NO WARRANTY IS PROVIDED. USE AT YOUR OWN RISK!\033[0m\n");
 
     upse123_init_audio();
 
