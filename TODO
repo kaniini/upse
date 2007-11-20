@@ -34,11 +34,6 @@ upse123:
 
 upse-audacious:
    - configuration dialog
-   - something in libupse is not thread safe (well, duh, it's an emulator)
-     guard with a mutex until state is not global?
-
-upse-xmms:
-   - implement once upse-audacious is complete
 
 upse-xmms2:
    - implement? is it worth it?
