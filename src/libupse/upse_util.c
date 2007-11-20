@@ -26,8 +26,6 @@
 #include "upse.h"
 #include "upse-string.h"
 
-static upse_iofuncs_t *_upse_iofuncs = NULL;
-
 // LOAD STUFF
 
 typedef struct
@@ -246,7 +244,7 @@ static int ccomp(const void *v1, const void *v2)
     return (a1->num - a2->num);
 }
 
-static upse_psf_t *_upse_load(char *path, int level, int type)	// Type==1 for just info load.
+static upse_psf_t *_upse_load(char *path, int level, int type, upse_iofuncs_t *_upse_iofuncs)	// Type==1 for just info load.
 {
     void *fp;
     upse_exe_header_t tmpHead;
@@ -356,7 +354,7 @@ static upse_psf_t *_upse_load(char *path, int level, int type)	// Type==1 for ju
 			   the full path(directory + file name) "path"
 			 */
 			tmpfn = GetFileWithBase(path, value);
-			if (!(tmpi = _upse_load(tmpfn, level + 1, 0)))
+			if (!(tmpi = _upse_load(tmpfn, level + 1, 0, _upse_iofuncs)))
 			{
 			    free(key);
 			    free(value);
@@ -433,7 +431,7 @@ static upse_psf_t *_upse_load(char *path, int level, int type)	// Type==1 for ju
 		   the full path(directory + file name) "path"
 		 */
 		tmpfn = GetFileWithBase(path, cache[cur].value);
-		if (!(tmpi = _upse_load(tmpfn, level + 1, 0)))
+		if (!(tmpi = _upse_load(tmpfn, level + 1, 0, _upse_iofuncs)))
 		{
 		    //free(key);
 		    //free(value);
@@ -471,17 +469,13 @@ upse_psf_t *upse_get_psf_metadata(char *path, upse_iofuncs_t * iofuncs)
 
     _ENTER;
 
-    _upse_iofuncs = iofuncs;
-
-    if (!(ret = _upse_load(path, 0, 1)))
+    if (!(ret = _upse_load(path, 0, 1, iofuncs)))
 	return NULL;
 
     if (ret->stop == (u32) ~ 0)
 	ret->fade = 0;
 
     ret->length = ret->stop + ret->fade;
-
-    _upse_iofuncs = NULL;
 
     _LEAVE;
     return ret;
@@ -493,15 +487,13 @@ upse_psf_t *upse_load(char *path, upse_iofuncs_t * iofuncs)
 
     _ENTER;
 
-    _upse_iofuncs = iofuncs;
-
     psxInit();
     psxReset();
 
     SPUinit();
     SPUopen();
 
-    if (!(ret = _upse_load(path, 0, 0)))
+    if (!(ret = _upse_load(path, 0, 0, iofuncs)))
     {
 	psxShutdown();
 
@@ -513,8 +505,6 @@ upse_psf_t *upse_load(char *path, upse_iofuncs_t * iofuncs)
 
     SPUsetlength(ret->stop, ret->fade);
     ret->length = ret->stop + ret->fade;
-
-    _upse_iofuncs = NULL;
 
     _LEAVE;
     return ret;
