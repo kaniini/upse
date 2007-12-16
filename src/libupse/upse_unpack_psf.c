@@ -120,7 +120,7 @@ static char *_upse_resolve_path(char *f, char *newfile)
     return (ret);
 }
 
-static int GetKeyVal(char *buf, char **key, char **val)
+static int _upse_psf_get_tag(char *buf, char **key, char **val)
 {
     char *tmp;
 
@@ -189,7 +189,7 @@ static int GetKeyVal(char *buf, char **key, char **val)
     return (1);
 }
 
-static void FreeTags(upse_psftag_t * tags)
+static void _upse_psf_free_tags(upse_psftag_t * tags)
 {
     while (tags)
     {
@@ -203,16 +203,16 @@ static void FreeTags(upse_psftag_t * tags)
     }
 }
 
-static void AddKV(upse_psftag_t ** tag, char *key, char *val)
+static void _upse_psf_add_tag(upse_psftag_t ** tag, const char *key, const char *val)
 {
     upse_psftag_t *tmp;
 
     tmp = malloc(sizeof(upse_psftag_t));
     memset(tmp, 0, sizeof(upse_psftag_t));
 
-    tmp->key = key;
-    tmp->value = val;
-    tmp->next = 0;
+    tmp->key = strdup(key);
+    tmp->value = strdup(val);
+    tmp->next = NULL;
 
     if (!*tag)
 	*tag = tmp;
@@ -315,9 +315,9 @@ static upse_psf_t *_upse_load(char *path, int level, int type, upse_iofuncs_t *_
 		while (upse_io_fgets(linebuf, 1024, fp, _upse_iofuncs))
 		{
 		    int x;
-		    char *key = 0, *value = 0;
+		    char *key = NULL, *value = NULL;
 
-		    if (!GetKeyVal(linebuf, &key, &value))
+		    if (!_upse_psf_get_tag(linebuf, &key, &value))
 		    {
 			if (key)
 			    free(key);
@@ -326,7 +326,7 @@ static upse_psf_t *_upse_load(char *path, int level, int type, upse_iofuncs_t *_
 			continue;
 		    }
 
-		    AddKV(&psfi->taglist, key, value);
+		    _upse_psf_add_tag(&psfi->taglist, key, value);
 
 		    if (!level)
 		    {
@@ -360,14 +360,19 @@ static upse_psf_t *_upse_load(char *path, int level, int type, upse_iofuncs_t *_
 			    if (!level)
 				free(out);
 			    _upse_iofuncs->close_impl(fp);
-			    FreeTags(psfi->taglist);
+			    _upse_psf_free_tags(psfi->taglist);
 			    free(psfi);
 			    return NULL;
 			}
-			FreeTags(tmpi->taglist);
+			_upse_psf_free_tags(tmpi->taglist);
 			free(tmpi);
 			free(tmpfn);
 		    }
+
+		    if (key)
+		        free(key);
+		    if (value)
+		        free(value);
 		}
 	    }
 	}
@@ -438,7 +443,7 @@ static upse_psf_t *_upse_load(char *path, int level, int type, upse_iofuncs_t *_
 		    //return(0);
 		}
 		free(tmpfn);
-		FreeTags(tmpi->taglist);
+		_upse_psf_free_tags(tmpi->taglist);
 		free(tmpi);
 
 		upse_r3000_cpu_regs.pc = ba[0];
@@ -457,7 +462,7 @@ static upse_psf_t *_upse_load(char *path, int level, int type, upse_iofuncs_t *_
 
 void upse_free_psf_metadata(upse_psf_t * info)
 {
-    FreeTags(info->taglist);
+    _upse_psf_free_tags(info->taglist);
     free(info);
 }
 
