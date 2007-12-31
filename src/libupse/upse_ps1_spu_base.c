@@ -545,15 +545,13 @@ int SPUasync(u32 cycles)
 	    }
 	}
 	sampcount++;
-	sl = (sl * volmul) >> 8;
-	sr = (sr * volmul) >> 8;
 
 	// post-processing: interpolation
 	if (_do_interpolation)
 	{
 	    double ldiff, rdiff, avg, tmp;
 
-	    avg = (sl + sr) / 2;
+	    avg = ((sl + sr) / 2);
 	    ldiff = sl - avg;
 	    rdiff = sr - avg;
 
@@ -572,6 +570,10 @@ int SPUasync(u32 cycles)
 	    sr = tmp;
 	}
 
+	/* fix dynamic range. */
+	sl = (sl * volmul) >> 14;
+	sr = (sr * volmul) >> 14;
+
 	if (sl > 32767)
 	    sl = 32767;
 	if (sl < -32767)
@@ -580,6 +582,7 @@ int SPUasync(u32 cycles)
 	    sr = 32767;
 	if (sr < -32767)
 	    sr = -32767;
+
 	*pS++ = sl;
 	*pS++ = sr;
     }
