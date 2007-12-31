@@ -40,9 +40,9 @@ typedef uint64_t u64;
 typedef uintptr_t uptr;
 
 #ifdef __GNUC__
-# define PACKSTRUCT	__attribute__ ((packed))
+# define upse_packed_t	__attribute__ ((packed))
 #else
-# define PACKSTRUCT
+# define upse_packed_t
 #endif
 
 #endif

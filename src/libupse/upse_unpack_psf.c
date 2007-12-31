@@ -46,7 +46,7 @@ typedef struct
     u32 SavedGP;
     u32 SavedRA;
     u32 SavedS0;
-} PACKSTRUCT upse_exe_header_t;
+} upse_packed_t upse_exe_header_t;
 
 static long _upse_time_to_ms(const char *str)
 {

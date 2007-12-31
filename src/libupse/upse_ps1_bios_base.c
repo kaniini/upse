@@ -143,7 +143,7 @@ typedef struct _malloc_chunk
     u32 size;
     u32 fd;
     u32 bk;
-} PACKSTRUCT malloc_chunk;
+} upse_packed_t malloc_chunk;
 
 #define INUSE 0x1
 
@@ -153,7 +153,7 @@ typedef struct
     s32 status;
     s32 mode;
     u32 fhandler;
-} PACKSTRUCT EvCB[32];
+} upse_packed_t EvCB[32];
 
 #define EvStUNUSED	0x0000
 #define EvStWAIT	0x1000
@@ -169,7 +169,7 @@ typedef struct
     s32 mode;
     u32 reg[32];
     u32 func;
-} PACKSTRUCT TCB;
+} upse_packed_t TCB;
 
 static u32 *jmp_int;
 

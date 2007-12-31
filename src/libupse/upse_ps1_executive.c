@@ -86,10 +86,10 @@ typedef struct
     u32 d_size;
     u32 b_addr;
     u32 b_size;
-    u32 S_addr;
+    u32 s_addr;
     u32 s_size;
     u32 _sp, _fp, _gp, ret, base;
-} PACKSTRUCT upse_ps1_executive_exec_record_t;
+} upse_packed_t upse_ps1_executive_exec_record_t;
 
 static void upse_ps1_executive_task_switch(void)
 {
