@@ -371,8 +371,6 @@ static upse_psf_t *_upse_load(char *path, int level, int type, upse_iofuncs_t *_
 
 		    if (key)
 		        free(key);
-		    if (value)
-		        free(value);
 		}
 	    }
 	}
