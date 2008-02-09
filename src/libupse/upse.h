@@ -88,4 +88,11 @@ void upse_set_reverb_mode(u32 setting);
  */
 void upse_set_reverb_no_downsample(u32 setting);
 
+/*
+ * Custom BIOS stuff.
+ */
+int upse_has_custom_bios(void);
+const char *upse_get_custom_bios(void);
+void upse_set_custom_bios(const char *bios);
+
 #endif

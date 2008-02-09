@@ -46,6 +46,7 @@ void __Log(char *fmt, ...);
 #define BIAS	2
 #define PSXCLK	33868800	/* 33.8688 Mhz */
 
+#include "upse.h"
 #include "upse-debug.h"
 #include "upse-r3000-abstract.h"
 #include "upse-ps1-memory-manager.h"

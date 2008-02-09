@@ -1118,6 +1118,9 @@ void upse_ps1_bios_init()
     u32 *ptr;
     int i;
 
+    if (upse_has_custom_bios())
+        return;
+
     heap_addr = 0;
     CurThread = 0;
     jmp_int = NULL;

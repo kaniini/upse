@@ -5,6 +5,7 @@ LIB_MINOR = 0
 SRCS = upse_string.c			\
        upse_util.c			\
        upse_unpack_psf.c		\
+       upse_bios_manager.c 		\
        upse_r3000_bytecode_evaluator.c	\
        upse_r3000_abstract.c		\
        upse_ps1_executive.c		\

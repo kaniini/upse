@@ -46,6 +46,10 @@ void psxReset()
 
     upse_ps1_hal_reset();
     upse_ps1_bios_init();
+
+    /* start up the bios */
+    if (upse_has_custom_bios())
+        psxExecuteBios();
 }
 
 void psxShutdown()
@@ -83,7 +87,8 @@ void psxException(u32 code, u32 bd)
     // Set the Status
     upse_r3000_cpu_regs.CP0.n.Status = (upse_r3000_cpu_regs.CP0.n.Status & ~0x3f) | ((upse_r3000_cpu_regs.CP0.n.Status & 0xf) << 2);
 
-    upse_ps1_bios_exception();
+    if (!upse_has_custom_bios())
+        upse_ps1_bios_exception();
 }
 
 void psxBranchTest()
