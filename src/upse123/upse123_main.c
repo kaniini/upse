@@ -269,6 +269,7 @@ usage(const char *progname)
     printf("  -q        Enables non-resampled reverb. [experimental]\n");
     printf("  -h        Displays this message.\n");
     printf("  -v        Displays upse123's version.\n");
+    printf("  -B        Sets a custom BIOS to use.\n");
     printf("\nReport bugs to <" PACKAGE_BUGREPORT ">.\n");
 
     exit(EXIT_SUCCESS);
@@ -287,7 +288,7 @@ main(int argc, char *argv[])
     char r;
     int sleep_value_ = 0;
 
-    while ((r = getopt(argc, argv, "hvo:d:s:Rq")) >= 0)
+    while ((r = getopt(argc, argv, "hvo:d:s:RqB:")) >= 0)
     {
         switch(r) {
             case 'h':
@@ -314,6 +315,9 @@ main(int argc, char *argv[])
                 break;
             case 'q':
                 upse_set_reverb_no_downsample(1);
+                break;
+            case 'B':
+                upse_set_custom_bios(optarg);
                 break;
             default:
                 break;
