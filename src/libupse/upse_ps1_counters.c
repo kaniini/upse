@@ -200,7 +200,6 @@ void psxRcntUpdate()
     }
 
     psxRcntSet();
-
 }
 
 void psxRcntWcount(u32 index, u32 value)

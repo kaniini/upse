@@ -571,8 +571,8 @@ int SPUasync(u32 cycles)
 	}
 
 	/* fix dynamic range. */
-	sl = (sl * volmul) >> 14;
-	sr = (sr * volmul) >> 14;
+	sl = (sl * volmul) >> 10;
+	sr = (sr * volmul) >> 10;
 
 	if (sl > 32767)
 	    sl = 32767;
@@ -746,7 +746,7 @@ int SPUopen(void)
     memset((void *) s_chan, 0, (MAXCHAN + 1) * sizeof(SPUCHAN));
     pSpuIrq = 0;
 
-    iVolume = 128;		//85;
+    iVolume = 160;		//85;
     SetupStreams();		// prepare streaming
 
     bSPUIsOpen = 1;
