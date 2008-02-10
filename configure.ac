@@ -120,9 +120,10 @@ AC_SUBST(UPSE_TARGET_AUD)
 AC_ARG_ENABLE(audplugin,
         [  --enable-ao                        enable libao support (default=yes)],
                         ao=$enableval, ao=yes)
-if text "x$ao" == "xyes"; then
+if test "x$ao" == "xyes"; then
 	PKG_CHECK_MODULES(AO, [ao],
-	    [AC_DEFINE(HAVE_AO, 1, [Define this if you have AO.])]
+	    [AC_DEFINE(HAVE_AO, 1, [Define this if you have AO.])],
+            [ao="no"]
 	)
 fi
 
