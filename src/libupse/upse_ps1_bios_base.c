@@ -1106,6 +1106,8 @@ static void bios_ChangeClearRCnt()
 static void bios_dummy()
 {
     pc0 = ra;
+
+    printf("[unimplemented] A0: %p A1: %p A2: %p A3: %p\n", Ra0, Ra1, Ra2, Ra3);
 }
 
 void (*biosA0[256]) ();
@@ -1132,6 +1134,7 @@ void upse_ps1_bios_init()
 	biosC0[i] = NULL;
     }
 
+#if 0
     for (i = 0; i < 256; i++)
     {
 	if (biosA0[i] == NULL)
@@ -1141,6 +1144,7 @@ void upse_ps1_bios_init()
 	if (biosC0[i] == NULL)
 	    biosC0[i] = bios_dummy;
     }
+#endif
 
     biosA0[0x0e] = bios_abs;
     biosA0[0x0f] = bios_labs;
@@ -1352,6 +1356,7 @@ void upse_ps1_bios_init()
     //biosC0[0x1a] = bios_sys_c0_1a
     //biosC0[0x1b] = bios_KernelRedirect;
     //biosC0[0x1c] = bios_PatchAOTable;
+    biosC0[0x3f] = bios_dummy;
 //************** THE END ***************************************
 
     base = 0x1000;

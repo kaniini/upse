@@ -1,3 +1,20 @@
+upse 0.6.0 (2008-02-10):
+
+* the "protect the fact that information is free" release.
+* Add option to load in a PSone ROM image for replayers which
+  need it. No UPSE will not come with a ROM image, and no I won't
+  tell you where you can get one. Pro tip: I got mine by JTAGing my
+  PSone, and you can do the same. Also, some replayers seem to use values
+  in the ROM which changes the way the replayer plays back the sound.
+  (crash2.psflib, I'm looking at you for _all_ of the above.)
+* Do some reworking of the analogue filter on the SPU.
+* upse123: Add -B option to specify a playstation ROM image.
+* HLE bios: Display function ID on unimplemented syscalls.
+
+upse 0.5.0 (2007-12-28):
+
+* fix some bugs and other stuff
+
 upse 0.4.0 (2007-11-19):
 
 * first public release
