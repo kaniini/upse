@@ -697,13 +697,17 @@ static void bios_InitHeap()
 
 static void bios_printf()
 {
+    pc0 = ra;
+
 #ifdef UPSE_DEBUG
-    printf(Ra0, Ra1, Ra2, Ra3);
+    _DEBUG(Ra0, Ra1, Ra2, Ra3);
 #endif
 }
 
 static void bios_puts()
 {
+    pc0 = ra;
+
 #ifdef UPSE_DEBUG
     _DEBUG("%s", Ra0);
 #endif
@@ -1099,15 +1103,14 @@ static void bios_ChangeClearRCnt()
     v0 = BFLIP32(*ptr);
     *ptr = BFLIP32(a1);
 
-//      upse_r3000_cpu_regs.CP0.n.Status|= 0x404;
+    upse_r3000_cpu_regs.CP0.n.Status|= 0x404;
     pc0 = ra;
 }
 
 static void bios_dummy()
 {
     pc0 = ra;
-
-    printf("[unimplemented] A0: %p A1: %p A2: %p A3: %p\n", Ra0, Ra1, Ra2, Ra3);
+    v0 = a1;
 }
 
 void (*biosA0[256]) ();
@@ -1134,7 +1137,6 @@ void upse_ps1_bios_init()
 	biosC0[i] = NULL;
     }
 
-#if 0
     for (i = 0; i < 256; i++)
     {
 	if (biosA0[i] == NULL)
@@ -1144,7 +1146,6 @@ void upse_ps1_bios_init()
 	if (biosC0[i] == NULL)
 	    biosC0[i] = bios_dummy;
     }
-#endif
 
     biosA0[0x0e] = bios_abs;
     biosA0[0x0f] = bios_labs;
@@ -1356,7 +1357,7 @@ void upse_ps1_bios_init()
     //biosC0[0x1a] = bios_sys_c0_1a
     //biosC0[0x1b] = bios_KernelRedirect;
     //biosC0[0x1c] = bios_PatchAOTable;
-    biosC0[0x3f] = bios_dummy;
+    biosC0[0x3f] = bios_printf;
 //************** THE END ***************************************
 
     base = 0x1000;
@@ -1386,12 +1387,12 @@ void upse_ps1_bios_init()
     psxMu32(0x0160) = BFLIP32(0x248);
     strcpy(&psxM[0x248], "bu");
 
-/*	psxMu32(0x0ca8) = BFLIP32(0x1f410004);
+	psxMu32(0x0ca8) = BFLIP32(0x1f410004);
 	psxMu32(0x0cf0) = BFLIP32(0x3c020000);
 	psxMu32(0x0cf4) = BFLIP32(0x2442641c);
 	psxMu32(0x09e0) = BFLIP32(0x43d0);
 	psxMu32(0x4d98) = BFLIP32(0x946f000a);
-*/
+
     // opcode HLE
     psxRu32(0x0000) = BFLIP32((0x3b << 26) | 4);
     psxMu32(0x0000) = BFLIP32((0x3b << 26) | 0);
