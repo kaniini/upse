@@ -81,6 +81,18 @@ u16 upse_ps1_hal_read_16(u32 add)
       case 0x1f801128:
 	  hard = psxCounters[2].target;
 	  return hard;
+      case 0x1f801070:
+          hard = psxHu16(0x1070);
+	  return hard;
+      case 0x1f801074:
+          hard = psxHu16(0x1074);
+	  return hard;
+      case 0x1f8010f0:
+          hard = psxHu16(0x10f0);
+	  return hard;
+      case 0x1f8010f4:
+          hard = psxHu16(0x10f4);
+	  return hard;
 
       default:
 	  if (add >= 0x1f801c00 && add < 0x1f801e00)
@@ -89,6 +101,7 @@ u16 upse_ps1_hal_read_16(u32 add)
 	  }
 	  else
 	  {
+              _WARN("unknown address [0x%x]", add);
 	      hard = BFLIP16(psxHu16(add));
 	  }
 	  return hard;
@@ -130,8 +143,20 @@ u32 upse_ps1_hal_read_32(u32 add)
       case 0x1f801128:
 	  hard = psxCounters[2].target;
 	  return hard;
-
+      case 0x1f801070:
+          hard = psxHu32(0x1070);
+	  return hard;
+      case 0x1f801074:
+          hard = psxHu32(0x1074);
+	  return hard;
+      case 0x1f8010f0:
+          hard = psxHu32(0x10f0);
+	  return hard;
+      case 0x1f8010f4:
+          hard = psxHu32(0x10f4);
+	  return hard;
       default:
+          _WARN("unknown address [0x%x]", add);
 	  hard = BFLIP32(psxHu32(add));
 	  return hard;
     }
@@ -153,10 +178,6 @@ void upse_ps1_hal_write_16(u32 add, u16 value)
 {
     switch (add)
     {
-
-      case 0x1f801070:
-	  psxHu16(0x1070) &= BFLIP16(BFLIP16(psxHu16(0x1074)) & value);
-	  return;
       case 0x1f801100:
 	  psxRcntWcount(0, value);
 	  return;
@@ -187,6 +208,16 @@ void upse_ps1_hal_write_16(u32 add, u16 value)
 	  psxRcntWtarget(2, value);
 	  return;
 
+      case 0x1f801070:
+          psxHu16(0x1070) |= BFLIP16(0x200);
+          psxHu16(0x1070) &= BFLIP16((psxHu16(0x1074) & value));
+          return;
+
+      case 0x1f801074:
+          psxHu16(0x1074) = BFLIP16(value);
+          upse_r3000_cpu_regs.interrupt |= 0x80000000;
+          return;
+
       default:
 	  if (add >= 0x1f801c00 && add < 0x1f801e00)
 	  {
@@ -194,6 +225,7 @@ void upse_ps1_hal_write_16(u32 add, u16 value)
 	      return;
 	  }
 
+          _DEBUG("unknown address [0x%x]", add);
 	  psxHu16(add) = BFLIP16(value);
 	  return;
     }
@@ -218,9 +250,6 @@ void upse_ps1_hal_write_32(u32 add, u32 value)
 {
     switch (add)
     {
-      case 0x1f801070:
-	  psxHu32(0x1070) &= BFLIP32(BFLIP32(psxHu32(0x1074)) & value);
-	  return;
       case 0x1f8010c8:
 	  HW_DMA4_CHCR = BFLIP32(value);	// DMA4 chcr (SPU DMA)
 	  DmaExec(4);
@@ -263,7 +292,26 @@ void upse_ps1_hal_write_32(u32 add, u32 value)
 	  psxRcntWtarget(2, value & 0xffff);
 	  return;
 
+      case 0x1f8010c0:
+          _DEBUG("DMA4 MADR 32bit write %x\n", value);
+          HW_DMA4_MADR = BFLIP32(value);
+          return;
+      case 0x1f8010c4:
+          _DEBUG("DMA4 BCR 32bit write %lx\n", value);
+          HW_DMA4_BCR  = BFLIP32(value);
+          return;
+
+      case 0x1f801070:
+          psxHu32(0x1070) |= BFLIP32(0x200);
+          psxHu32(0x1070) &= BFLIP32((psxHu32(0x1074) & value));
+          return;
+      case 0x1f801074:
+          psxHu32(0x1074) = BFLIP32(value);
+          upse_r3000_cpu_regs.interrupt |= 0x80000000;
+          return;
+
       default:
+          _DEBUG("unknown address [0x%x]", add);
 	  psxHu32(add) = BFLIP32(value);
 	  return;
     }
