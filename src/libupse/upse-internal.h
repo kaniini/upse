@@ -51,6 +51,7 @@ void __Log(char *fmt, ...);
 #include "upse-r3000-abstract.h"
 #include "upse-ps1-memory-manager.h"
 #include "upse-ps1-hal.h"
+#include "upse-ps1-gpu.h"
 #include "upse-ps1-bios-base.h"
 #include "upse-ps1-dma-manager.h"
 #include "upse-ps1-counters.h"
