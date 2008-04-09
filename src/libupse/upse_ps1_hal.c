@@ -155,6 +155,9 @@ u32 upse_ps1_hal_read_32(u32 add)
       case 0x1f8010f4:
           hard = psxHu32(0x10f4);
 	  return hard;
+      case 0x1f801814:
+          hard = BFLIP32(upse_ps1_gpu_get_status());
+          return hard;
       default:
           _WARN("unknown address [0x%x]", add);
 	  hard = BFLIP32(psxHu32(add));
@@ -308,6 +311,10 @@ void upse_ps1_hal_write_32(u32 add, u32 value)
       case 0x1f801074:
           psxHu32(0x1074) = BFLIP32(value);
           upse_r3000_cpu_regs.interrupt |= 0x80000000;
+          return;
+
+      case 0x1f801814:
+          upse_ps1_gpu_set_status(BFLIP32(value));
           return;
 
       default:
