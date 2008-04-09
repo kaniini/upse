@@ -10,6 +10,7 @@ SRCS = upse_string.c			\
        upse_r3000_abstract.c		\
        upse_ps1_executive.c		\
        upse_ps1_counters.c		\
+       upse_ps1_gpu.c			\
        upse_ps1_hal.c			\
        upse_ps1_bios_base.c		\
        upse_ps1_memory_manager.c	\
