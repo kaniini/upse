@@ -101,7 +101,7 @@ u16 upse_ps1_hal_read_16(u32 add)
 	  }
 	  else
 	  {
-              _WARN("unknown address [0x%x]", add);
+              _DEBUG("unknown address [0x%x]", add);
 	      hard = BFLIP16(psxHu16(add));
 	  }
 	  return hard;
@@ -159,7 +159,7 @@ u32 upse_ps1_hal_read_32(u32 add)
           hard = BFLIP32(upse_ps1_gpu_get_status());
           return hard;
       default:
-          _WARN("unknown address [0x%x]", add);
+          _DEBUG("unknown address [0x%x]", add);
 	  hard = BFLIP32(psxHu32(add));
 	  return hard;
     }
