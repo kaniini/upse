@@ -177,7 +177,6 @@ static void upse_aud_stop(InputPlayback *playback)
 
     playback->output->pause(0);
     playback->playing = FALSE;
-    g_thread_join(playback->thread);
 
     upse_free_psf_metadata(playback->data);
 }
