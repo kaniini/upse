@@ -73,6 +73,10 @@ void upse_aud_update(unsigned char *buffer, long count, gpointer data)
     while (count > 0)
     {
         int t = playback->output->buffer_free() & mask;
+
+        if (playback->playing == FALSE)
+            upse_stop();
+
         if (t > count)
             playback->pass_audio(playback,
                           FMT_S16_NE, 2, count, buffer, &playback->playing);
