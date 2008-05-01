@@ -34,7 +34,7 @@
 void SPUirq(void);
 u16 SPUreadRegister(u32 reg);
 void SPUwriteRegister(u32 reg, u16 val);
-int SPUasync(u32 cycle);
+int upse_ps1_spu_render(u32 cycle);
 void SPUwriteDMAMem(u32 usPSXMem, int iSize);
 void SPUreadDMAMem(u32 usPSXMem, int iSize);
 

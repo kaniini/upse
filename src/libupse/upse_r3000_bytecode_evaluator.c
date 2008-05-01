@@ -1080,7 +1080,7 @@ void upse_r3000_cpu_execute(void)
 	    psxShutdown();
 	    return;
 	}
-	SPUendflush();
+	upse_ps1_spu_finalize();
 	execI();
     }
 }

@@ -493,8 +493,8 @@ upse_psf_t *upse_load(char *path, upse_iofuncs_t * iofuncs)
     psxInit();
     psxReset();
 
-    SPUinit();
-    SPUopen();
+    upse_ps1_spu_init();
+    upse_ps1_spu_open();
 
     if (!(ret = _upse_load(path, 0, 0, iofuncs)))
     {
@@ -506,8 +506,8 @@ upse_psf_t *upse_load(char *path, upse_iofuncs_t * iofuncs)
     if (ret->stop == (u32) ~ 0)
 	ret->fade = 0;
 
-    SPUsetvolume(ret->volume);
-    SPUsetlength(ret->stop, ret->fade);
+    upse_ps1_spu_setvolume(ret->volume);
+    upse_ps1_spu_setlength(ret->stop, ret->fade);
     ret->length = ret->stop + ret->fade;
 
     _LEAVE;

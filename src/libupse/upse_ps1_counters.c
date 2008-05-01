@@ -129,7 +129,7 @@ int CounterSPURun(void)
 
     if (cycles >= 16)
     {
-	if (!SPUasync(cycles))
+	if (!upse_ps1_spu_render(cycles))
 	    return (0);
 	last = upse_r3000_cpu_regs.cycle;
     }

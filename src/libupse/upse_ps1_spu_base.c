@@ -247,7 +247,7 @@ static u32 decaybegin;
 static u32 decayend;
 
 // Counting to 65536 results in full volume offage.
-void SPUsetlength(s32 stop, s32 fade)
+void upse_ps1_spu_setlength(s32 stop, s32 fade)
 {
     _ENTER;
 
@@ -267,7 +267,7 @@ void SPUsetlength(s32 stop, s32 fade)
     _LEAVE;
 }
 
-void SPUsetvolume(int volume)
+void upse_ps1_spu_setvolume(int volume)
 {
     _ENTER;
 
@@ -295,7 +295,7 @@ static u32 _do_interpolation = 1;
 static double _interpolation_coefficient = 3.759285613;
 
 #define CLIP(_x) {if(_x>32767) _x=32767; if(_x<-32767) _x=-32767;}
-int SPUasync(u32 cycles)
+int upse_ps1_spu_render(u32 cycles)
 {
     static s32 dosampies;
     s32 temp;
@@ -646,7 +646,7 @@ void upse_set_interpolation_coefficient(double setting)
     _LEAVE;
 }
 
-void SPUendflush(void)
+void upse_ps1_spu_finalize(void)
 {
     if ((seektime != (u32) ~ 0) && seektime > sampcount)
     {
@@ -686,7 +686,7 @@ static u64 SexyTime64(void)
 // SPUINIT: this func will be called first by the main emu
 ////////////////////////////////////////////////////////////////////////
 
-int SPUinit(void)
+int upse_ps1_spu_init(void)
 {
     spuMemC = (u8 *) spuMem;	// just small setup
     memset((void *) s_chan, 0, MAXCHAN * sizeof(SPUCHAN));
@@ -749,7 +749,7 @@ void RemoveStreams(void)
 // SPUOPEN: called by main emu after init
 ////////////////////////////////////////////////////////////////////////
 
-int SPUopen(void)
+int upse_ps1_spu_open(void)
 {
     if (bSPUIsOpen)
 	return 0;		// security for some stupid main emus
@@ -777,7 +777,7 @@ int SPUopen(void)
 // SPUCLOSE: called before shutdown
 ////////////////////////////////////////////////////////////////////////
 
-int SPUclose(void)
+int upse_ps1_spu_close(void)
 {
     if (!bSPUIsOpen)
 	return 0;		// some security

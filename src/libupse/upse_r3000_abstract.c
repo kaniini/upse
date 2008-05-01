@@ -58,7 +58,7 @@ void psxShutdown()
     upse_ps1_bios_shutdown();
 
     upse_r3000_cpu_shutdown();
-    SPUclose();
+    upse_ps1_spu_close();
 }
 
 void psxException(u32 code, u32 bd)
