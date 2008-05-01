@@ -95,4 +95,9 @@ int upse_has_custom_bios(void);
 const char *upse_get_custom_bios(void);
 void upse_set_custom_bios(const char *bios);
 
+/*
+ * Utility functions.
+ */
+float upse_strtof(const char *value);
+
 #endif

@@ -24,11 +24,24 @@
 #include "upse.h"
 #include "upse-string.h"
 
-void upse_execute(void)
+void
+upse_execute(void)
 {
     _ENTER;
 
     upse_r3000_cpu_execute();
 
     _LEAVE;
+}
+
+float
+upse_strtof(const char *value)
+{
+    float val;
+
+    _ENTER;
+
+    val = strtof(value, NULL);
+
+    _LEAVE val;
 }
