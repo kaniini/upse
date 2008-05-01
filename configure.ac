@@ -117,7 +117,7 @@ fi
 
 AC_SUBST(UPSE_TARGET_AUD)
 
-AC_ARG_ENABLE(audplugin,
+AC_ARG_ENABLE(ao,
         [  --enable-ao                        enable libao support (default=yes)],
                         ao=$enableval, ao=yes)
 if test "x$ao" == "xyes"; then
