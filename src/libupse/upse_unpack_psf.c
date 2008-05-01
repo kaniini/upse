@@ -344,7 +344,7 @@ static upse_psf_t *_upse_load(char *path, int level, int type, upse_iofuncs_t *_
 			else if (!strcasecmp(key, "fade"))
 			    psfi->fade = _upse_time_to_ms(value);
 			else if (!strcasecmp(key, "volume"))
-			    psfi->volume = upse_strtof(value) * 255;
+			    psfi->volume = upse_strtof(value) * 32;
 		    }
 
 		    if (!strcasecmp(key, "_lib") && !type)

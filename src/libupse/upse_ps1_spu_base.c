@@ -17,7 +17,7 @@
  */
 
 #define _IN_SPU
-
+#define UPSE_DEBUG
 
 #include "upse-types.h"
 #include "upse-internal.h"
@@ -43,7 +43,7 @@ u8 *pSpuIrq = 0;
 u8 *pSpuBuffer;
 
 // user settings          
-static u32 iVolume;
+static int iVolume;
 
 // MAIN infos struct for each channel
 
@@ -267,13 +267,16 @@ void SPUsetlength(s32 stop, s32 fade)
     _LEAVE;
 }
 
-void SPUsetvolume(u32 volume)
+void SPUsetvolume(int volume)
 {
     _ENTER;
 
-    _DEBUG("new volume [%d]", volume);
+    if (volume >= 32)
+        iVolume = 0;
+    else
+        iVolume = (volume / 4);
 
-    iVolume = volume;
+    _DEBUG("new volume [%d] [%d]", iVolume, volume);
 
     _LEAVE;
 }
@@ -294,7 +297,6 @@ static double _interpolation_coefficient = 3.759285613;
 #define CLIP(_x) {if(_x>32767) _x=32767; if(_x<-32767) _x=-32767;}
 int SPUasync(u32 cycles)
 {
-    int volmul = iVolume;
     static s32 dosampies;
     s32 temp;
 
@@ -586,8 +588,8 @@ int SPUasync(u32 cycles)
 	}
 
 	/* fix dynamic range. */
-	sl = (sl * volmul) >> 8;
-	sr = (sr * volmul) >> 8;
+	sl >>= iVolume;
+	sr >>= iVolume;
 
 	if (sl > 32767)
 	    sl = 32767;
@@ -761,7 +763,7 @@ int SPUopen(void)
     memset((void *) s_chan, 0, (MAXCHAN + 1) * sizeof(SPUCHAN));
     pSpuIrq = 0;
 
-    iVolume = 255;		// full volume
+    iVolume = 0;		// full volume (0dB), volume past this point is seen as a pad, where 8 = -64dB
     SetupStreams();		// prepare streaming
 
     bSPUIsOpen = 1;

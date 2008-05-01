@@ -296,11 +296,11 @@ void upse_ps1_hal_write_32(u32 add, u32 value)
 	  return;
 
       case 0x1f8010c0:
-          _DEBUG("DMA4 MADR 32bit write %x\n", value);
+          _DEBUG("DMA4 MADR 32bit write %x", value);
           HW_DMA4_MADR = BFLIP32(value);
           return;
       case 0x1f8010c4:
-          _DEBUG("DMA4 BCR 32bit write %lx\n", value);
+          _DEBUG("DMA4 BCR 32bit write %lx", value);
           HW_DMA4_BCR  = BFLIP32(value);
           return;
 

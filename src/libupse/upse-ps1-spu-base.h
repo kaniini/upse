@@ -6,4 +6,4 @@ void SPUendflush(void);
 
 // External, called by SPU code.
 void SPUirq(void);
-void SPUsetvolume(u32 volume);
+void SPUsetvolume(int volume);
