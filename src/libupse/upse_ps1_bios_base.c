@@ -698,10 +698,6 @@ static void bios_InitHeap()
 static void bios_printf()
 {
     pc0 = ra;
-
-#ifdef UPSE_DEBUG
-    _DEBUG(Ra0, Ra1, Ra2, Ra3);
-#endif
 }
 
 static void bios_puts()
