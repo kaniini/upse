@@ -17,7 +17,6 @@
  */
 
 #define _IN_SPU
-#define UPSE_DEBUG
 
 #include "upse-types.h"
 #include "upse-internal.h"
