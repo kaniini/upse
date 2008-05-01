@@ -343,6 +343,8 @@ static upse_psf_t *_upse_load(char *path, int level, int type, upse_iofuncs_t *_
 			    psfi->stop = _upse_time_to_ms(value);
 			else if (!strcasecmp(key, "fade"))
 			    psfi->fade = _upse_time_to_ms(value);
+			else if (!strcasecmp(key, "volume"))
+			    psfi->volume = upse_strtof(value) * 255;
 		    }
 
 		    if (!strcasecmp(key, "_lib") && !type)
@@ -504,6 +506,7 @@ upse_psf_t *upse_load(char *path, upse_iofuncs_t * iofuncs)
     if (ret->stop == (u32) ~ 0)
 	ret->fade = 0;
 
+    SPUsetvolume(ret->volume);
     SPUsetlength(ret->stop, ret->fade);
     ret->length = ret->stop + ret->fade;
 

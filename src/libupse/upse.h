@@ -33,6 +33,7 @@ typedef struct
     u32 length;
     u32 stop;
     u32 fade;
+    u32 volume;
     char *title;
     char *artist;
     char *game;

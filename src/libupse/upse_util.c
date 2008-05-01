@@ -15,6 +15,8 @@
  * UPSE is offered without any warranty of any kind, explicit or implicit.
  */
 
+#define _ISOC99_SOURCE
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -43,5 +45,7 @@ upse_strtof(const char *value)
 
     val = strtof(value, NULL);
 
-    _LEAVE val;
+    _LEAVE;
+
+    return val;
 }

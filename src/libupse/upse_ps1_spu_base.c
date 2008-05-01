@@ -43,7 +43,7 @@ u8 *pSpuIrq = 0;
 u8 *pSpuBuffer;
 
 // user settings          
-static int iVolume;
+static u32 iVolume;
 
 // MAIN infos struct for each channel
 
@@ -249,6 +249,8 @@ static u32 decayend;
 // Counting to 65536 results in full volume offage.
 void SPUsetlength(s32 stop, s32 fade)
 {
+    _ENTER;
+
     if (stop == ~0)
     {
 	decaybegin = ~0;
@@ -261,6 +263,19 @@ void SPUsetlength(s32 stop, s32 fade)
 	decaybegin = stop;
 	decayend = stop + fade;
     }
+
+    _LEAVE;
+}
+
+void SPUsetvolume(u32 volume)
+{
+    _ENTER;
+
+    _DEBUG("new volume [%d]", volume);
+
+    iVolume = volume;
+
+    _LEAVE;
 }
 
 static u32 seektime;
@@ -746,7 +761,7 @@ int SPUopen(void)
     memset((void *) s_chan, 0, (MAXCHAN + 1) * sizeof(SPUCHAN));
     pSpuIrq = 0;
 
-    iVolume = 255;		//85;
+    iVolume = 255;		// full volume
     SetupStreams();		// prepare streaming
 
     bSPUIsOpen = 1;
