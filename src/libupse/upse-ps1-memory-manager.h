@@ -17,7 +17,7 @@
  * UPSE is offered without any warranty of any kind, explicit or implicit.
  */
 
-#include "config.h"
+#include "upse-internal.h"
 
 #ifndef _UPSE__LIBUPSE__UPSE_PS1_MEMORY_MANAGER_H__GUARD
 #define _UPSE__LIBUPSE__UPSE_PS1_MEMORY_MANAGER_H__GUARD

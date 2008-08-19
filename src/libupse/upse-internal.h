@@ -41,6 +41,10 @@
 #include <sys/types.h>
 #include "upse-types.h"
 
+#ifndef WIN32_MSC
+#include "config.h"
+#endif
+
 void __Log(char *fmt, ...);
 
 #define BIAS	2

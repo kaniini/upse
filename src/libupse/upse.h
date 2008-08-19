@@ -18,8 +18,14 @@
 #ifndef __UPSE_LIBUPSE_UPSE_H_GUARD
 #define __UPSE_LIBUPSE_UPSE_H_GUARD
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
 #include <unistd.h>
-#include <upse-types.h>
+#endif
+
+#include "upse-types.h"
 
 typedef struct _upse_psftag
 {
