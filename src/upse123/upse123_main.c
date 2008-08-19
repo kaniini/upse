@@ -17,6 +17,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#ifndef _WIN32
 #include <unistd.h>
 #include <stdarg.h>
 #include <sys/mman.h>
@@ -26,9 +28,16 @@
 #include <time.h>
 #include <fcntl.h>
 #include <sys/soundcard.h>
-#include <upse.h>
+#endif
 
+#include "../libupse/upse.h"
+
+#ifndef WIN32_MSC
 #include "../../config.h"
+#else
+#define PACKAGE_VERSION "1.0"
+#define PACKAGE_BUGREPORT "nenolod@sacredspiral.co.uk"
+#endif
 
 #ifdef HAVE_AO
 # include <ao/ao.h>
@@ -114,6 +123,7 @@ upse123_ao_add_option(ao_option **optv, const char *string)
 void 
 upse123_write_audio(unsigned char* data, long bytes, void *unused)
 {
+#ifndef _WIN32
     int remaining;
 
 #ifndef HAVE_AO
@@ -151,11 +161,13 @@ upse123_write_audio(unsigned char* data, long bytes, void *unused)
     }
 
     fflush(stdout);
+#endif
 }
 
 void
 upse123_init_audio(void)
 {
+#ifndef _WIN32
 #ifndef HAVE_AO
     int pspeed = 44100;
     int pstereo = 1;
@@ -217,6 +229,7 @@ upse123_init_audio(void)
                                &format_, ao_opts_);
     }
 #endif
+#endif
 
     upse_set_audio_callback(upse123_write_audio, NULL);
 }
@@ -225,7 +238,7 @@ void
 upse123_close_audio(void)
 {
     upse_set_audio_callback(NULL, NULL);
-
+#ifndef _WIN32
 #ifndef HAVE_AO
     if (oss_audio_fd > 0)
         close(oss_audio_fd);
@@ -239,6 +252,7 @@ upse123_close_audio(void)
     ao_opts_ = NULL;
 
     ao_shutdown();
+#endif
 #endif
 }
 
@@ -281,6 +295,10 @@ version(const char *progname)
     printf("%s " PACKAGE_VERSION "\n", progname);
 }
 
+#ifdef _WIN32
+int optind = 0;
+#endif
+
 int
 main(int argc, char *argv[])
 {
@@ -288,6 +306,7 @@ main(int argc, char *argv[])
     char r;
     int sleep_value_ = 0;
 
+#ifndef _WIN32
     while ((r = getopt(argc, argv, "hvo:d:s:RqB:")) >= 0)
     {
         switch(r) {
@@ -323,6 +342,7 @@ main(int argc, char *argv[])
                 break;
         }
     }
+#endif
 
     printf("\033[K\033[01;36mUPSE123\033[00;36m: High quality PSF player.\033[0m\n");
     printf("\033[K\033[00;36mCopyright (C) 2007 William Pitcock <nenolod@sacredspiral.co.uk>\033[0m\n");
@@ -358,9 +378,11 @@ main(int argc, char *argv[])
         upse_execute();
         upse_free_psf_metadata(psf);
 
+#ifndef _WIN32
         if (sleep_value_)
             sleep(sleep_value_);
-    }
+#endif
+	}
 
     upse123_close_audio();
 

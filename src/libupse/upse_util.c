@@ -42,8 +42,11 @@ upse_strtof(const char *value)
     float val;
 
     _ENTER;
-
+#ifndef _WIN32
     val = strtof(value, NULL);
+#else
+	val = (float) atoi(value);
+#endif
 
     _LEAVE;
 

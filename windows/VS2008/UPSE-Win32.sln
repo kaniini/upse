@@ -3,16 +3,34 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual C++ Express 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LIBUPSE", "VS2008\VS2008.vcproj", "{BAA98828-2BDA-4717-8F4D-AB5E14C0CF96}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinampPlugin", "WinampPlugin\WinampPlugin.vcproj", "{FC0C7C53-C713-4566-8B7C-5A99D7C4C172}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BAA98828-2BDA-4717-8F4D-AB5E14C0CF96} = {BAA98828-2BDA-4717-8F4D-AB5E14C0CF96}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "upse123", "upse123\upse123.vcproj", "{D5C51B13-A2E5-4957-8D05-7601025D4A7A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BAA98828-2BDA-4717-8F4D-AB5E14C0CF96} = {BAA98828-2BDA-4717-8F4D-AB5E14C0CF96}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{BAA98828-2BDA-4717-8F4D-AB5E14C0CF96}.Debug|Win32.ActiveCfg = Release|Win32
-		{BAA98828-2BDA-4717-8F4D-AB5E14C0CF96}.Debug|Win32.Build.0 = Release|Win32
+		{BAA98828-2BDA-4717-8F4D-AB5E14C0CF96}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BAA98828-2BDA-4717-8F4D-AB5E14C0CF96}.Debug|Win32.Build.0 = Debug|Win32
 		{BAA98828-2BDA-4717-8F4D-AB5E14C0CF96}.Release|Win32.ActiveCfg = Release|Win32
 		{BAA98828-2BDA-4717-8F4D-AB5E14C0CF96}.Release|Win32.Build.0 = Release|Win32
+		{FC0C7C53-C713-4566-8B7C-5A99D7C4C172}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FC0C7C53-C713-4566-8B7C-5A99D7C4C172}.Debug|Win32.Build.0 = Debug|Win32
+		{FC0C7C53-C713-4566-8B7C-5A99D7C4C172}.Release|Win32.ActiveCfg = Release|Win32
+		{FC0C7C53-C713-4566-8B7C-5A99D7C4C172}.Release|Win32.Build.0 = Release|Win32
+		{D5C51B13-A2E5-4957-8D05-7601025D4A7A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D5C51B13-A2E5-4957-8D05-7601025D4A7A}.Debug|Win32.Build.0 = Debug|Win32
+		{D5C51B13-A2E5-4957-8D05-7601025D4A7A}.Release|Win32.ActiveCfg = Release|Win32
+		{D5C51B13-A2E5-4957-8D05-7601025D4A7A}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

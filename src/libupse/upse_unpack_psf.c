@@ -26,6 +26,10 @@
 
 // LOAD STUFF
 
+#ifdef WIN32_MSC
+#pragma pack(4)
+#endif
+
 typedef struct
 {
     unsigned char id[8];
@@ -499,7 +503,6 @@ upse_psf_t *upse_load(char *path, upse_iofuncs_t * iofuncs)
     if (!(ret = _upse_load(path, 0, 0, iofuncs)))
     {
 	psxShutdown();
-
 	return NULL;
     }
 
