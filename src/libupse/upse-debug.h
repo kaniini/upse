@@ -28,8 +28,14 @@
 
 #else
 
-#define _MESSAGE(tag, string, ...) do { fprintf(stderr, "libupse: %s: %s:%d: " string "\n", \
-	tag, __FILE__, __LINE__, ##__VA_ARGS__); } while(0)
+#if 0
+#define _MESSAGE(tag, string ...) do { fprintf(stderr, "libupse: %s: %s:%d: " string "\n", \
+	tag, __FILE__, __LINE__, __VA_ARGS__); } while(0)
+#else
+
+#define _MESSAGE(...) {}
+
+#endif
 
 #endif
 

@@ -44,7 +44,7 @@ typedef enum {
 
 struct {
     upse_gpu_status_t status;
-} upse_gpu_state = {};
+} upse_gpu_state = { 0 };
 
 void
 upse_ps1_gpu_set_status(u32 cmd)
