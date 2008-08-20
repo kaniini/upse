@@ -90,6 +90,18 @@ int play(char *fn)
 	int tmp;
 	strcpy(lastfn,fn);
 
+	if (thread_handle != INVALID_HANDLE_VALUE)
+	{
+		killDecodeThread = 1;
+		if (WaitForSingleObject(thread_handle, INFINITE) == WAIT_TIMEOUT)
+		{
+			MessageBox(mod.hMainWindow,"error asking thread to die!\n","error killing decode thread",0);
+			TerminateThread(thread_handle,0);
+		}
+		CloseHandle(thread_handle);
+		thread_handle = INVALID_HANDLE_VALUE;
+	}
+
 	length = -1000;
 	killDecodeThread=0;
 	thread_handle = (HANDLE) CreateThread(NULL,0,(LPTHREAD_START_ROUTINE) PlayThread,(void *) &lastfn,0,&tmp);
@@ -117,6 +129,7 @@ void stop()
 
 	mod.outMod->Close();
 	mod.SAVSADeInit();
+	killDecodeThread=0;
 }
 
 int getlength() { return length; }
@@ -266,7 +279,9 @@ DWORD WINAPI __stdcall PlayThread(void *b)
 	mod.VSASetInfo(44100,1);
 	mod.outMod->SetVolume(-666);
 
-	for (;;)
+	killDecodeThread = 0;
+
+	while (killDecodeThread == 0)
 	{
 		upse_execute();
 
@@ -290,11 +305,15 @@ DWORD WINAPI __stdcall PlayThread(void *b)
 		while (mod.outMod->IsPlaying())
 			Sleep(10);
 
+		PostMessage(mod.hMainWindow, WM_WA_MPEG_EOF, 0, 0);
+
 		break;
 	}
 
+	killDecodeThread = 0;
+
 	mod.outMod->Close();
-	PostMessage(mod.hMainWindow, WM_WA_MPEG_EOF, 0, 0);
+	mod.SAVSADeInit();
 
 	return 0;
 }
