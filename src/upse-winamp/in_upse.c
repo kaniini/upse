@@ -82,12 +82,15 @@ static upse_iofuncs_t upse_winamp_iofuncs = {
     upse_winamp_close_impl
 };
 
+static int length = -1000;
+
 void upse_winamp_update_cb(unsigned char *buffer, long count, void *data);
-int play(char *fn) { 
-	int maxlatency;
+int play(char *fn)
+{ 
 	int tmp;
 	strcpy(lastfn,fn);
 
+	length = -1000;
 	killDecodeThread=0;
 	thread_handle = (HANDLE) CreateThread(NULL,0,(LPTHREAD_START_ROUTINE) PlayThread,(void *) &lastfn,0,&tmp);
 	
@@ -98,7 +101,8 @@ void pause() { paused=1; mod.outMod->Pause(1); }
 void unpause() { paused=0; mod.outMod->Pause(0); }
 int ispaused() { return paused; }
 
-void stop() { 
+void stop()
+{ 
 	if (thread_handle != INVALID_HANDLE_VALUE)
 	{
 		killDecodeThread=1;
@@ -115,9 +119,9 @@ void stop() {
 	mod.SAVSADeInit();
 }
 
-int getlength() { return -1000; }
+int getlength() { return length; }
 int getoutputtime() { return mod.outMod->GetOutputTime(); }
-void setoutputtime(int time_in_ms) { seekTime = time_in_ms / 1000; }
+void setoutputtime(int time_in_ms) { seekTime = time_in_ms; }
 
 void setvolume(int volume) { mod.outMod->SetVolume(volume); }
 void setpan(int pan) { mod.outMod->SetPan(pan); }
@@ -129,15 +133,24 @@ int infoDlg(char *fn, HWND hwnd)
 
 void getfileinfo(char *filename, char *title, int *length_in_ms)
 {
+	upse_psf_t *psf;
+
 	if (!filename || !*filename)
 		filename=lastfn;
 
+	psf = upse_get_psf_metadata(filename, &upse_winamp_iofuncs);
+	if (!psf)
+		return;
+
 	if (title) 
 	{
-		wsprintf(title,"Tag support not yet implemented.");
+		sprintf(title, "%s - %s", psf->artist, psf->title);
 	}
 
-	if (length_in_ms) *length_in_ms=-1000;
+	if (length_in_ms)
+		*length_in_ms = psf->length;
+
+	upse_free_psf_metadata(psf);
 }
 
 void eq_set(int on, char data[10], int preamp) 
@@ -148,7 +161,7 @@ void eq_set(int on, char data[10], int preamp)
 In_Module mod = 
 {
 	IN_VER,
-	"Unix Playstation Sound Emulator WinAmp Plugin",
+	"UPSE WinAmp Plugin",
 	0,	// hMainWindow
 	0,  // hDllInstance
 	"PSF\0PlayStation 1 Module Format (*.PSF)\0"
@@ -197,44 +210,11 @@ int _fltused=0;
 
 void upse_winamp_update_cb(unsigned char *buffer, long count, void *data)
 {
-	const int mask = ~((((16 / 8) * 2)) - 1);
+	int ts = mod.outMod->GetWrittenTime();
 
-	while (count > 0)
-	{
-		int t = mod.outMod->CanWrite() & mask;
-		
-		if (killDecodeThread)
-			upse_stop();
-
-		if (t > count)
-		{
-			int y;
-
-			mod.outMod->Write(buffer, count);
-
-			y = mod.outMod->GetWrittenTime();
-			mod.SAAddPCMData(buffer, count / 2, 16, y);
-			mod.VSAAddPCMData(buffer, count / 2, 16, y);
-		}
-		else
-		{
-			if (t)
-			{
-				int y;
-
-				mod.outMod->Write(buffer, count);
-
-				y = mod.outMod->GetWrittenTime();
-				mod.SAAddPCMData(buffer, count / 2, 16, y);
-				mod.VSAAddPCMData(buffer, count / 2, 16, y);
-			}
-
-			Sleep((count - t) * 5 / 441 / 2);
-		}
-
-		count -= t;
-		buffer += t;
-	}
+	mod.outMod->Write(buffer, count);
+	mod.SAAddPCMData(buffer, 2, 16, ts);
+	mod.VSAAddPCMData(buffer, 2, 16, ts);
 
 	if (seekTime)
 	{
@@ -252,6 +232,9 @@ void upse_winamp_update_cb(unsigned char *buffer, long count, void *data)
 
 	if (killDecodeThread)
 		upse_stop();
+
+	if (!mod.outMod->CanWrite())
+		Sleep(1);
 }
 
 DWORD WINAPI __stdcall PlayThread(void *b)
@@ -265,11 +248,13 @@ DWORD WINAPI __stdcall PlayThread(void *b)
 	if (!psf)
 		return 1;
 
+	length = psf->length;
+
 	upse_set_audio_callback(upse_winamp_update_cb, NULL);
 
 	paused=0;
 	
-	maxlatency = mod.outMod->Open(44100,1,16, -1,-1);
+	maxlatency = mod.outMod->Open(44100, 2, 16, -1,-1);
 	if (maxlatency < 0)
 	{
 		upse_free_psf_metadata(psf);
@@ -279,7 +264,7 @@ DWORD WINAPI __stdcall PlayThread(void *b)
 	mod.SetInfo(0,44,1,1);
 	mod.SAVSAInit(maxlatency,44100);
 	mod.VSASetInfo(44100,1);
-	mod.outMod->SetVolume(-666);		
+	mod.outMod->SetVolume(-666);
 
 	for (;;)
 	{
@@ -304,9 +289,12 @@ DWORD WINAPI __stdcall PlayThread(void *b)
 
 		while (mod.outMod->IsPlaying())
 			Sleep(10);
+
+		break;
 	}
 
 	mod.outMod->Close();
+	PostMessage(mod.hMainWindow, WM_WA_MPEG_EOF, 0, 0);
 
 	return 0;
 }
