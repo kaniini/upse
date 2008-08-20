@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="WinampPlugin"
+	Name="in_upse"
 	ProjectGUID="{FC0C7C53-C713-4566-8B7C-5A99D7C4C172}"
 	RootNamespace="WinampPlugin"
 	Keyword="Win32Proj"
