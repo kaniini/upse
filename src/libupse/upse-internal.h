@@ -53,6 +53,7 @@ void __Log(char *fmt, ...);
 #include "upse.h"
 #include "upse-debug.h"
 #include "upse-r3000-abstract.h"
+#include "upse-loader.h"
 #include "upse-ps1-memory-manager.h"
 #include "upse-ps1-hal.h"
 #include "upse-ps1-gpu.h"
