@@ -1,0 +1,22 @@
+Building UPSE under Windows
+---------------------------
+
+You will need:
+
+* Visual Studio 2008
+
+* zlib-1.2.3
+
+* A folder on your hard drive: c:\dev-src
+
+How to do it
+------------
+
+1. Extract zlib-1.2.3 to c:\dev-src\zlib-1.2.3
+2. Start the Visual Studio command prompt.
+3. cd \dev-src\zlib-1.2.3
+4. nmake -f win\Makefile.msc
+5. Open windows/VS2008/UPSE-Win32.sln.
+6. Tools -> Build Solution
+7. Enjoy
+
