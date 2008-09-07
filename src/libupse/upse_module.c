@@ -104,6 +104,7 @@ upse_module_open(char *file, upse_iofuncs_t *funcs)
         return NULL;
     }
 
+    funcs->seek_impl(fileptr, 0, SEEK_SET);
     ret = functor(fileptr, file, funcs);
     funcs->close_impl(fileptr);
 

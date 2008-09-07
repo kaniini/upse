@@ -38,7 +38,9 @@ upse_loader_add_magic(const char *bytes, int length, int offset, upse_loader_fun
     loader->func = func;
 
     loader->next = loader_list_;
-    loader->next->prev = loader;
+
+    if (loader->next)
+        loader->next->prev = loader;
 
     loader_list_ = loader;
 }

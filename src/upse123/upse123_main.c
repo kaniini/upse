@@ -89,7 +89,7 @@ static ao_option *ao_opts_ = NULL;
 static char *audio_dev_ = NULL;
 
 static int decode_position = 0;
-static upse_psf_t *psf;
+static upse_module_t *mod;
 
 #ifdef HAVE_AO
 int
@@ -139,15 +139,15 @@ upse123_write_audio(unsigned char* data, long bytes, void *unused)
 #endif
 
     decode_position += ((bytes / 4 * 1000) / 44100);
-    remaining = psf->length - decode_position;
+    remaining = mod->metadata->length - decode_position;
 
     printf("\033[00;36mTime:\033[0m %02d:%02d.%02d%s",
          (int)(decode_position / 1000.0) / 60,
          (int)(decode_position / 1000.0) % 60,
          (int)(decode_position / 10.0) % 100,
-	 psf->length == -1 ? "\r" : "");
+	 mod->metadata->length == -1 ? "\r" : "");
 
-    if (psf->length != -1)
+    if (mod->metadata->length != -1)
     {
         printf(" [-%02d:%02d.%02d]",
              (int)(remaining / 1000.0) / 60,
@@ -155,9 +155,9 @@ upse123_write_audio(unsigned char* data, long bytes, void *unused)
              (int)(remaining / 10.0) % 100);
 
         printf(" of %02d:%02d.%02d\r",
-             (int)(psf->length / 1000.0) / 60,
-             (int)(psf->length / 1000.0) % 60,
-             (int)(psf->length / 10.0) % 100);
+             (int)(mod->metadata->length / 1000.0) / 60,
+             (int)(mod->metadata->length / 1000.0) % 60,
+             (int)(mod->metadata->length / 10.0) % 100);
     }
 
     fflush(stdout);
@@ -306,6 +306,8 @@ main(int argc, char *argv[])
     char r;
     int sleep_value_ = 0;
 
+    upse_module_init();
+
 #ifndef _WIN32
     while ((r = getopt(argc, argv, "hvo:d:s:RqB:")) >= 0)
     {
@@ -355,7 +357,7 @@ main(int argc, char *argv[])
 
     for (i = optind; i < argc; i++)
     {
-        if ((psf = upse_load(argv[i], &upse123_iofuncs)) == NULL)
+        if ((mod = upse_module_open(argv[i], &upse123_iofuncs)) == NULL)
         {
             printf("%s: failed to load `%s'\n", argv[0], argv[1]);
             continue;
@@ -365,24 +367,24 @@ main(int argc, char *argv[])
 
         printf("\nInformation about \033[01m%s\033[00;0m:\n\n", argv[i]);
 
-        upse123_print_field("Game", psf->game);
-        upse123_print_field("Title", psf->title);
-        upse123_print_field("Artist", psf->artist);
-        upse123_print_field("Year", psf->year);
-        upse123_print_field("Genre", psf->genre);
-        upse123_print_field("Ripper", psf->psfby);
-        upse123_print_field("Copyright", psf->copyright);
+        upse123_print_field("Game", mod->metadata->game);
+        upse123_print_field("Title", mod->metadata->title);
+        upse123_print_field("Artist", mod->metadata->artist);
+        upse123_print_field("Year", mod->metadata->year);
+        upse123_print_field("Genre", mod->metadata->genre);
+        upse123_print_field("Ripper", mod->metadata->psfby);
+        upse123_print_field("Copyright", mod->metadata->copyright);
 
 	printf("\n");
 
         upse_execute();
-        upse_free_psf_metadata(psf);
+        upse_module_close(mod);
 
 #ifndef _WIN32
         if (sleep_value_)
             sleep(sleep_value_);
 #endif
-	}
+    }
 
     upse123_close_audio();
 
