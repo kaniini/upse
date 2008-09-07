@@ -276,15 +276,15 @@ void upse_winamp_update_cb(unsigned char *buffer, long count, void *data)
 DWORD WINAPI __stdcall PlayThread(void *b)
 {
 	int maxlatency;
-	upse_psf_t *psf;
+	upse_module_t *module;
 	char filename[MAX_PATH];
 	strcpy(filename, (char *) b);
 
-	psf = upse_load(filename, &upse_winamp_iofuncs);
-	if (!psf)
+	module = upse_module_open(filename, &upse_winamp_iofuncs);
+	if (!module)
 		return 1;
 
-	length = psf->length;
+	length = module->length;
 
 	upse_set_audio_callback(upse_winamp_update_cb, NULL);
 
@@ -293,7 +293,7 @@ DWORD WINAPI __stdcall PlayThread(void *b)
 	maxlatency = mod.outMod->Open(44100, 2, 16, -1,-1);
 	if (maxlatency < 0)
 	{
-		upse_free_psf_metadata(psf);
+		upse_module_close(module);
 		return 1;
 	}
 
@@ -315,8 +315,8 @@ DWORD WINAPI __stdcall PlayThread(void *b)
 		{
 			mod.outMod->Flush(seekTime);
 
-			upse_free_psf_metadata(psf);
-			if (!(psf = upse_load(lastfn, &upse_winamp_iofuncs)))
+			upse_module_close(module);
+			if (!(module = upse_module_open(lastfn, &upse_winamp_iofuncs)))
 				break;
 
 			upse_seek(seekTime);
