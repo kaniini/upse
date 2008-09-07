@@ -18,8 +18,17 @@
 #ifndef __UPSE__LIBUPSE__UPSE_MODULE_H__GUARD
 #define __UPSE__LIBUPSE__UPSE_MODULE_H__GUARD
 
+typedef struct {
+    void *opaque;
+    upse_psf_t *metadata; /* XXX */
+} upse_module_t;
+
+typedef upse_module_t *(*upse_loader_func_t)(void *fileptr, upse_iofuncs_t *iofuncs);
+
 upse_loader_func_t upse_module_probe(void *fileptr, upse_iofuncs_t *funcs);
 int upse_module_is_supported(void *fileptr, upse_iofuncs_t *funcs);
 int upse_file_is_supported(char *file, upse_iofuncs_t *funcs);
+upse_module_t *upse_module_open(char *file, upse_iofuncs_t *funcs);
+void upse_module_close(upse_module_t *mod);
 
 #endif

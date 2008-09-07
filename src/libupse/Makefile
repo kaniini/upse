@@ -1,5 +1,5 @@
 LIB = ${LIB_PREFIX}upse${LIB_SUFFIX}
-LIB_MAJOR = 2
+LIB_MAJOR = 3
 LIB_MINOR = 0
 
 SRCS = upse_string.c			\

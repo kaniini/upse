@@ -24,6 +24,9 @@ upse_module_probe(void *fileptr, upse_iofuncs_t *funcs)
 {
     int i, previous_offset, previous_length;
 
+    if (!fileptr)
+        return NULL;
+
     if (!upse_loader_table_)
         upse_loader_table_ = upse_loader_prepare_table();
 
@@ -81,3 +84,38 @@ upse_file_is_supported(char *file, upse_iofuncs_t *funcs)
     return ret;
 }
 
+upse_module_t *
+upse_module_open(char *file, upse_iofuncs_t *funcs)
+{
+    void *fileptr;
+    upse_module_t *ret;
+    upse_loader_func_t functor;
+
+    fileptr = funcs->open_impl(file, "rb");
+
+    if (!fileptr)
+        return NULL;
+
+    functor = upse_module_probe(fileptr, funcs);
+
+    if (!functor)
+    {
+        funcs->close_impl(fileptr);
+        return NULL;
+    }
+
+    ret = functor(fileptr, funcs);
+    funcs->close_impl(fileptr);
+
+    return ret;
+}
+
+void
+upse_module_close(upse_module_t *mod)
+{
+    if (!mod)
+        return;
+
+    upse_free_psf_metadata(mod->metadata); /* XXX */
+    free(mod);
+}

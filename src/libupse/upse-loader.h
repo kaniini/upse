@@ -18,7 +18,6 @@
 #ifndef __UPSE__LIBUPSE__UPSE_LOADER_H__GUARD
 #define __UPSE__LIBUPSE__UPSE_LOADER_H__GUARD
 
-typedef void (*upse_loader_func_t)(void *fileptr, upse_iofuncs_t *iofuncs);
 void upse_loader_add_magic(const char *bytes, int length, int offset, upse_loader_func_t loader);
 void upse_loader_del_magic(const char *bytes, int length, int offset);
 
