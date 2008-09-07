@@ -27,13 +27,14 @@
 
 #define WM_WA_MPEG_EOF WM_USER+2
 
+#ifdef WIN32_MSC
 #pragma warning (disable: 4133)
+#endif
 
 extern In_Module mod;
 char lastfn[MAX_PATH];
 
 int seekTime;
-int paused;
 DWORD WINAPI __stdcall PlayThread(void *b);
 
 int killDecodeThread=0;
@@ -90,18 +91,6 @@ int play(char *fn)
 	int tmp;
 	strcpy(lastfn,fn);
 
-	if (thread_handle != INVALID_HANDLE_VALUE)
-	{
-		killDecodeThread = 1;
-		if (WaitForSingleObject(thread_handle, INFINITE) == WAIT_TIMEOUT)
-		{
-			MessageBox(mod.hMainWindow,"error asking thread to die!\n","error killing decode thread",0);
-			TerminateThread(thread_handle,0);
-		}
-		CloseHandle(thread_handle);
-		thread_handle = INVALID_HANDLE_VALUE;
-	}
-
 	length = -1000;
 	killDecodeThread=0;
 	thread_handle = (HANDLE) CreateThread(NULL,0,(LPTHREAD_START_ROUTINE) PlayThread,(void *) &lastfn,0,&tmp);
@@ -109,9 +98,23 @@ int play(char *fn)
 	return 0; 
 }
 
-void pause() { paused=1; mod.outMod->Pause(1); }
-void unpause() { paused=0; mod.outMod->Pause(0); }
-int ispaused() { return paused; }
+int paused = 0;
+void pause()
+{
+	paused = 1;
+	mod.outMod->Pause(1);
+}
+
+void unpause()
+{
+	paused=0;
+	mod.outMod->Pause(0);
+}
+
+int ispaused()
+{
+	return paused;
+}
 
 void stop()
 { 
@@ -132,12 +135,30 @@ void stop()
 	killDecodeThread=0;
 }
 
-int getlength() { return length; }
-int getoutputtime() { return mod.outMod->GetOutputTime(); }
-void setoutputtime(int time_in_ms) { seekTime = time_in_ms; }
+int getlength()
+{
+	return length;
+}
 
-void setvolume(int volume) { mod.outMod->SetVolume(volume); }
-void setpan(int pan) { mod.outMod->SetPan(pan); }
+int getoutputtime()
+{
+	return mod.outMod->GetOutputTime();
+}
+
+void setoutputtime(int time_in_ms)
+{
+	seekTime = time_in_ms;
+}
+
+void setvolume(int volume)
+{
+	mod.outMod->SetVolume(volume);
+}
+
+void setpan(int pan)
+{
+	mod.outMod->SetPan(pan);
+}
 
 int infoDlg(char *fn, HWND hwnd)
 {
@@ -219,7 +240,6 @@ __declspec( dllexport ) In_Module * winampGetInModule2()
 	return &mod;
 }
 
-int _fltused=0;
 
 void upse_winamp_update_cb(unsigned char *buffer, long count, void *data)
 {
@@ -244,7 +264,10 @@ void upse_winamp_update_cb(unsigned char *buffer, long count, void *data)
 	}
 
 	if (killDecodeThread)
+	{
 		upse_stop();
+		return;
+	}
 
 	if (!mod.outMod->CanWrite())
 		Sleep(1);
@@ -303,7 +326,12 @@ DWORD WINAPI __stdcall PlayThread(void *b)
 		}
 
 		while (mod.outMod->IsPlaying())
+		{
+			if (killDecodeThread)
+				break;
+
 			Sleep(10);
+		}
 
 		PostMessage(mod.hMainWindow, WM_WA_MPEG_EOF, 0, 0);
 
