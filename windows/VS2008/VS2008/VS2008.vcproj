@@ -155,6 +155,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\libupse\upse_loader.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\libupse\upse_module.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\libupse\upse_ps1_bios_base.c"
 				>
 			</File>
@@ -234,6 +242,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\libupse\upse-internal.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\libupse\upse-loader.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\libupse\upse-module.h"
 				>
 			</File>
 			<File

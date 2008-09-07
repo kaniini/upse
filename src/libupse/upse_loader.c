@@ -30,7 +30,7 @@ static upse_loader_list_t *loader_list_ = NULL;
 void
 upse_loader_add_magic(const char *bytes, int length, int offset, upse_loader_func_t func)
 {
-    upse_loader_list_t *loader = calloc(sizeof(upse_loader_list_t), 1);
+    upse_loader_list_t *loader = (upse_loader_list_t *) calloc(sizeof(upse_loader_list_t), 1);
 
     loader->bytes = bytes;
     loader->length = length;
@@ -104,7 +104,7 @@ upse_loader_prepare_table(void)
 
     /* count and allocate the amount of loaders in the table. */
     for (elems = 1, iter = loader_list_; iter != NULL; elems++, iter = iter->next);
-    table = calloc(sizeof(upse_loader_t), elems);
+    table = (upse_loader_t *) calloc(sizeof(upse_loader_t), elems);
 
     /* ... and populate it. */
     for (iter = loader_list_, count = 0; iter != NULL; count++, iter = iter->next)
