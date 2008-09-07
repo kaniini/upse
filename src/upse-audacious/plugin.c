@@ -113,13 +113,22 @@ void upse_aud_update(unsigned char *buffer, long count, gpointer data)
 
 static void upse_aud_play(InputPlayback *playback)
 {
+    upse_module_t *mod;
     upse_psf_t *psf;
     gchar *name;
+    static int initialized = 0;
 
-    if(!(playback->data = upse_load(playback->filename, &upse_aud_iofuncs)))
+    if (!initialized)
+    {
+        upse_module_init();
+        initialized++;
+    }
+
+    if(!(playback->data = upse_module_open(playback->filename, &upse_aud_iofuncs)))
         return;
 
-    psf = (upse_psf_t *) playback->data;
+    mod = (upse_module_t *) playback->data;
+    psf = mod->metadata;
 
     seek = 0;
 
@@ -130,7 +139,7 @@ static void upse_aud_play(InputPlayback *playback)
 
     if (!playback->output->open_audio(FMT_S16_NE, 44100, 2))
     {
-        upse_free_psf_metadata(psf);
+        upse_module_close(mod);
         playback->error = TRUE;
         return;
     }
@@ -155,7 +164,8 @@ static void upse_aud_play(InputPlayback *playback)
         {
             playback->output->flush(seek);
 
-            if(!(playback->data = upse_load(playback->filename, &upse_aud_iofuncs)))
+            upse_module_close(mod);
+            if(!(playback->data = upse_module_open(playback->filename, &upse_aud_iofuncs)))
                 break;
 
             upse_seek(seek); 
@@ -168,6 +178,8 @@ static void upse_aud_play(InputPlayback *playback)
 
         break;
     }
+
+    upse_module_close(mod);
 
     playback->output->close_audio();
     playback->playing = FALSE;
@@ -182,7 +194,7 @@ static void upse_aud_stop(InputPlayback *playback)
     playback->output->pause(0);
     playback->playing = FALSE;
 
-    upse_free_psf_metadata(playback->data);
+    upse_module_close(playback->data);
 }
 
 static void upse_aud_pause(InputPlayback *playback, short p)
