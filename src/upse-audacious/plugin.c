@@ -27,7 +27,7 @@
 
 #include "../../config.h"
 
-static volatile int seek = 0;
+static int seek = 0;
 
 static Tuple *upse_aud_get_tuple_psf(const gchar *fn, upse_psf_t *psf);
 static gchar *upse_aud_get_title_psf(const gchar *fn, upse_psf_t *psf);
