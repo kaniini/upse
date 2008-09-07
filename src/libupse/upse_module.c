@@ -104,7 +104,7 @@ upse_module_open(char *file, upse_iofuncs_t *funcs)
         return NULL;
     }
 
-    ret = functor(fileptr, funcs);
+    ret = functor(fileptr, file, funcs);
     funcs->close_impl(fileptr);
 
     return ret;
@@ -118,4 +118,12 @@ upse_module_close(upse_module_t *mod)
 
     upse_free_psf_metadata(mod->metadata); /* XXX */
     free(mod);
+}
+
+extern upse_module_t *upse_load_psf(void *fileptr, char *path, upse_iofuncs_t *funcs);
+
+void
+upse_module_init(void)
+{
+    upse_loader_add_magic("PSF\x01", 4, 0, upse_load_psf);
 }

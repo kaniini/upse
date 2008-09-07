@@ -231,8 +231,7 @@ static void _upse_psf_add_tag(upse_psftag_t ** tag, const char *key, const char 
 
 }
 
-typedef struct
-{
+typedef struct {
     int num;
     char *value;
 } upse_libcache_slot_t;
@@ -246,9 +245,30 @@ static int ccomp(const void *v1, const void *v2)
     return (a1->num - a2->num);
 }
 
-static upse_psf_t *_upse_load(char *path, int level, int type, upse_iofuncs_t *_upse_iofuncs)	// Type==1 for just info load.
+// Type==1 for just info load.
+static upse_psf_t *_upse_load_psf(void *fp, char *path, int level, int type, upse_iofuncs_t *funcs);
+
+static upse_psf_t *
+_upse_load_psf_from_file(char *path, int level, int type, upse_iofuncs_t *funcs)
 {
     void *fp;
+    upse_psf_t *ret;
+
+    if (!(fp = funcs->open_impl(path, "rb")))
+    {
+	_ERROR("path %s failed to load\n", path);
+	return NULL;
+    }
+
+    ret = _upse_load_psf(fp, path, level, type, funcs);
+    funcs->close_impl(fp);
+
+    return ret;
+}
+
+static upse_psf_t *
+_upse_load_psf(void *fp, char *path, int level, int type, upse_iofuncs_t *funcs)
+{
     upse_exe_header_t tmpHead;
     unsigned char *in, *out = 0;
     u8 head[4];
@@ -261,13 +281,7 @@ static upse_psf_t *_upse_load(char *path, int level, int type, upse_iofuncs_t *_
 
     _ENTER;
 
-    if (!(fp = _upse_iofuncs->open_impl(path, "rb")))
-    {
-	_ERROR("path %s failed to load\n", path);
-	return NULL;
-    }
-
-    _upse_iofuncs->read_impl(head, 1, 4, fp);
+    funcs->read_impl(head, 1, 4, fp);
     if (memcmp(head, "PSF\x01", 4))
 	return NULL;
 
@@ -275,22 +289,22 @@ static upse_psf_t *_upse_load(char *path, int level, int type, upse_iofuncs_t *_
     psfi->stop = ~0;
     psfi->fade = 0;
 
-    _upse_iofuncs->read_impl(&reserved, 1, 4, fp);
-    _upse_iofuncs->read_impl(&complen, 1, 4, fp);
+    funcs->read_impl(&reserved, 1, 4, fp);
+    funcs->read_impl(&complen, 1, 4, fp);
     complen = BFLIP32(complen);
 
-    _upse_iofuncs->read_impl(&crc32, 1, 4, fp);
+    funcs->read_impl(&crc32, 1, 4, fp);
     crc32 = BFLIP32(crc32);
 
-    _upse_iofuncs->seek_impl(fp, reserved, SEEK_CUR);
+    funcs->seek_impl(fp, reserved, SEEK_CUR);
 
     if (type)
-	_upse_iofuncs->seek_impl(fp, complen, SEEK_CUR);
+	funcs->seek_impl(fp, complen, SEEK_CUR);
     else
     {
 	in = malloc(complen);
 	out = malloc(1024 * 1024 * 2 + 0x800);
-	_upse_iofuncs->read_impl(in, 1, complen, fp);
+	funcs->read_impl(in, 1, complen, fp);
 	outlen = 1024 * 1024 * 2;
 	uncompress(out, &outlen, in, complen);
 	free(in);
@@ -310,13 +324,13 @@ static upse_psf_t *_upse_load(char *path, int level, int type, upse_iofuncs_t *_
 
     {
 	u8 tagdata[5];
-	if (_upse_iofuncs->read_impl(tagdata, 1, 5, fp) == 5)
+	if (funcs->read_impl(tagdata, 1, 5, fp) == 5)
 	{
 	    if (!memcmp(tagdata, "[TAG]", 5))
 	    {
 		char linebuf[1024];
 
-		while (upse_io_fgets(linebuf, 1024, fp, _upse_iofuncs))
+		while (upse_io_fgets(linebuf, 1024, fp, funcs))
 		{
 		    int x;
 		    char *key = NULL, *value = NULL;
@@ -358,14 +372,13 @@ static upse_psf_t *_upse_load(char *path, int level, int type, upse_iofuncs_t *_
 			   the full path(directory + file name) "path"
 			 */
 			tmpfn = _upse_resolve_path(path, value);
-			if (!(tmpi = _upse_load(tmpfn, level + 1, 0, _upse_iofuncs)))
+			if (!(tmpi = _upse_load_psf_from_file(tmpfn, level + 1, 0, funcs)))
 			{
 			    free(key);
 			    free(value);
 			    free(tmpfn);
 			    if (!level)
 				free(out);
-			    _upse_iofuncs->close_impl(fp);
 			    _upse_psf_free_tags(psfi->taglist);
 			    free(psfi);
 			    return NULL;
@@ -381,8 +394,6 @@ static upse_psf_t *_upse_load(char *path, int level, int type, upse_iofuncs_t *_
 	    }
 	}
     }
-
-    _upse_iofuncs->close_impl(fp);
 
     /* Now, if we're at level 0(main PSF), load the main executable, and any libN stuff */
     if (!level && !type)
@@ -438,12 +449,11 @@ static upse_psf_t *_upse_load(char *path, int level, int type, upse_iofuncs_t *_
 		   the full path(directory + file name) "path"
 		 */
 		tmpfn = _upse_resolve_path(path, cache[cur].value);
-		if (!(tmpi = _upse_load(tmpfn, level + 1, 0, _upse_iofuncs)))
+		if (!(tmpi = _upse_load_psf_from_file(tmpfn, level + 1, 0, funcs)))
 		{
 		    //free(key);
 		    //free(value);
 		    //free(tmpfn);
-		    //_upse_iofuncs->close_impl(fp);
 		    //return(0);
 		}
 		free(tmpfn);
@@ -470,13 +480,14 @@ void upse_free_psf_metadata(upse_psf_t * info)
     free(info);
 }
 
-upse_psf_t *upse_get_psf_metadata(char *path, upse_iofuncs_t * iofuncs)
+upse_psf_t *
+upse_get_psf_metadata(char *path, upse_iofuncs_t * iofuncs)
 {
     upse_psf_t *ret;
 
     _ENTER;
 
-    if (!(ret = _upse_load(path, 0, 1, iofuncs)))
+    if (!(ret = _upse_load_psf_from_file(path, 0, 1, iofuncs)))
 	return NULL;
 
     if (ret->stop == (u32) ~ 0)
@@ -488,9 +499,11 @@ upse_psf_t *upse_get_psf_metadata(char *path, upse_iofuncs_t * iofuncs)
     return ret;
 }
 
-upse_psf_t *upse_load(char *path, upse_iofuncs_t * iofuncs)
+upse_module_t *
+upse_load_psf(void *fp, char *path, upse_iofuncs_t * iofuncs)
 {
-    upse_psf_t *ret;
+    upse_psf_t *psf;
+    upse_module_t *ret;
 
     _ENTER;
 
@@ -500,18 +513,21 @@ upse_psf_t *upse_load(char *path, upse_iofuncs_t * iofuncs)
     upse_ps1_spu_init();
     upse_ps1_spu_open();
 
-    if (!(ret = _upse_load(path, 0, 0, iofuncs)))
+    if (!(psf = _upse_load_psf(fp, path, 0, 0, iofuncs)))
     {
 	psxShutdown();
 	return NULL;
     }
 
-    if (ret->stop == (u32) ~ 0)
-	ret->fade = 0;
+    if (psf->stop == (u32) ~ 0)
+	psf->fade = 0;
 
-    upse_ps1_spu_setvolume(ret->volume);
-    upse_ps1_spu_setlength(ret->stop, ret->fade);
-    ret->length = ret->stop + ret->fade;
+    upse_ps1_spu_setvolume(psf->volume);
+    upse_ps1_spu_setlength(psf->stop, psf->fade);
+    psf->length = psf->stop + psf->fade;
+
+    ret = (upse_module_t *) calloc(sizeof(upse_module_t), 1);
+    ret->metadata = psf;
 
     _LEAVE;
     return ret;

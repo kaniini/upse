@@ -23,7 +23,7 @@ typedef struct {
     upse_psf_t *metadata; /* XXX */
 } upse_module_t;
 
-typedef upse_module_t *(*upse_loader_func_t)(void *fileptr, upse_iofuncs_t *iofuncs);
+typedef upse_module_t *(*upse_loader_func_t)(void *fileptr, char *path, upse_iofuncs_t *iofuncs);
 
 upse_loader_func_t upse_module_probe(void *fileptr, upse_iofuncs_t *funcs);
 int upse_module_is_supported(void *fileptr, upse_iofuncs_t *funcs);

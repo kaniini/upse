@@ -64,7 +64,6 @@ typedef struct
     int (*close_impl) (void *file);
 } upse_iofuncs_t;
 
-upse_psf_t *upse_load(char *path, upse_iofuncs_t * iofuncs);
 upse_psf_t *upse_get_psf_metadata(char *path, upse_iofuncs_t * iofuncs);
 void upse_free_psf_metadata(upse_psf_t * info);
 
@@ -107,5 +106,7 @@ void upse_set_custom_bios(const char *bios);
  * Utility functions.
  */
 float upse_strtof(const char *value);
+
+#include "upse-module.h"
 
 #endif
