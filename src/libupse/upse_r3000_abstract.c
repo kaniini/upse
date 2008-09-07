@@ -105,6 +105,7 @@ void psxBranchTest()
     }
 
 }
+
 void psxExecuteBios()
 {
     while (upse_r3000_cpu_regs.pc != 0x80030000)
