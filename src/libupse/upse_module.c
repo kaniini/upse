@@ -23,6 +23,7 @@ upse_loader_func_t
 upse_module_probe(void *fileptr, upse_iofuncs_t *funcs)
 {
     int i, previous_offset, previous_length;
+    char *bytes = NULL;
 
     if (!fileptr)
         return NULL;
@@ -37,7 +38,6 @@ upse_module_probe(void *fileptr, upse_iofuncs_t *funcs)
     for (i = 0; upse_loader_table_[i].bytes != NULL; i++)
     {
         upse_loader_t *loader = &upse_loader_table_[i];
-        static char *bytes = NULL;
 
         if (loader->offset != previous_offset)
         {

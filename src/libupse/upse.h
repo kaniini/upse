@@ -107,6 +107,7 @@ void upse_set_custom_bios(const char *bios);
  */
 float upse_strtof(const char *value);
 
+#include "upse-eventloop.h"
 #include "upse-module.h"
 
 #endif

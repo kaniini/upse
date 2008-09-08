@@ -606,7 +606,7 @@ int upse_ps1_spu_render(u32 cycles)
     return (1);
 }
 
-void upse_stop(void)
+void upse_ps1_stop(void)
 {
     decaybegin = decayend = 0;
 }

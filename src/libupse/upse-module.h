@@ -18,9 +18,13 @@
 #ifndef __UPSE__LIBUPSE__UPSE_MODULE_H__GUARD
 #define __UPSE__LIBUPSE__UPSE_MODULE_H__GUARD
 
+typedef void (*upse_eventloop_func_t)(void);
+
 typedef struct {
     void *opaque;
     upse_psf_t *metadata; /* XXX */
+    upse_eventloop_func_t evloop_run;
+    upse_eventloop_func_t evloop_stop;
 } upse_module_t;
 
 typedef upse_module_t *(*upse_loader_func_t)(void *fileptr, char *path, upse_iofuncs_t *iofuncs);

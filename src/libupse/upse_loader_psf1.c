@@ -228,7 +228,6 @@ static void _upse_psf_add_tag(upse_psftag_t ** tag, const char *key, const char 
 	    rec = rec->next;
 	rec->next = tmp;
     }
-
 }
 
 typedef struct {
@@ -476,7 +475,9 @@ _upse_load_psf(void *fp, char *path, int level, int type, upse_iofuncs_t *funcs)
 
 void upse_free_psf_metadata(upse_psf_t * info)
 {
-    _upse_psf_free_tags(info->taglist);
+    if (info->taglist)
+        _upse_psf_free_tags(info->taglist);
+
     free(info);
 }
 

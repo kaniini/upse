@@ -184,6 +184,7 @@ static void upse_aud_play(InputPlayback *playback)
     playback->output->close_audio();
     playback->playing = FALSE;
     playback->eof = TRUE;
+    playback->data = NULL;
 }
 
 static void upse_aud_stop(InputPlayback *playback)
@@ -193,8 +194,6 @@ static void upse_aud_stop(InputPlayback *playback)
 
     playback->output->pause(0);
     playback->playing = FALSE;
-
-    upse_module_close(playback->data);
 }
 
 static void upse_aud_pause(InputPlayback *playback, short p)
