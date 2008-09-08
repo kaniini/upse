@@ -258,14 +258,14 @@ void upse_winamp_update_cb(unsigned char *buffer, long count, void *data)
 		}
 		else
 		{
-			upse_stop();
+			upse_eventloop_stop(data);
 			return;
 		}
 	}
 
 	if (killDecodeThread)
 	{
-		upse_stop();
+		upse_eventloop_stop(data);
 		return;
 	}
 
@@ -286,7 +286,7 @@ DWORD WINAPI __stdcall PlayThread(void *b)
 
 	length = module->length;
 
-	upse_set_audio_callback(upse_winamp_update_cb, NULL);
+	upse_set_audio_callback(upse_winamp_update_cb, module);
 
 	paused=0;
 	
@@ -306,7 +306,7 @@ DWORD WINAPI __stdcall PlayThread(void *b)
 
 	while (killDecodeThread == 0)
 	{
-		upse_execute();
+		upse_eventloop_run(module);
 
 		if (killDecodeThread)
 			break;
