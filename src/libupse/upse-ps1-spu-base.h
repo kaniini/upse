@@ -7,3 +7,4 @@ void upse_ps1_spu_finalize(void);
 // External, called by SPU code.
 void SPUirq(void);
 void upse_ps1_spu_setvolume(int volume);
+void upse_ps1_stop(void);

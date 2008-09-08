@@ -26,16 +26,6 @@
 #include "upse.h"
 #include "upse-string.h"
 
-void
-upse_execute(void)
-{
-    _ENTER;
-
-    upse_r3000_cpu_execute();
-
-    _LEAVE;
-}
-
 float
 upse_strtof(const char *value)
 {

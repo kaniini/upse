@@ -53,8 +53,6 @@ typedef struct
 } upse_psf_t;
 
 int upse_seek(u32 t);
-void upse_stop(void);
-void upse_execute(void);
 
 typedef struct
 {

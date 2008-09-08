@@ -529,6 +529,8 @@ upse_load_psf(void *fp, char *path, upse_iofuncs_t * iofuncs)
 
     ret = (upse_module_t *) calloc(sizeof(upse_module_t), 1);
     ret->metadata = psf;
+    ret->evloop_run = upse_r3000_cpu_execute;
+    ret->evloop_stop = upse_ps1_stop;
 
     _LEAVE;
     return ret;
