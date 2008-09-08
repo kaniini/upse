@@ -75,7 +75,7 @@ void upse_aud_update(unsigned char *buffer, long count, gpointer data)
         int t = playback->output->buffer_free() & mask;
 
         if (playback->playing == FALSE)
-            upse_stop();
+            upse_eventloop_stop(playback->data);
 
         if (t > count)
             playback->pass_audio(playback,
@@ -102,13 +102,13 @@ void upse_aud_update(unsigned char *buffer, long count, gpointer data)
         }
         else  // negative time - must make a C time machine
         {
-            upse_stop();
+            upse_eventloop_stop(playback->data);
             return;
         }
     }
 
     if (playback->playing == FALSE)
-        upse_stop();
+        upse_eventloop_stop(playback->data);
 }
 
 static void upse_aud_play(InputPlayback *playback)
@@ -151,7 +151,7 @@ static void upse_aud_play(InputPlayback *playback)
 
     for (;;)
     {
-        upse_execute();
+        upse_eventloop_run(mod);
 
         /* we have reached the end of the song or a command was issued */
         playback->output->buffer_free();
