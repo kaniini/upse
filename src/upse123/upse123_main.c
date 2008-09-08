@@ -377,7 +377,7 @@ main(int argc, char *argv[])
 
 	printf("\n");
 
-        upse_execute();
+        upse_eventloop_run(mod);
         upse_module_close(mod);
 
 #ifndef _WIN32
