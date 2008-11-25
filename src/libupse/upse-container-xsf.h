@@ -67,8 +67,8 @@ typedef struct {
 	char inf_year[256];
 	char inf_length[256];
 	char inf_fade[256];
-
 	char inf_refresh[256];
+        char inf_volume[256];
 	
 	char tag_name[MAX_UNKNOWN_TAGS][256];
 	char tag_data[MAX_UNKNOWN_TAGS][256];
@@ -78,5 +78,6 @@ typedef struct {
 } upse_xsf_t;
 
 upse_xsf_t *upse_xsf_decode(u8 *input, u32 input_len, u8 **output, u64 *size);
+long upse_time_to_ms(const char *str);
 
 #endif

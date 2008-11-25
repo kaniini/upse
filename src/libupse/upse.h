@@ -27,13 +27,7 @@
 #endif
 
 #include "upse-types.h"
-
-typedef struct _upse_psftag
-{
-    struct _upse_psftag *next;
-    char *key;
-    char *value;
-} upse_psftag_t;
+#include "upse-container-xsf.h"
 
 typedef struct
 {
@@ -50,7 +44,7 @@ typedef struct
     char *psfby;
     char *comment;
     char *copyright;
-    upse_psftag_t *taglist;
+    upse_xsf_t *xsf;
 } upse_psf_t;
 
 int upse_seek(u32 t);

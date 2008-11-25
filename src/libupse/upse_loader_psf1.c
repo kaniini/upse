@@ -52,43 +52,6 @@ typedef struct
     u32 SavedS0;
 } upse_packed_t upse_exe_header_t;
 
-static long _upse_time_to_ms(const char *str)
-{
-    int x, c = 0;
-    int acc = 0;
-    char s[100];
-
-    strncpy(s, str, 100);
-    s[99] = 0;
-
-    for (x = strlen(s); x >= 0; x--)
-	if (s[x] == '.' || s[x] == ',')
-	{
-	    acc = atoi(s + x + 1);
-	    s[x] = 0;
-	}
-	else if (s[x] == ':')
-	{
-	    if (c == 0)
-		acc += atoi(s + x + 1) * 10;
-	    else if (c == 1)
-		acc += atoi(s + x + (x ? 1 : 0)) * 10 * 60;
-	    c++;
-	    s[x] = 0;
-	}
-	else if (x == 0)
-	{
-	    if (c == 0)
-		acc += atoi(s + x) * 10;
-	    else if (c == 1)
-		acc += atoi(s + x) * 10 * 60;
-	    else if (c == 2)
-		acc += atoi(s + x) * 10 * 60 * 60;
-	}
-    acc *= 100;			// To milliseconds.
-    return (acc);
-}
-
 static char *_upse_resolve_path(char *f, char *newfile)
 {
     static char *ret;
@@ -124,126 +87,6 @@ static char *_upse_resolve_path(char *f, char *newfile)
     return (ret);
 }
 
-static int _upse_psf_get_tag(char *buf, char **key, char **val)
-{
-    char *tmp;
-
-    tmp = buf;
-
-    /* First, convert any weirdo ASCII characters to spaces. */
-    while (*tmp++)
-	if (*tmp > 0 && *tmp < 0x20)
-	    *tmp = 0x20;
-
-    /* Strip off white space off end of string(which should be the "value"). */
-    for (tmp = buf + strlen(buf) - 1; tmp >= buf; tmp--)
-    {
-	if (*tmp != 0x20)
-	    break;
-	*tmp = 0;
-    }
-
-    /* Now, search for the first non-whitespace character. */
-    while (*buf == 0x20)
-	buf++;
-
-    tmp = buf;
-    while ((*buf != 0x20) && (*buf != '='))
-    {
-	if (!*buf)
-	    return (0);		/* Null character. */
-	buf++;
-    }
-
-    /* Allocate memory, copy string, and terminate string. */
-    if (!(*key = malloc(buf - tmp + 1)))
-	return (0);
-    strncpy(*key, tmp, buf - tmp);
-    (*key)[(buf - tmp)] = 0;
-
-    /* Search for "=" character. */
-    while (*buf != '=')
-    {
-	if (!*buf)
-	    return (0);		/* Null character. */
-	buf++;
-    }
-
-    buf++;			/* Skip over equals character. */
-
-    /* Remove leading whitespace on value. */
-    while (*buf == 0x20)
-    {
-	if (!*buf)
-	    return (0);		/* Null character. */
-	buf++;
-    }
-
-    /* Allocate memory, and copy string over.  Trailing whitespace was eliminated
-       earlier.
-     */
-
-    if (!(*val = malloc(strlen(buf) + 1)))
-	return (0);
-    strcpy(*val, buf);
-
-    //puts(*key);
-    //puts(*val);
-
-    return (1);
-}
-
-static void _upse_psf_free_tags(upse_psftag_t * tags)
-{
-    while (tags)
-    {
-	upse_psftag_t *tmp = tags->next;
-
-	free(tags->key);
-	free(tags->value);
-	free(tags);
-
-	tags = tmp;
-    }
-}
-
-static void _upse_psf_add_tag(upse_psftag_t ** tag, const char *key, const char *val)
-{
-    upse_psftag_t *tmp;
-
-    tmp = malloc(sizeof(upse_psftag_t));
-    memset(tmp, 0, sizeof(upse_psftag_t));
-
-    tmp->key = strdup(key);
-    tmp->value = strdup(val);
-    tmp->next = NULL;
-
-    if (!*tag)
-	*tag = tmp;
-    else
-    {
-	upse_psftag_t *rec;
-	rec = *tag;
-	while (rec->next)
-	    rec = rec->next;
-	rec->next = tmp;
-    }
-}
-
-typedef struct {
-    int num;
-    char *value;
-} upse_libcache_slot_t;
-
-static int ccomp(const void *v1, const void *v2)
-{
-    const upse_libcache_slot_t *a1, *a2;
-    a1 = v1;
-    a2 = v2;
-
-    return (a1->num - a2->num);
-}
-
 // Type==1 for just info load.
 static upse_psf_t *_upse_load_psf(void *fp, char *path, int level, int type, upse_iofuncs_t *funcs);
 
@@ -270,204 +113,79 @@ _upse_load_psf(void *fp, char *path, int level, int type, upse_iofuncs_t *funcs)
 {
     upse_exe_header_t tmpHead;
     unsigned char *in, *out = 0;
-    u8 head[4];
-    u32 reserved;
-    u32 complen;
-    u32 crc32;
     uLongf outlen;
     upse_psf_t *psfi;
-    upse_psf_t *tmpi;
+    upse_xsf_t *xsf;
+    u32 inlen;
 
     _ENTER;
 
-    funcs->read_impl(head, 1, 4, fp);
-    if (memcmp(head, "PSF\x01", 4))
-	return NULL;
+    in = upse_get_buffer(fp, funcs, &inlen);
+    xsf = upse_xsf_decode(in, inlen, &out, &outlen);
+
+    memcpy(&tmpHead, out, sizeof(upse_exe_header_t));
+    upse_r3000_cpu_regs.pc = BFLIP32(tmpHead.pc0);
+    upse_r3000_cpu_regs.GPR.n.gp = BFLIP32(tmpHead.gp0);
+    upse_r3000_cpu_regs.GPR.n.sp = BFLIP32(tmpHead.s_addr);
+    if (upse_r3000_cpu_regs.GPR.n.sp == 0)
+        upse_r3000_cpu_regs.GPR.n.sp = 0x801fff00; /* first executable block in memory */
 
     psfi = calloc(sizeof(upse_psf_t), 1);
-    psfi->stop = ~0;
-    psfi->fade = 0;
+    psfi->xsf = xsf;
+    psfi->volume = upse_strtof(xsf->inf_volume) * 32;
+    psfi->fade = upse_time_to_ms(xsf->inf_fade);
+    psfi->stop = upse_time_to_ms(xsf->inf_length);
+    psfi->title = xsf->inf_title;
+    psfi->artist = xsf->inf_artist;
+    psfi->copyright = xsf->inf_copy;
+    psfi->game = xsf->inf_game;
+    psfi->year = xsf->inf_year;
 
-    funcs->read_impl(&reserved, 1, 4, fp);
-    funcs->read_impl(&complen, 1, 4, fp);
-    complen = BFLIP32(complen);
-
-    funcs->read_impl(&crc32, 1, 4, fp);
-    crc32 = BFLIP32(crc32);
-
-    funcs->seek_impl(fp, reserved, SEEK_CUR);
-
-    if (type)
-	funcs->seek_impl(fp, complen, SEEK_CUR);
-    else
+    /* we are loading a psflib */
+    if (level)
     {
-	in = malloc(complen);
-	out = malloc(1024 * 1024 * 2 + 0x800);
-	funcs->read_impl(in, 1, complen, fp);
-	outlen = 1024 * 1024 * 2;
-	uncompress(out, &outlen, in, complen);
-	free(in);
-	memcpy(&tmpHead, out, sizeof(upse_exe_header_t));
-	upse_r3000_cpu_regs.pc = BFLIP32(tmpHead.pc0);
-	upse_r3000_cpu_regs.GPR.n.gp = BFLIP32(tmpHead.gp0);
-	upse_r3000_cpu_regs.GPR.n.sp = BFLIP32(tmpHead.s_addr);
-	if (upse_r3000_cpu_regs.GPR.n.sp == 0)
-	    upse_r3000_cpu_regs.GPR.n.sp = 0x801fff00;
+        LoadPSXMem(BFLIP32(tmpHead.t_addr), BFLIP32(tmpHead.t_size), out + 0x800);
+        free(in);
+        free(out);
 
-	if (level)
-	{
-	    LoadPSXMem(BFLIP32(tmpHead.t_addr), BFLIP32(tmpHead.t_size), out + 0x800);
-	    free(out);
-	}
+        return psfi;
     }
 
+    if (!type && *xsf->lib != '\0')
     {
-	u8 tagdata[5];
-	if (funcs->read_impl(tagdata, 1, 5, fp) == 5)
-	{
-	    if (!memcmp(tagdata, "[TAG]", 5))
-	    {
-		char linebuf[1024];
+        char *lib;
+        int i;
 
-		while (upse_io_fgets(linebuf, 1024, fp, funcs))
-		{
-		    int x;
-		    char *key = NULL, *value = NULL;
+        if (*xsf->lib == '\0')
+        {
+            _LEAVE;
+            return psfi;
+        }
 
-		    if (!_upse_psf_get_tag(linebuf, &key, &value))
-		    {
-			if (key)
-			    free(key);
-			if (value)
-			    free(value);
-			continue;
-		    }
+        for (lib = xsf->lib, i = 0; *lib != '\0'; lib = xsf->libaux[i], i++)
+        {
+            u32 ba[3];
+            char *tmpfn;
 
-		    _upse_psf_add_tag(&psfi->taglist, key, value);
+            ba[0] = upse_r3000_cpu_regs.pc;
+	    ba[1] = upse_r3000_cpu_regs.GPR.n.gp;
+	    ba[2] = upse_r3000_cpu_regs.GPR.n.sp;
 
-		    if (!level)
-		    {
-			static char *yoinks[8] = { "title", "artist", "game", "year", "genre",
-			    "copyright", "psfby", "comment"
-			};
-			char **yoinks2[8] = { &psfi->title, &psfi->artist, &psfi->game, &psfi->year, &psfi->genre,
-			    &psfi->copyright, &psfi->psfby, &psfi->comment
-			};
-			for (x = 0; x < 8; x++)
-			    if (!strcasecmp(key, yoinks[x]))
-				*yoinks2[x] = value;
-			if (!strcasecmp(key, "length"))
-			    psfi->stop = _upse_time_to_ms(value);
-			else if (!strcasecmp(key, "fade"))
-			    psfi->fade = _upse_time_to_ms(value);
-			else if (!strcasecmp(key, "volume"))
-			    psfi->volume = upse_strtof(value) * 32;
-		    }
+	    tmpfn = _upse_resolve_path(path, lib);
+	    _upse_load_psf_from_file(tmpfn, level + 1, 0, funcs);
 
-		    if (!strcasecmp(key, "_lib") && !type)
-		    {
-			char *tmpfn;
-			/* Load file name "value" from the directory specified in
-			   the full path(directory + file name) "path"
-			 */
-			tmpfn = _upse_resolve_path(path, value);
-			if (!(tmpi = _upse_load_psf_from_file(tmpfn, level + 1, 0, funcs)))
-			{
-			    free(key);
-			    free(value);
-			    free(tmpfn);
-			    if (!level)
-				free(out);
-			    _upse_psf_free_tags(psfi->taglist);
-			    free(psfi);
-			    return NULL;
-			}
-			_upse_psf_free_tags(tmpi->taglist);
-			free(tmpi);
-			free(tmpfn);
-		    }
-
-		    if (key)
-		        free(key);
-		}
-	    }
-	}
-    }
-
-    /* Now, if we're at level 0(main PSF), load the main executable, and any libN stuff */
-    if (!level && !type)
-    {
-	LoadPSXMem(BFLIP32(tmpHead.t_addr), BFLIP32(tmpHead.t_size), out + 0x800);
-	free(out);
-    }
-
-    if (!type)			/* Load libN */
-    {
-	upse_libcache_slot_t *cache;
-	upse_psftag_t *tag;
-	unsigned int libncount = 0;
-	unsigned int cur = 0;
-
-	tag = psfi->taglist;
-	while (tag)
-	{
-	    if (!strncasecmp(tag->key, "_lib", 4) && tag->key[4])
-		libncount++;
-	    tag = tag->next;
-	}
-
-	if (libncount)
-	{
-	    cache = malloc(sizeof(upse_libcache_slot_t) * libncount);
-
-	    tag = psfi->taglist;
-	    while (tag)
-	    {
-		if (!strncasecmp(tag->key, "_lib", 4) && tag->key[4])
-		{
-		    cache[cur].num = atoi(&tag->key[4]);
-		    cache[cur].value = tag->value;
-		    cur++;
-		}
-		tag = tag->next;
-	    }
-	    qsort(cache, libncount, sizeof(upse_libcache_slot_t), ccomp);
-	    for (cur = 0; cur < libncount; cur++)
-	    {
-		u32 ba[3];
-		char *tmpfn;
-
-		if (cache[cur].num < 2)
-		    continue;
-
-		ba[0] = upse_r3000_cpu_regs.pc;
-		ba[1] = upse_r3000_cpu_regs.GPR.n.gp;
-		ba[2] = upse_r3000_cpu_regs.GPR.n.sp;
-
-		/* Load file name "value" from the directory specified in
-		   the full path(directory + file name) "path"
-		 */
-		tmpfn = _upse_resolve_path(path, cache[cur].value);
-		if (!(tmpi = _upse_load_psf_from_file(tmpfn, level + 1, 0, funcs)))
-		{
-		    //free(key);
-		    //free(value);
-		    //free(tmpfn);
-		    //return(0);
-		}
-		free(tmpfn);
-		_upse_psf_free_tags(tmpi->taglist);
-		free(tmpi);
-
-		upse_r3000_cpu_regs.pc = ba[0];
-		upse_r3000_cpu_regs.GPR.n.gp = ba[1];
-		upse_r3000_cpu_regs.GPR.n.sp = ba[2];
-	    }
-	    free(cache);
-
-	}			// if(libncount)
-
+	    upse_r3000_cpu_regs.pc = ba[0];
+	    upse_r3000_cpu_regs.GPR.n.gp = ba[1];
+	    upse_r3000_cpu_regs.GPR.n.sp = ba[2];
+        }
     }				// if(!type)
+
+    if (!level)
+    {
+        LoadPSXMem(BFLIP32(tmpHead.t_addr), BFLIP32(tmpHead.t_size), out + 0x800);
+        free(in);
+        free(out);
+    }
 
     _LEAVE;
     return psfi;
@@ -475,8 +193,8 @@ _upse_load_psf(void *fp, char *path, int level, int type, upse_iofuncs_t *funcs)
 
 void upse_free_psf_metadata(upse_psf_t * info)
 {
-    if (info->taglist)
-        _upse_psf_free_tags(info->taglist);
+    if (info->xsf)
+        free(info->xsf);
 
     free(info);
 }

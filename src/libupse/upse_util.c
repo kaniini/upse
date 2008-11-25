@@ -45,7 +45,7 @@ upse_strtof(const char *value)
 }
 
 u8 *
-upse_get_buffer(void *fp, upse_iofuncs_t *funcs)
+upse_get_buffer(void *fp, upse_iofuncs_t *funcs, u32 *len_)
 {
     int len, pos;
     u8 *buf;
@@ -63,5 +63,10 @@ upse_get_buffer(void *fp, upse_iofuncs_t *funcs)
 
     funcs->seek_impl(fp, pos, SEEK_SET);
 
+    if (len_ != NULL)
+        *len_ = len;
+
     _LEAVE;
+
+    return buf;
 }

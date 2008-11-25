@@ -341,9 +341,55 @@ upse_xsf_decode(u8 *input, u32 input_len, u8 **output, u64 *size)
 				c->tag_data[num_tags][0] = 0;
 				c->tag_name[num_tags][0] = 0;
 			}
+			else if (!strncmp(c->tag_name[num_tags], "volume", 6))
+			{
+				strcpy(c->inf_volume, c->tag_data[num_tags]);
+				c->tag_data[num_tags][0] = 0;
+				c->tag_name[num_tags][0] = 0;
+			}
 		}
 	}
 	
 	// Bingo
 	return c;
 }
+
+long
+upse_time_to_ms(const char *str)
+{
+    int x, c = 0;
+    int acc = 0;
+    char s[100];
+
+    strncpy(s, str, 100);
+    s[99] = 0;
+
+    for (x = strlen(s); x >= 0; x--)
+	if (s[x] == '.' || s[x] == ',')
+	{
+	    acc = atoi(s + x + 1);
+	    s[x] = 0;
+	}
+	else if (s[x] == ':')
+	{
+	    if (c == 0)
+		acc += atoi(s + x + 1) * 10;
+	    else if (c == 1)
+		acc += atoi(s + x + (x ? 1 : 0)) * 10 * 60;
+	    c++;
+	    s[x] = 0;
+	}
+	else if (x == 0)
+	{
+	    if (c == 0)
+		acc += atoi(s + x) * 10;
+	    else if (c == 1)
+		acc += atoi(s + x) * 10 * 60;
+	    else if (c == 2)
+		acc += atoi(s + x) * 10 * 60 * 60;
+	}
+    acc *= 100;			// To milliseconds.
+    return (acc);
+}
+
+

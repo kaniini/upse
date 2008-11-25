@@ -25,7 +25,7 @@ SRCS = upse_string.c			\
        upse_ps1_spu_reverb.c		\
        upse_ps1_spu_adsr_filter.c	\
 
-INCLUDES = upse.h upse-types.h upse-module.h upse-eventloop.h
+INCLUDES = upse.h upse-types.h upse-module.h upse-eventloop.h upse-container-xsf.h
 
 include ../../buildsys.mk
 include ../../extra.mk
