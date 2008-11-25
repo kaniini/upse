@@ -1,10 +1,10 @@
 /*
  * UPSE: the unix playstation sound emulator.
  *
- * Filename: upse_unpack_psf.c
- * Purpose: libupse: PSF/MiniPSF/PSF2/MiniPSF2 unpacker
+ * Filename: upse_loader_psf1.c
+ * Purpose: libupse: PSF/MiniPSF loader.
  *
- * Copyright (c) 2007 William Pitcock <nenolod@sacredspiral.co.uk>
+ * Copyright (c) 2008 William Pitcock <nenolod@dereferenced.org>
  *
  * UPSE is free software, released under the GNU General Public License,
  * version 2.
