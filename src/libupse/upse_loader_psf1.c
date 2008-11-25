@@ -124,11 +124,6 @@ _upse_load_psf(void *fp, char *path, int level, int type, upse_iofuncs_t *funcs)
     xsf = upse_xsf_decode(in, inlen, &out, &outlen);
 
     memcpy(&tmpHead, out, sizeof(upse_exe_header_t));
-    upse_r3000_cpu_regs.pc = BFLIP32(tmpHead.pc0);
-    upse_r3000_cpu_regs.GPR.n.gp = BFLIP32(tmpHead.gp0);
-    upse_r3000_cpu_regs.GPR.n.sp = BFLIP32(tmpHead.s_addr);
-    if (upse_r3000_cpu_regs.GPR.n.sp == 0)
-        upse_r3000_cpu_regs.GPR.n.sp = 0x801fff00; /* first executable block in memory */
 
     psfi = calloc(sizeof(upse_psf_t), 1);
     psfi->xsf = xsf;
@@ -141,8 +136,14 @@ _upse_load_psf(void *fp, char *path, int level, int type, upse_iofuncs_t *funcs)
     psfi->game = xsf->inf_game;
     psfi->year = xsf->inf_year;
 
+    upse_r3000_cpu_regs.pc = BFLIP32(tmpHead.pc0);
+    upse_r3000_cpu_regs.GPR.n.gp = BFLIP32(tmpHead.gp0);
+    upse_r3000_cpu_regs.GPR.n.sp = BFLIP32(tmpHead.s_addr);
+    if (upse_r3000_cpu_regs.GPR.n.sp == 0)
+        upse_r3000_cpu_regs.GPR.n.sp = 0x801fff00; /* first executable block in memory */
+
     /* we are loading a psflib */
-    if (level)
+    if (level && !type)
     {
         LoadPSXMem(BFLIP32(tmpHead.t_addr), BFLIP32(tmpHead.t_size), out + 0x800);
         free(in);
@@ -153,38 +154,51 @@ _upse_load_psf(void *fp, char *path, int level, int type, upse_iofuncs_t *funcs)
 
     if (!type && *xsf->lib != '\0')
     {
-        char *lib;
-        int i;
+        upse_psf_t *tmpi;
 
-        if (*xsf->lib == '\0')
+        if (*xsf->lib != '\0')
         {
-            _LEAVE;
-            return psfi;
-        }
-
-        for (lib = xsf->lib, i = 0; *lib != '\0'; lib = xsf->libaux[i], i++)
-        {
-            u32 ba[3];
             char *tmpfn;
 
-            ba[0] = upse_r3000_cpu_regs.pc;
-	    ba[1] = upse_r3000_cpu_regs.GPR.n.gp;
-	    ba[2] = upse_r3000_cpu_regs.GPR.n.sp;
+            tmpfn = _upse_resolve_path(path, xsf->lib);
+    	    tmpi = _upse_load_psf_from_file(tmpfn, level + 1, 0, funcs);
 
-	    tmpfn = _upse_resolve_path(path, lib);
-	    _upse_load_psf_from_file(tmpfn, level + 1, 0, funcs);
-
-	    upse_r3000_cpu_regs.pc = ba[0];
-	    upse_r3000_cpu_regs.GPR.n.gp = ba[1];
-	    upse_r3000_cpu_regs.GPR.n.sp = ba[2];
+            free(tmpfn);
+            upse_free_psf_metadata(tmpi);
         }
     }				// if(!type)
 
-    if (!level)
+    if (!level && !type)
     {
+        upse_psf_t *tmpi;
+        char *lib;
+        int i;
+        u32 ba[3]; /* table holding base addresses for restore after loading aux libs */
+
         LoadPSXMem(BFLIP32(tmpHead.t_addr), BFLIP32(tmpHead.t_size), out + 0x800);
         free(in);
         free(out);
+
+        for (lib = xsf->libaux[0], i = 1; *lib != '\0'; lib = xsf->libaux[i], i++)
+        {
+            char *tmpfn;
+
+            ba[0] = upse_r3000_cpu_regs.pc;
+            ba[1] = upse_r3000_cpu_regs.GPR.n.gp;
+            ba[2] = upse_r3000_cpu_regs.GPR.n.sp;
+
+            tmpfn = _upse_resolve_path(path, lib);
+    	    tmpi = _upse_load_psf_from_file(tmpfn, level + 1, 0, funcs);
+            if (tmpi == NULL)
+                continue;
+
+            free(tmpfn);
+            upse_free_psf_metadata(tmpi);
+
+            upse_r3000_cpu_regs.pc = ba[0];
+            upse_r3000_cpu_regs.GPR.n.gp = ba[1];
+            upse_r3000_cpu_regs.GPR.n.sp = ba[2];
+        }
     }
 
     _LEAVE;
