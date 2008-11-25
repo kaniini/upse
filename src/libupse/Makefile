@@ -3,6 +3,7 @@ LIB_MAJOR = 3
 LIB_MINOR = 0
 
 SRCS = upse_string.c			\
+       upse_container_xsf.c		\
        upse_util.c			\
        upse_loader.c			\
        upse_eventloop.c			\
