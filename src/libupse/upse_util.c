@@ -43,3 +43,25 @@ upse_strtof(const char *value)
 
     return val;
 }
+
+u8 *
+upse_get_buffer(void *fp, upse_iofuncs_t *funcs)
+{
+    int len, pos;
+    u8 *buf;
+
+    _ENTER;
+
+    pos = funcs->tell_impl(fp);
+
+    funcs->seek_impl(fp, 0, SEEK_END);
+    len = funcs->tell_impl(fp);
+    funcs->seek_impl(fp, 0, SEEK_SET);
+
+    buf = calloc(sizeof(u8), len);
+    funcs->read_impl(buf, len, 1, fp);
+
+    funcs->seek_impl(fp, pos, SEEK_SET);
+
+    _LEAVE;
+}

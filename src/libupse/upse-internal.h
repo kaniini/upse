@@ -67,4 +67,6 @@ void __Log(char *fmt, ...);
 #include "upse-ps1-spu-base.h"
 #include "upse-container-xsf.h"
 
-#endif /* __PSXCOMMON_H__ */
+u8 *upse_get_buffer(void *fp, upse_iofuncs_t *funcs);
+
+#endif

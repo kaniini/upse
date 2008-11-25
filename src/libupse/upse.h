@@ -61,6 +61,7 @@ typedef struct
     size_t(*read_impl) (void *ptr, size_t size, size_t nmemb, void *file);
     int (*seek_impl) (void *file, long offset, int whence);
     int (*close_impl) (void *file);
+    long (*tell_impl) (void *file);
 } upse_iofuncs_t;
 
 upse_psf_t *upse_get_psf_metadata(char *path, upse_iofuncs_t * iofuncs);
