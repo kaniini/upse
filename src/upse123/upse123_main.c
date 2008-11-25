@@ -73,11 +73,20 @@ upse123_close_impl(void *ptr)
     return fclose(f);
 }
 
+static long
+upse123_tell_impl(void *ptr)
+{
+    FILE *f = (FILE *) ptr;
+
+    return ftell(f);
+}
+
 static upse_iofuncs_t upse123_iofuncs = {
     upse123_open_impl,
     upse123_read_impl,
     upse123_seek_impl,
-    upse123_close_impl
+    upse123_close_impl,
+    upse123_tell_impl
 };
 
 #ifndef HAVE_AO

@@ -48,11 +48,16 @@ static int upse_aud_close_impl(void *ptr) {
     return aud_vfs_fclose(ptr);
 }
 
+static long upse_aud_tell_impl(void *ptr) {
+    return aud_vfs_ftell(ptr);
+}
+
 static upse_iofuncs_t upse_aud_iofuncs = {
     upse_aud_open_impl,
     upse_aud_read_impl,
     upse_aud_seek_impl,
-    upse_aud_close_impl
+    upse_aud_close_impl,
+    upse_aud_tell_impl
 };
 
 static int is_our_fd(gchar *filename, VFSFile *file) {

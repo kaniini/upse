@@ -76,11 +76,19 @@ static int upse_winamp_close_impl(void *ptr)
     return fclose(f);
 }
 
+static long upse_winamp_tell_impl(void *ptr)
+{
+    FILE *f = (FILE *) ptr;
+
+    return ftell(f);
+}
+
 static upse_iofuncs_t upse_winamp_iofuncs = {
     upse_winamp_open_impl,
     upse_winamp_read_impl,
     upse_winamp_seek_impl,
-    upse_winamp_close_impl
+    upse_winamp_close_impl,
+    upse_winamp_tell_impl
 };
 
 static int length = -1000;
