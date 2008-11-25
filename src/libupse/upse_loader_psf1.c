@@ -136,11 +136,15 @@ _upse_load_psf(void *fp, char *path, int level, int type, upse_iofuncs_t *funcs)
     psfi->game = xsf->inf_game;
     psfi->year = xsf->inf_year;
 
-    upse_r3000_cpu_regs.pc = BFLIP32(tmpHead.pc0);
-    upse_r3000_cpu_regs.GPR.n.gp = BFLIP32(tmpHead.gp0);
-    upse_r3000_cpu_regs.GPR.n.sp = BFLIP32(tmpHead.s_addr);
-    if (upse_r3000_cpu_regs.GPR.n.sp == 0)
-        upse_r3000_cpu_regs.GPR.n.sp = 0x801fff00; /* first executable block in memory */
+    /* if querying information, we do not want to upset the emulator. */
+    if (!type)
+    {
+        upse_r3000_cpu_regs.pc = BFLIP32(tmpHead.pc0);
+        upse_r3000_cpu_regs.GPR.n.gp = BFLIP32(tmpHead.gp0);
+        upse_r3000_cpu_regs.GPR.n.sp = BFLIP32(tmpHead.s_addr);
+        if (upse_r3000_cpu_regs.GPR.n.sp == 0)
+            upse_r3000_cpu_regs.GPR.n.sp = 0x801fff00; /* first executable block in memory */
+    }
 
     /* we are loading a psflib */
     if (level && !type)
