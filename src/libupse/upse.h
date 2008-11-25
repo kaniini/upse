@@ -37,6 +37,7 @@ typedef struct _upse_psftag
 
 typedef struct
 {
+    u16 rate;
     u32 length;
     u32 stop;
     u32 fade;

@@ -526,6 +526,7 @@ upse_load_psf(void *fp, char *path, upse_iofuncs_t * iofuncs)
     upse_ps1_spu_setvolume(psf->volume);
     upse_ps1_spu_setlength(psf->stop, psf->fade);
     psf->length = psf->stop + psf->fade;
+    psf->rate = 44100;
 
     ret = (upse_module_t *) calloc(sizeof(upse_module_t), 1);
     ret->metadata = psf;

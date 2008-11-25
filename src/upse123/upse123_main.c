@@ -165,11 +165,11 @@ upse123_write_audio(unsigned char* data, long bytes, void *unused)
 }
 
 void
-upse123_init_audio(void)
+upse123_init_audio(int rate)
 {
 #ifndef _WIN32
 #ifndef HAVE_AO
-    int pspeed = 44100;
+    int pspeed = rate;
     int pstereo = 1;
     int format;
     int oss_speed, oss_stereo;
@@ -224,7 +224,7 @@ upse123_init_audio(void)
     ao_initialize();
 
     {
-        ao_sample_format format_ = { 16, 44100, 2, AO_FMT_NATIVE };
+        ao_sample_format format_ = { 16, rate, 2, AO_FMT_NATIVE };
         ao_dev_ = ao_open_live(audio_dev_ != NULL ? ao_driver_id(audio_dev_) : ao_default_driver_id(),
                                &format_, ao_opts_);
     }
@@ -350,8 +350,6 @@ main(int argc, char *argv[])
     printf("\033[K\033[00;36mCopyright (C) 2007 William Pitcock <nenolod@sacredspiral.co.uk>\033[0m\n");
     printf("\n\033[01mUPSE123 is free software; licensed under the GNU GPL version 2.\nAs such, NO WARRANTY IS PROVIDED. USE AT YOUR OWN RISK!\033[0m\n");
 
-    upse123_init_audio();
-
     if (argc - optind <= 0)
         usage(argv[0]);
 
@@ -377,16 +375,16 @@ main(int argc, char *argv[])
 
 	printf("\n");
 
+        upse123_init_audio(mod->metadata->rate);
         upse_eventloop_run(mod);
         upse_module_close(mod);
+        upse123_close_audio();
 
 #ifndef _WIN32
         if (sleep_value_)
             sleep(sleep_value_);
 #endif
     }
-
-    upse123_close_audio();
 
     return 0;
 }

@@ -290,16 +290,16 @@ DWORD WINAPI __stdcall PlayThread(void *b)
 
 	paused=0;
 	
-	maxlatency = mod.outMod->Open(44100, 2, 16, -1,-1);
+	maxlatency = mod.outMod->Open(module->metadata->rate, 2, 16, -1,-1);
 	if (maxlatency < 0)
 	{
 		upse_module_close(module);
 		return 1;
 	}
 
-	mod.SetInfo(0,44,1,1);
-	mod.SAVSAInit(maxlatency,44100);
-	mod.VSASetInfo(44100,1);
+	mod.SetInfo(0, module->metadata->rate / 100, 1, 1);
+	mod.SAVSAInit(maxlatency, module->metadata->rate);
+	mod.VSASetInfo(44100, 1);
 	mod.outMod->SetVolume(-666);
 
 	killDecodeThread = 0;

@@ -134,10 +134,10 @@ static void upse_aud_play(InputPlayback *playback)
 
     /* XXX */
     name = upse_aud_get_title_psf(playback->filename, psf);
-    playback->set_params(playback, name, psf->length, 44100 * 2 * 2 * 8, 44100, 2);
+    playback->set_params(playback, name, psf->length, psf->rate * 2 * 2 * 8, psf->rate, 2);
     g_free(name);
 
-    if (!playback->output->open_audio(FMT_S16_NE, 44100, 2))
+    if (!playback->output->open_audio(FMT_S16_NE, psf->rate, 2))
     {
         upse_module_close(mod);
         playback->error = TRUE;
