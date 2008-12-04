@@ -4,6 +4,7 @@ LIB_MINOR = 0
 
 SRCS = upse_string.c			\
        upse_container_xsf.c		\
+       upse_filesystem.c		\
        upse_util.c			\
        upse_loader.c			\
        upse_eventloop.c			\
