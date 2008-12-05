@@ -10,6 +10,7 @@ SRCS = upse_string.c			\
        upse_eventloop.c			\
        upse_module.c			\
        upse_loader_psf1.c		\
+       upse_loader_psf2.c		\
        upse_bios_manager.c 		\
        upse_r3000_bytecode_evaluator.c	\
        upse_r3000_abstract.c		\

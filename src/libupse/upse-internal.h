@@ -66,6 +66,7 @@ void __Log(char *fmt, ...);
 #include "upse-ps1-spu-abstract.h"
 #include "upse-ps1-spu-base.h"
 #include "upse-container-xsf.h"
+#include "upse-filesystem.h"
 
 u8 *upse_get_buffer(void *fp, upse_iofuncs_t *funcs, u32 *len);
 
