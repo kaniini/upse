@@ -73,30 +73,11 @@ static int is_our_fd(gchar *filename, VFSFile *file) {
 void upse_aud_update(unsigned char *buffer, long count, gpointer data)
 {
     InputPlayback *playback = (InputPlayback *) data;
-    const int mask = ~((((16 / 8) * 2)) - 1);
 
-    while (count > 0)
-    {
-        int t = playback->output->buffer_free() & mask;
+    if (playback->playing == FALSE)
+        upse_eventloop_stop(playback->data);
 
-        if (playback->playing == FALSE)
-            upse_eventloop_stop(playback->data);
-
-        if (t > count)
-            playback->pass_audio(playback,
-                          FMT_S16_NE, 2, count, buffer, &playback->playing);
-        else
-        {
-            if (t)
-                playback->pass_audio(playback, FMT_S16_NE, 2, t, buffer, &playback->playing);
-
-            /* XXX: wait for the buffer to drain */
-            g_usleep((count - t)*1000*5/441/2);
-        }
-
-        count -= t;
-        buffer += t;
-    }
+    playback->pass_audio(playback, FMT_S16_NE, 2, count, buffer, &playback->playing);
 
     if (seek)
     {
@@ -158,10 +139,6 @@ static void upse_aud_play(InputPlayback *playback)
     {
         upse_eventloop_run(mod);
 
-        /* we have reached the end of the song or a command was issued */
-        playback->output->buffer_free();
-        playback->output->buffer_free();
-
         if (playback->playing == FALSE)
             break;
 
@@ -212,17 +189,6 @@ static void upse_aud_seek(InputPlayback *playback, int time)
         return;
 
     seek = time * 1000;
-}
-
-static void upse_aud_getsonginfo(char *fn, char **title, int *length)
-{
-    upse_psf_t *tmp;
-
-    if((tmp = upse_get_psf_metadata(fn, &upse_aud_iofuncs))) {
-        *length = tmp->length;
-        *title = upse_aud_get_title_psf(fn, tmp);
-        upse_free_psf_metadata(tmp);
-    }
 }
 
 static Tuple *upse_aud_get_tuple_psf(const gchar *fn, upse_psf_t *psf) {
@@ -303,7 +269,6 @@ InputPlugin upse_ip =
     .stop = upse_aud_stop,
     .pause = upse_aud_pause,
     .seek = upse_aud_seek,
-    .get_song_info = upse_aud_getsonginfo,
     .get_song_tuple = get_tuple_psf,
     .is_our_file_from_vfs = is_our_fd,
     .vfs_extensions = upse_fmts,
