@@ -1,3 +1,3 @@
-SUBDIRS = libupse upse-audacious upse123
+SUBDIRS = libupse upse-audacious
 
 include ../buildsys.mk

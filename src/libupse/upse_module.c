@@ -122,9 +122,11 @@ upse_module_close(upse_module_t *mod)
 }
 
 extern upse_module_t *upse_load_psf(void *fileptr, char *path, upse_iofuncs_t *funcs);
+extern upse_module_t *upse_load_psf2(void *fileptr, char *path, upse_iofuncs_t *funcs);
 
 void
 upse_module_init(void)
 {
     upse_loader_add_magic("PSF\x01", 4, 0, upse_load_psf);
+    upse_loader_add_magic("PSF\x02", 4, 0, upse_load_psf2);
 }
