@@ -18,11 +18,14 @@
 #include <upse.h>
 #include <upse-filesystem.h>
 
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #include <errno.h>
 #include <strings.h>
 
 static void *
-psf2dump_open_impl(char *path, char *mode)
+psf2dump_open_impl(const char *path, const char *mode)
 {
     return fopen(path, mode);
 }

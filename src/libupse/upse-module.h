@@ -32,7 +32,7 @@ typedef upse_module_t *(*upse_loader_func_t)(void *fileptr, char *path, upse_iof
 upse_loader_func_t upse_module_probe(void *fileptr, upse_iofuncs_t *funcs);
 int upse_module_is_supported(void *fileptr, upse_iofuncs_t *funcs);
 int upse_file_is_supported(char *file, upse_iofuncs_t *funcs);
-upse_module_t *upse_module_open(char *file, upse_iofuncs_t *funcs);
+upse_module_t *upse_module_open(const char *file, upse_iofuncs_t *funcs);
 void upse_module_close(upse_module_t *mod);
 void upse_module_init(void);
 

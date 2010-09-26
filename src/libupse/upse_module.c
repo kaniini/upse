@@ -85,7 +85,7 @@ upse_file_is_supported(char *file, upse_iofuncs_t *funcs)
 }
 
 upse_module_t *
-upse_module_open(char *file, upse_iofuncs_t *funcs)
+upse_module_open(const char *file, upse_iofuncs_t *funcs)
 {
     void *fileptr;
     upse_module_t *ret;
