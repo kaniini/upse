@@ -17,7 +17,7 @@
 
 #include "upse-internal.h"
 
-static char *_upse_resolve_path(char *f, char *newfile)
+static char *_upse_resolve_path(const char *f, const char *newfile)
 {
     static char *ret;
     char *tp1;
@@ -126,7 +126,7 @@ upse_psf2_parse_filesystem(upse_filesystem_t *ret, char *curdir, u8 *filesys, u8
 }
 
 upse_module_t *
-upse_load_psf2(void *fp, char *path, upse_iofuncs_t *iofuncs)
+upse_load_psf2(void *fp, const char *path, upse_iofuncs_t *iofuncs)
 {
     upse_xsf_t *xsf;
     u8 *in, *out;

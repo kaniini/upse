@@ -121,8 +121,8 @@ upse_module_close(upse_module_t *mod)
     free(mod);
 }
 
-extern upse_module_t *upse_load_psf(void *fileptr, char *path, upse_iofuncs_t *funcs);
-extern upse_module_t *upse_load_psf2(void *fileptr, char *path, upse_iofuncs_t *funcs);
+extern upse_module_t *upse_load_psf(void *fileptr, const char *path, upse_iofuncs_t *funcs);
+extern upse_module_t *upse_load_psf2(void *fileptr, const char *path, upse_iofuncs_t *funcs);
 
 void
 upse_module_init(void)

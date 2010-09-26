@@ -27,7 +27,7 @@ typedef struct {
     upse_eventloop_func_t evloop_stop;
 } upse_module_t;
 
-typedef upse_module_t *(*upse_loader_func_t)(void *fileptr, char *path, upse_iofuncs_t *iofuncs);
+typedef upse_module_t *(*upse_loader_func_t)(void *fileptr, const char *path, upse_iofuncs_t *iofuncs);
 
 upse_loader_func_t upse_module_probe(void *fileptr, upse_iofuncs_t *funcs);
 int upse_module_is_supported(void *fileptr, upse_iofuncs_t *funcs);

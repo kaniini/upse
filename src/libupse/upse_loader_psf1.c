@@ -237,7 +237,7 @@ upse_get_psf_metadata(const char *path, upse_iofuncs_t * iofuncs)
 }
 
 upse_module_t *
-upse_load_psf(void *fp, char *path, upse_iofuncs_t * iofuncs)
+upse_load_psf(void *fp, const char *path, upse_iofuncs_t * iofuncs)
 {
     upse_psf_t *psf;
     upse_module_t *ret;
