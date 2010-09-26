@@ -51,14 +51,14 @@ int upse_seek(u32 t);
 
 typedef struct
 {
-    void *(*open_impl) (char *path, char *mode);
+    void *(*open_impl) (const char *path, const char *mode);
     size_t(*read_impl) (void *ptr, size_t size, size_t nmemb, void *file);
     int (*seek_impl) (void *file, long offset, int whence);
     int (*close_impl) (void *file);
     long (*tell_impl) (void *file);
 } upse_iofuncs_t;
 
-upse_psf_t *upse_get_psf_metadata(char *path, upse_iofuncs_t * iofuncs);
+upse_psf_t *upse_get_psf_metadata(const char *path, upse_iofuncs_t * iofuncs);
 void upse_free_psf_metadata(upse_psf_t * info);
 
 typedef void (*upse_audio_callback_func_t) (unsigned char *, long, void *);

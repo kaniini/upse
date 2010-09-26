@@ -52,7 +52,7 @@ typedef struct
     u32 SavedS0;
 } upse_packed_t upse_exe_header_t;
 
-static char *_upse_resolve_path(char *f, char *newfile)
+static char *_upse_resolve_path(const char *f, const char *newfile)
 {
     static char *ret;
     char *tp1;
@@ -88,10 +88,10 @@ static char *_upse_resolve_path(char *f, char *newfile)
 }
 
 // Type==1 for just info load.
-static upse_psf_t *_upse_load_psf(void *fp, char *path, int level, int type, upse_iofuncs_t *funcs);
+static upse_psf_t *_upse_load_psf(void *fp, const char *path, int level, int type, upse_iofuncs_t *funcs);
 
 static upse_psf_t *
-_upse_load_psf_from_file(char *path, int level, int type, upse_iofuncs_t *funcs)
+_upse_load_psf_from_file(const char *path, int level, int type, upse_iofuncs_t *funcs)
 {
     void *fp;
     upse_psf_t *ret;
@@ -109,7 +109,7 @@ _upse_load_psf_from_file(char *path, int level, int type, upse_iofuncs_t *funcs)
 }
 
 static upse_psf_t *
-_upse_load_psf(void *fp, char *path, int level, int type, upse_iofuncs_t *funcs)
+_upse_load_psf(void *fp, const char *path, int level, int type, upse_iofuncs_t *funcs)
 {
     upse_exe_header_t tmpHead;
     unsigned char *in, *out = 0;
@@ -218,7 +218,7 @@ void upse_free_psf_metadata(upse_psf_t * info)
 }
 
 upse_psf_t *
-upse_get_psf_metadata(char *path, upse_iofuncs_t * iofuncs)
+upse_get_psf_metadata(const char *path, upse_iofuncs_t * iofuncs)
 {
     upse_psf_t *ret;
 
