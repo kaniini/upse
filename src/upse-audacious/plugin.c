@@ -77,7 +77,7 @@ void upse_aud_update(unsigned char *buffer, long count, gpointer data)
     if (playback->playing == FALSE)
         upse_eventloop_stop(playback->data);
 
-    playback->pass_audio(playback, FMT_S16_NE, 2, count, buffer, &playback->playing);
+    playback->output->write_audio(buffer, count);
 
     if (seek)
     {
@@ -86,7 +86,7 @@ void upse_aud_update(unsigned char *buffer, long count, gpointer data)
             playback->output->flush(seek);
             seek = 0;
         }
-        else  // negative time - must make a C time machine
+        else
         {
             upse_eventloop_stop(playback->data);
             return;
@@ -97,7 +97,7 @@ void upse_aud_update(unsigned char *buffer, long count, gpointer data)
         upse_eventloop_stop(playback->data);
 }
 
-static void upse_aud_play(InputPlayback *playback)
+static gboolean upse_aud_play(InputPlayback *playback, const gchar * filename, VFSFile * file, gint start_time, gint stop_time, gboolean pause)
 {
     upse_module_t *mod;
     upse_psf_t *psf;
@@ -110,12 +110,12 @@ static void upse_aud_play(InputPlayback *playback)
     }
 
     if(!(playback->data = upse_module_open(playback->filename, &upse_aud_iofuncs)))
-        return;
+        return FALSE;
 
     mod = (upse_module_t *) playback->data;
     psf = mod->metadata;
 
-    seek = 0;
+    seek = start_time;
 
     playback->set_params(playback, NULL, psf->length, psf->rate * 2 * 2 * 8, psf->rate, 2);
 
@@ -123,7 +123,7 @@ static void upse_aud_play(InputPlayback *playback)
     {
         upse_module_close(mod);
         playback->error = TRUE;
-        return;
+        return FALSE;
     }
 
     upse_set_audio_callback(upse_aud_update, playback);
@@ -163,6 +163,8 @@ static void upse_aud_play(InputPlayback *playback)
     playback->playing = FALSE;
     playback->eof = TRUE;
     playback->data = NULL;
+
+    return TRUE;
 }
 
 static void upse_aud_stop(InputPlayback *playback)
@@ -179,12 +181,12 @@ static void upse_aud_pause(InputPlayback *playback, short p)
     playback->output->pause(p);
 }
 
-static void upse_aud_seek(InputPlayback *playback, int time)
+static void upse_aud_mseek(InputPlayback *playback, gulong time)
 {
     if (!playback->playing)
         return;
 
-    seek = time * 1000;
+    seek = time;
 }
 
 static Tuple *upse_aud_get_tuple_psf(const gchar *fn, upse_psf_t *psf) {
@@ -249,10 +251,10 @@ InputPlugin upse_ip =
 {
     .description = "UNIX Playstation Sound Emulator",
     .about = upse_aud_about,
-    .play_file = upse_aud_play,
+    .play = upse_aud_play,
     .stop = upse_aud_stop,
     .pause = upse_aud_pause,
-    .seek = upse_aud_seek,
+    .mseek = upse_aud_mseek,
     .get_song_tuple = get_tuple_psf,
     .is_our_file_from_vfs = is_our_fd,
     .vfs_extensions = upse_fmts,
