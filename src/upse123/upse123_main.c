@@ -44,7 +44,7 @@
 #endif
 
 static void *
-upse123_open_impl(char *path, char *mode)
+upse123_open_impl(const char *path, const char *mode)
 {
     return fopen(path, mode);
 }

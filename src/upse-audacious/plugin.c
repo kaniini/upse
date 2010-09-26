@@ -16,9 +16,10 @@
  */
 
 #include <audacious/plugin.h>
-#include <audacious/output.h>
-#include <audacious/main.h>
-#include <audacious/util.h>
+#include <libaudcore/vfs.h>
+#include <libaudcore/tuple.h>
+#include <libaudgui/libaudgui.h>
+#include <libaudgui/libaudgui-gtk.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,26 +31,25 @@
 static int seek = 0;
 
 static Tuple *upse_aud_get_tuple_psf(const gchar *fn, upse_psf_t *psf);
-static gchar *upse_aud_get_title_psf(const gchar *fn, upse_psf_t *psf);
 
-static void *upse_aud_open_impl(gchar *path, gchar *mode) {
-    return aud_vfs_fopen(path, mode);
+static void *upse_aud_open_impl(const gchar *path, const gchar *mode) {
+    return vfs_fopen(path, mode);
 }
 
 static size_t upse_aud_read_impl(void *ptr, size_t sz, size_t nmemb, void *file) {
-    return aud_vfs_fread(ptr, sz, nmemb, file);
+    return vfs_fread(ptr, sz, nmemb, file);
 }
 
 static int upse_aud_seek_impl(void *ptr, long offset, int whence) {
-    return aud_vfs_fseek(ptr, offset, whence);
+    return vfs_fseek(ptr, offset, whence);
 }
 
 static int upse_aud_close_impl(void *ptr) {
-    return aud_vfs_fclose(ptr);
+    return vfs_fclose(ptr);
 }
 
 static long upse_aud_tell_impl(void *ptr) {
-    return aud_vfs_ftell(ptr);
+    return vfs_ftell(ptr);
 }
 
 static upse_iofuncs_t upse_aud_iofuncs = {
@@ -60,9 +60,9 @@ static upse_iofuncs_t upse_aud_iofuncs = {
     upse_aud_tell_impl
 };
 
-static int is_our_fd(gchar *filename, VFSFile *file) {
+static int is_our_fd(const gchar *filename, VFSFile *file) {
     gchar magic[4];
-    aud_vfs_fread(magic, 1, 4, file);
+    vfs_fread(magic, 1, 4, file);
 
     // only allow PSF1 for now
     if (!memcmp(magic, "PSF\x01", 4))
@@ -77,7 +77,7 @@ void upse_aud_update(unsigned char *buffer, long count, gpointer data)
     if (playback->playing == FALSE)
         upse_eventloop_stop(playback->data);
 
-    playback->pass_audio(playback, FMT_S16_NE, 2, count, buffer, &playback->playing);
+    playback->output->write_audio(buffer, count);
 
     if (seek)
     {
@@ -86,7 +86,7 @@ void upse_aud_update(unsigned char *buffer, long count, gpointer data)
             playback->output->flush(seek);
             seek = 0;
         }
-        else  // negative time - must make a C time machine
+        else
         {
             upse_eventloop_stop(playback->data);
             return;
@@ -97,11 +97,10 @@ void upse_aud_update(unsigned char *buffer, long count, gpointer data)
         upse_eventloop_stop(playback->data);
 }
 
-static void upse_aud_play(InputPlayback *playback)
+static gboolean upse_aud_play(InputPlayback *playback, const gchar * filename, VFSFile * file, gint start_time, gint stop_time, gboolean pause)
 {
     upse_module_t *mod;
     upse_psf_t *psf;
-    gchar *name;
     static int initialized = 0;
 
     if (!initialized)
@@ -111,23 +110,20 @@ static void upse_aud_play(InputPlayback *playback)
     }
 
     if(!(playback->data = upse_module_open(playback->filename, &upse_aud_iofuncs)))
-        return;
+        return FALSE;
 
     mod = (upse_module_t *) playback->data;
     psf = mod->metadata;
 
-    seek = 0;
+    seek = start_time;
 
-    /* XXX */
-    name = upse_aud_get_title_psf(playback->filename, psf);
-    playback->set_params(playback, name, psf->length, psf->rate * 2 * 2 * 8, psf->rate, 2);
-    g_free(name);
+    playback->set_params(playback, NULL, psf->length, psf->rate * 2 * 2 * 8, psf->rate, 2);
 
     if (!playback->output->open_audio(FMT_S16_NE, psf->rate, 2))
     {
         upse_module_close(mod);
         playback->error = TRUE;
-        return;
+        return FALSE;
     }
 
     upse_set_audio_callback(upse_aud_update, playback);
@@ -167,6 +163,8 @@ static void upse_aud_play(InputPlayback *playback)
     playback->playing = FALSE;
     playback->eof = TRUE;
     playback->data = NULL;
+
+    return TRUE;
 }
 
 static void upse_aud_stop(InputPlayback *playback)
@@ -183,37 +181,37 @@ static void upse_aud_pause(InputPlayback *playback, short p)
     playback->output->pause(p);
 }
 
-static void upse_aud_seek(InputPlayback *playback, int time)
+static void upse_aud_mseek(InputPlayback *playback, gulong time)
 {
     if (!playback->playing)
         return;
 
-    seek = time * 1000;
+    seek = time;
 }
 
 static Tuple *upse_aud_get_tuple_psf(const gchar *fn, upse_psf_t *psf) {
     Tuple *tuple = NULL;
 
     if (psf->length) {
-        tuple = aud_tuple_new_from_filename(fn);
-        aud_tuple_associate_int(tuple, FIELD_LENGTH, NULL, psf->length);
-        aud_tuple_associate_string(tuple, FIELD_ARTIST, NULL, psf->artist);
-        aud_tuple_associate_string(tuple, FIELD_ALBUM, NULL, psf->game);
-        aud_tuple_associate_string(tuple, -1, "game", psf->game);
-        aud_tuple_associate_string(tuple, FIELD_TITLE, NULL, psf->title);
-        aud_tuple_associate_string(tuple, FIELD_GENRE, NULL, psf->genre);
-        aud_tuple_associate_string(tuple, FIELD_COPYRIGHT, NULL, psf->copyright);
-        aud_tuple_associate_string(tuple, FIELD_QUALITY, NULL, "sequenced");
-        aud_tuple_associate_string(tuple, FIELD_CODEC, NULL, "PlayStation Audio");
-        aud_tuple_associate_string(tuple, -1, "console", "PlayStation");
-        aud_tuple_associate_string(tuple, -1, "dumper", psf->psfby);
-        aud_tuple_associate_string(tuple, FIELD_COMMENT, NULL, psf->comment);
+        tuple = tuple_new_from_filename(fn);
+        tuple_associate_int(tuple, FIELD_LENGTH, NULL, psf->length);
+        tuple_associate_string(tuple, FIELD_ARTIST, NULL, psf->artist);
+        tuple_associate_string(tuple, FIELD_ALBUM, NULL, psf->game);
+        tuple_associate_string(tuple, -1, "game", psf->game);
+        tuple_associate_string(tuple, FIELD_TITLE, NULL, psf->title);
+        tuple_associate_string(tuple, FIELD_GENRE, NULL, psf->genre);
+        tuple_associate_string(tuple, FIELD_COPYRIGHT, NULL, psf->copyright);
+        tuple_associate_string(tuple, FIELD_QUALITY, NULL, "sequenced");
+        tuple_associate_string(tuple, FIELD_CODEC, NULL, "PlayStation Audio");
+        tuple_associate_string(tuple, -1, "console", "PlayStation");
+        tuple_associate_string(tuple, -1, "dumper", psf->psfby);
+        tuple_associate_string(tuple, FIELD_COMMENT, NULL, psf->comment);
     }
 
     return tuple;
 }   
 
-static Tuple *get_tuple_psf(gchar *fn) {
+static Tuple *get_tuple_psf(const gchar *fn) {
     upse_psf_t *psf = upse_get_psf_metadata(fn, &upse_aud_iofuncs);
 
     if (psf != NULL) {
@@ -225,21 +223,8 @@ static Tuple *get_tuple_psf(gchar *fn) {
     return NULL;
 }
 
-static gchar *upse_aud_get_title_psf(const gchar *fn, upse_psf_t *psf) {
-    gchar *title = NULL;
-    Tuple *tuple = upse_aud_get_tuple_psf(fn, psf);
-
-    if (tuple != NULL) {
-        title = aud_tuple_formatter_make_title_string(tuple, aud_get_gentitle_format());
-        aud_tuple_free(tuple);
-    }
-    else
-        title = g_path_get_basename(fn);
-
-    return title;
-}
-
 static void upse_aud_about(void) {
+#if 0
     audacious_info_dialog("About " PACKAGE_STRING,
                           PACKAGE " is a plugin and emulation library which produces near-bit-exact\n"
                           "output comparable to a PlayStation. It can be used to play chiptunes, and other\n"
@@ -257,18 +242,19 @@ static void upse_aud_about(void) {
                           FALSE,
                           G_CALLBACK(gtk_widget_destroy),
                           NULL);
+#endif
 }
 
-gchar *upse_fmts[] = { "psf", "minipsf", NULL };
+const gchar *upse_fmts[] = { "psf", "minipsf", NULL };
 
 InputPlugin upse_ip =
 {
     .description = "UNIX Playstation Sound Emulator",
     .about = upse_aud_about,
-    .play_file = upse_aud_play,
+    .play = upse_aud_play,
     .stop = upse_aud_stop,
     .pause = upse_aud_pause,
-    .seek = upse_aud_seek,
+    .mseek = upse_aud_mseek,
     .get_song_tuple = get_tuple_psf,
     .is_our_file_from_vfs = is_our_fd,
     .vfs_extensions = upse_fmts,
