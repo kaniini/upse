@@ -24,3 +24,7 @@
 #include "upse-internal.h"
 #include "upse-ps2-iop-private.h"
 
+void upse_ps2_iop_call(uint32_t callnum)
+{
+	_DEBUG("IOP call at 0x%lx", pc0);
+}

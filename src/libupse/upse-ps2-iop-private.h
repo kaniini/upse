@@ -61,4 +61,6 @@
 #define Rv0 ((char*)PSXM(v0))
 #define Rsp ((char*)PSXM(sp))
 
+void upse_ps2_iop_call(uint32_t callnum);
+
 #endif

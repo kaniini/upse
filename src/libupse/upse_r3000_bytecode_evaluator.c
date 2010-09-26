@@ -21,6 +21,8 @@
 
 #include "upse-internal.h"
 
+extern void upse_ps2_iop_call(uint32_t callnum);
+
 static int branch;
 static int branch2;
 static u32 branchPC;
@@ -467,6 +469,14 @@ static void psxADDIU()
 {
     if (!_Rt_)
 	return;
+
+    /* The IRX coprocessor does this to jump into the IOP interface.  Go figure. --nenolod */
+    if (((upse_r3000_cpu_regs.code >> 16) & 31) == 0) {
+        _DEBUG("IOP call? PC:%lx CODE:%lx", upse_r3000_cpu_regs.pc, upse_r3000_cpu_regs.code);
+        upse_ps2_iop_call(upse_r3000_cpu_regs.code & 0xffff);
+        return;
+    }
+
     _rRt_ = _u32(_rRs_) + _Imm_;
 }				// Rt = Rs + Im
 static void psxANDI()
