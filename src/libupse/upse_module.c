@@ -39,6 +39,8 @@ upse_module_probe(void *fileptr, upse_iofuncs_t *funcs)
     {
         upse_loader_t *loader = &upse_loader_table_[i];
 
+        _DEBUG("trying loader with magic: %s length: %d", loader->bytes, loader->length);
+
         if (loader->offset != previous_offset)
         {
             previous_length = 0;

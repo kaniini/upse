@@ -387,6 +387,7 @@ main(int argc, char *argv[])
         upse123_init_audio(mod->metadata->rate);
         upse_eventloop_run(mod);
         upse_module_close(mod);
+        mod = NULL;
         upse123_close_audio();
 
 #ifndef _WIN32

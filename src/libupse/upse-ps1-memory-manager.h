@@ -90,5 +90,6 @@ void upse_ps1_memory_write_16(u32 mem, u16 value);
 void upse_ps1_memory_write_32(u32 mem, u32 value);
 
 void LoadPSXMem(u32 address, s32 length, unsigned char *data);
+void ClearPSXMem(u32 address, s32 length);
 
 #endif /* __PSXMEMORY_H__ */

@@ -59,6 +59,31 @@ void LoadPSXMem(u32 address, s32 length, unsigned char *data)
     }
 }
 
+void ClearPSXMem(u32 address, s32 length)
+{
+    while (length > 0)
+    {
+	if (address & 65535)
+	{
+	    u32 tmplen;
+
+	    tmplen = ((65536 - (address & 65535)) > (u32) length) ? (u32) length : 65536 - (address & 65535);
+	    if (upse_ps1_memory_LUT[address >> 16])
+		memset((char *) (upse_ps1_memory_LUT[address >> 16] + (address & 65535)), '\0', tmplen);
+	    address += tmplen;
+	    length -= tmplen;
+	    //printf("%08x %08x\n",address,tmplen);
+	    continue;
+	}
+	if (upse_ps1_memory_LUT[address >> 16])
+	{
+	    memset((char *) (upse_ps1_memory_LUT[address >> 16]), '\0', (length < 65536) ? length : 65536);
+	}
+	address += 65536;
+	length -= 65536;
+    }
+}
+
 static int writeok;
 int upse_ps1_memory_init()
 {

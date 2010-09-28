@@ -112,6 +112,9 @@ main(int argc, const char *argv[])
 
     upse_module_init();
     mod = upse_module_open(argv[1], &psf2dump_iofuncs);
+    if (mod == NULL)
+        return -1;
+
     fs = (upse_filesystem_t *) mod->opaque;
 
     for (iter = fs->head; iter != NULL; iter = iter->next)
