@@ -18,8 +18,6 @@
 #ifndef _UPSE__LIBUPSE__UPSE_DEBUG_H__GUARD
 #define _UPSE__LIBUPSE__UPSE_DEBUG_H__GUARD
 
-#define UPSE_DEBUG
-
 #define _ENTER _DEBUG("enter")
 #define _LEAVE _DEBUG("leave")
 

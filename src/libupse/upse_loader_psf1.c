@@ -15,6 +15,7 @@
  * UPSE is offered without any warranty of any kind, explicit or implicit.
  */
 
+#define UPSE_DEBUG
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -282,6 +283,12 @@ upse_load_psf(void *fp, const char *path, upse_iofuncs_t * iofuncs)
        PSXMu32(0xbc090) = BFLIP32(0);
        PSXMu32(0xbc094) = BFLIP32(0x0802f040);
        PSXMu32(0xbc098) = BFLIP32(0);
+    }
+
+    _DEBUG("applying bugfixes for naughtydog replayers...");
+    if (PSXMu32(0x118b8) == BFLIP32(0x1060fffd)) {
+       _DEBUG("naughtydog patch applied.");
+       PSXMu32(0x118b8) = BFLIP32(0);
     }
 
     ret = (upse_module_t *) calloc(sizeof(upse_module_t), 1);

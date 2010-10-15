@@ -136,38 +136,6 @@ int CounterSPURun(void)
     return (1);
 }
 
-/* Set by spu irq stuff in spu code to number of cpu cycles to back
-   up(if necessary).  Very crazy hack.  Eh, not implemented.  Hmm.
-   TODO!
-*/
-s32 spuirqvoodoo = -1;
-
-void CounterDeadLoopSkip()
-{
-    s32 min, x, lmin;
-
-    lmin = 0x7FFFFFFF;
-
-    for (x = 0; x < 4; x++)
-    {
-	if (psxCounters[x].Cycle != 0xffffffff)
-	{
-	    min = psxCounters[x].Cycle;
-	    min -= (upse_r3000_cpu_regs.cycle - psxCounters[x].sCycle);
-	    if (min < lmin)
-		lmin = min;
-//        if(min<0) exit();
-//        printf("Poo: %d, ",min);
-	}
-    }
-
-    if (lmin > 0)
-    {
-//       printf("skip %u\n",lmin);
-	upse_r3000_cpu_regs.cycle += lmin;
-    }
-}
-
 void psxUpdateVSyncRate()
 {
     //if (Config.PsxType) // ntsc - 0 | pal - 1

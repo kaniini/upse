@@ -444,11 +444,6 @@ static INLINE void doBranch(u32 tar)
 
     psxBSC[upse_r3000_cpu_regs.code >> 26] ();
 
-    if ((upse_r3000_cpu_regs.pc - 8) == branchPC && !(upse_r3000_cpu_regs.code >> 26))
-    {
-	//printf("%08x\n",upse_r3000_cpu_regs.code>>26);
-	CounterDeadLoopSkip();
-    }
     branch = 0;
     upse_r3000_cpu_regs.pc = branchPC;
 

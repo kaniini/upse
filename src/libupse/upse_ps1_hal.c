@@ -93,7 +93,6 @@ u16 upse_ps1_hal_read_16(u32 add)
       case 0x1f8010f4:
           hard = psxHu16(0x10f4);
 	  return hard;
-
       default:
 	  if (add >= 0x1f801c00 && add < 0x1f801e00)
 	  {
@@ -115,6 +114,9 @@ u32 upse_ps1_hal_read_32(u32 add)
 
     switch (add)
     {
+      case 0x1f801014:
+          hard = 0;
+          return hard;
 	  // time for rootcounters :)
       case 0x1f801100:
 	  hard = psxRcntRcount(0);
