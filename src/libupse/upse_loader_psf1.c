@@ -264,6 +264,26 @@ upse_load_psf(void *fp, const char *path, upse_iofuncs_t * iofuncs)
     psf->length = psf->stop + psf->fade;
     psf->rate = 44100;
 
+    /*
+     * Several rips by CaitSith2 have an invalid jump to the branch delay slot
+     * before the BNE instruction, which causes the branching unit to deadlock
+     * when we're cycle-accurate or running on the real deal.  This patch has
+     * existed for some time in PlayPSF, actually, but since PlayPSF has been
+     * separated from UPSE in UPSE2, we have to patch it here in the loader.
+     *
+     * Before, we would just stuff the PSF into memory after chainloading
+     * PlayPSF.exe.
+     *
+     *     -- nenolod.
+     */
+    _DEBUG("checking for CaitSith2's JNE-delay-slot bug in this rip");
+    if (PSXMu32(0xbc090) == BFLIP32(0x0802f040)) {
+       _DEBUG("...fixing. :(");
+       PSXMu32(0xbc090) = BFLIP32(0);
+       PSXMu32(0xbc094) = BFLIP32(0x0802f040);
+       PSXMu32(0xbc098) = BFLIP32(0);
+    }
+
     ret = (upse_module_t *) calloc(sizeof(upse_module_t), 1);
     ret->metadata = psf;
     ret->evloop_run = upse_r3000_cpu_execute;
