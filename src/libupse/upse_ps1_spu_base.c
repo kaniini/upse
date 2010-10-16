@@ -250,9 +250,12 @@ void upse_ps1_spu_setlength(s32 stop, s32 fade)
 {
     _ENTER;
 
-    if (stop == ~0)
+    _DEBUG("stop [%d] fade [%d]", stop, fade);
+
+    if (stop == 0)
     {
-	decaybegin = ~0;
+	decaybegin = 0;
+        _LEAVE;
     }
     else
     {
@@ -547,11 +550,10 @@ int upse_ps1_spu_render(u32 cycles)
 	///////////////////////////////////////////////////////
 	// mix all channels (including reverb) into one buffer
 	MixREVERBLeftRight(&sl, &sr, revLeft, revRight);
-	if (sampcount >= decaybegin)
+	if (decaybegin != 0 && sampcount >= decaybegin)
 	{
 	    s32 dmul;
-	    if (decaybegin != (u32) ~ 0)	// Is anyone REALLY going to be playing a song
-		// for 13 hours?
+	    if (decaybegin != 0)
 	    {
 		if (sampcount >= decayend)
 		    return (0);
