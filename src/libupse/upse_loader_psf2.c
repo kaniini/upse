@@ -205,7 +205,7 @@ upse_parse_psf2_elf(u8 *start, u32 len)
             break;
 
         case 1:
-            LoadPSXMem(loadAddr + addr, size, &start[offset]);
+            LoadPSXMem(loadAddr + addr, size, start + offset);
             totallen += size;
             break;
 
