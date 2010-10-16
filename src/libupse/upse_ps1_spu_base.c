@@ -610,7 +610,8 @@ int upse_ps1_spu_render(u32 cycles)
 
 void upse_ps1_stop(void)
 {
-    decaybegin = decayend = 0;
+    decaybegin = 1;
+    decayend = 0;
 }
 
 static upse_audio_callback_func_t _upse_audio_callback_f = NULL;
