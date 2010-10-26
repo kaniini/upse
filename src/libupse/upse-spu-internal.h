@@ -121,6 +121,7 @@ typedef struct
     int bNoise;			// noise active flag
     int bFMod;			// freq mod (0=off, 1=sound channel, 2=freq channel)
     int iOldNoise;		// old noise val for this channel   
+    int iNoisePos;		// position in noise PRNG.
     ADSRInfo ADSR;		// active ADSR settings
     ADSRInfoEx ADSRX;		// next ADSR settings (will be moved to active on sample start)
 

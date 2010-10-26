@@ -208,6 +208,24 @@ const int gauss[] = {
     0x000, 0x17A, 0x519, 0x16E, 0x000, 0x176, 0x519, 0x172
 };
 
+/*
+ * Noise table used by the SPU.  Verified on a real PS1.
+ *
+ * Noise is created using a very simple PRNG:
+ *     u16 bias = bias + bias + noisetable[(bias >> 10) & 63]
+ *     u16 freq = 0x8000 >> ((spuCtrl & 0x3f00) >> 2)
+ */
+static const int noisetable[] = {
+    1, 0, 0, 1, 0, 1, 1, 0,
+    1, 0, 0, 1, 0, 1, 1, 0,
+    1, 0, 0, 1, 0, 1, 1, 0,
+    1, 0, 0, 1, 0, 1, 1, 0,
+    0, 1, 1, 0, 1, 0, 0, 1,
+    0, 1, 1, 0, 1, 0, 0, 1,
+    0, 1, 1, 0, 1, 0, 0, 1,
+    0, 1, 1, 0, 1, 0, 0, 1
+};
+
 ////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////
@@ -459,31 +477,17 @@ int upse_ps1_spu_render(u32 cycles)
 		    s_chan[ch].spos -= 0x10000L;
 		}
 
-		////////////////////////////////////////////////
-		// noise handler... just produces some noise data
-		// surely wrong... and no noise frequency (spuCtrl&0x3f00) will be used...
-		// and sometimes the noise will be used as fmod modulation... pfff
-
 		if (s_chan[ch].bNoise)
 		{
-		    //puts("Noise");
-		    if ((dwNoiseVal <<= 1) & 0x80000000L)
-		    {
-			dwNoiseVal ^= 0x0040001L;
-			fa = ((dwNoiseVal >> 2) & 0x7fff);
-			fa = -fa;
-		    }
-		    else
-			fa = (dwNoiseVal >> 2) & 0x7fff;
+		    _DEBUG("noise, ch:%d", ch);
+		    fa = s_chan[ch].iOldNoise;
 
-		    // mmm... depending on the noise freq we allow bigger/smaller changes to the previous val
-		    fa = s_chan[ch].iOldNoise + ((fa - s_chan[ch].iOldNoise) / ((0x001f - ((spuCtrl & 0x3f00) >> 9)) + 1));
-		    if (fa > 32767L)
-			fa = 32767L;
-		    if (fa < -32767L)
-			fa = -32767L;
+		    s_chan[ch].iNoisePos += (u16) (0x8000 >> ((spuCtrl & 0x3f00) >> 2));
+		    fa += (s_chan[ch].iNoisePos + s_chan[ch].iNoisePos + noisetable[(s_chan[ch].iNoisePos >> 10) & 63]);
+
+		    CLIP(fa);
+
 		    s_chan[ch].iOldNoise = fa;
-
 		}		//----------------------------------------
 		else		// NO NOISE (NORMAL SAMPLE DATA) HERE 
 		{
