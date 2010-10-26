@@ -124,7 +124,6 @@ typedef struct
     int iNoisePos;		// position in noise PRNG.
     ADSRInfo ADSR;		// active ADSR settings
     ADSRInfoEx ADSRX;		// next ADSR settings (will be moved to active on sample start)
-
 } SPUCHAN;
 
 ///////////////////////////////////////////////////////////

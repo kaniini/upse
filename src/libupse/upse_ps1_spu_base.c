@@ -312,11 +312,12 @@ int upse_seek(u32 t)
 }
 
 static u32 _do_interpolation = 1;
-static double _interpolation_coefficient = 3.759285613;
+static double _interpolation_coefficient = 1.5;
 
 #define CLIP(_x) {if(_x>32767) _x=32767; if(_x<-32767) _x=-32767;}
 int upse_ps1_spu_render(u32 cycles)
 {
+    static s16 prevSampleLeft, prevSampleRight;
     static s32 dosampies;
     s32 temp;
 
@@ -571,39 +572,24 @@ int upse_ps1_spu_render(u32 cycles)
 	// post-processing: interpolation
 	if (_do_interpolation)
 	{
-	    double ldiff, rdiff, avg, tmp;
+            s16 sl2, sr2;
 
-	    avg = ((sl + sr) / 2);
-	    ldiff = sl - avg;
-	    rdiff = sr - avg;
+            sl2 = sl + (sl - prevSampleLeft) * _interpolation_coefficient;
+            sr2 = sr + (sr - prevSampleRight) * _interpolation_coefficient;
 
-	    tmp = avg + ldiff * _interpolation_coefficient;
-	    if (tmp < -32768)
-		tmp = -32768;
-	    if (tmp > 32767)
-		tmp = 32767;
-	    sl = tmp;
+            prevSampleLeft = sl;
+            prevSampleRight = sr;
 
-	    tmp = avg + rdiff * _interpolation_coefficient;
-	    if (tmp < -32768)
-		tmp = -32768;
-	    if (tmp > 32767)
-		tmp = 32767;
-	    sr = tmp;
+            sl = sl2;
+            sr = sr2;
 	}
 
 	/* fix dynamic range. */
 	sl >>= iVolume;
 	sr >>= iVolume;
 
-	if (sl > 32767)
-	    sl = 32767;
-	if (sl < -32767)
-	    sl = -32767;
-	if (sr > 32767)
-	    sr = 32767;
-	if (sr < -32767)
-	    sr = -32767;
+        CLIP(sl);
+        CLIP(sr);
 
 	*pS++ = sl;
 	*pS++ = sr;
