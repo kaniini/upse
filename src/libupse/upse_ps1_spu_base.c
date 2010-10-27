@@ -311,13 +311,9 @@ int upse_seek(u32 t)
     return (0);
 }
 
-static u32 _do_interpolation = 1;
-static double _interpolation_coefficient = 1.5;
-
 #define CLIP(_x) {if(_x>32767) _x=32767; if(_x<-32767) _x=-32767;}
 int upse_ps1_spu_render(u32 cycles)
 {
-    static s16 prevSampleLeft, prevSampleRight;
     static s32 dosampies;
     s32 temp;
 
@@ -495,10 +491,11 @@ int upse_ps1_spu_render(u32 cycles)
 		    int vl, vr, gpos;
 		    vl = (s_chan[ch].spos >> 6) & ~3;
 		    gpos = s_chan[ch].SB[28];
-		    vr = (gauss[vl] * gval0) >> 9;
-		    vr += (gauss[vl + 1] * gval(1)) >> 9;
-		    vr += (gauss[vl + 2] * gval(2)) >> 9;
-		    vr += (gauss[vl + 3] * gval(3)) >> 9;
+
+		    vr = ((gauss[vl] >> 2) * gval0) >> 6;
+		    vr += ((gauss[vl + 1] >> 2) * gval(1)) >> 6;
+		    vr += ((gauss[vl + 2] >> 2) * gval(2)) >> 6;
+		    vr += ((gauss[vl + 3] >> 2) * gval(3)) >> 6;
 		    fa = vr >> 2;
 		}
 
@@ -569,21 +566,6 @@ int upse_ps1_spu_render(u32 cycles)
 	}
 	sampcount++;
 
-	// post-processing: interpolation
-	if (_do_interpolation)
-	{
-            s16 sl2, sr2;
-
-            sl2 = sl + (sl - prevSampleLeft) * _interpolation_coefficient;
-            sr2 = sr + (sr - prevSampleRight) * _interpolation_coefficient;
-
-            prevSampleLeft = sl;
-            prevSampleRight = sr;
-
-            sl = sl2;
-            sr = sr2;
-	}
-
 	/* fix dynamic range. */
 	sl >>= iVolume;
 	sr >>= iVolume;
@@ -616,24 +598,6 @@ void upse_set_audio_callback(upse_audio_callback_func_t func, void *user_data)
 
     _DEBUG("set audio callback function to <%p>", _upse_audio_callback_f);
     _DEBUG("set audio callback userdata to <%p>", _upse_audio_cb_user_data);
-
-    _LEAVE;
-}
-
-void upse_set_interpolation_mode(u32 setting)
-{
-    _ENTER;
-
-    _do_interpolation = setting;
-
-    _LEAVE;
-}
-
-void upse_set_interpolation_coefficient(double setting)
-{
-    _ENTER;
-
-    _interpolation_coefficient = setting;
 
     _LEAVE;
 }
