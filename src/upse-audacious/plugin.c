@@ -70,12 +70,15 @@ static int is_our_fd(const gchar *filename, VFSFile *file) {
     return 0;
 }
 
+gboolean stop_flag = FALSE;
+upse_module_t *playback_mod = NULL;
+
 void upse_aud_update(unsigned char *buffer, long count, gpointer data)
 {
-    InputPlayback *playback = (InputPlayback *) data;
+    InputPlayback *playback = data;
 
-    if (playback->playing == FALSE)
-        upse_eventloop_stop(playback->data);
+    if (stop_flag)
+        upse_eventloop_stop(playback_mod);
 
     playback->output->write_audio(buffer, count);
 
@@ -88,18 +91,14 @@ void upse_aud_update(unsigned char *buffer, long count, gpointer data)
         }
         else
         {
-            upse_eventloop_stop(playback->data);
+            upse_eventloop_stop(playback_mod);
             return;
         }
     }
-
-    if (playback->playing == FALSE)
-        upse_eventloop_stop(playback->data);
 }
 
 static gboolean upse_aud_play(InputPlayback *playback, const gchar * filename, VFSFile * file, gint start_time, gint stop_time, gboolean pause)
 {
-    upse_module_t *mod;
     upse_psf_t *psf;
     static int initialized = 0;
 
@@ -109,41 +108,38 @@ static gboolean upse_aud_play(InputPlayback *playback, const gchar * filename, V
         initialized++;
     }
 
-    if(!(playback->data = upse_module_open(playback->filename, &upse_aud_iofuncs)))
+    if(!(playback_mod = upse_module_open(filename, &upse_aud_iofuncs)))
         return FALSE;
 
-    mod = (upse_module_t *) playback->data;
-    psf = mod->metadata;
-
+    psf = playback_mod->metadata;
     seek = start_time;
 
-    playback->set_params(playback, NULL, psf->length, psf->rate * 2 * 2 * 8, psf->rate, 2);
+    playback->set_params(playback, psf->rate * 2 * 2 * 8, psf->rate, 2);
 
     if (!playback->output->open_audio(FMT_S16_NE, psf->rate, 2))
     {
-        upse_module_close(mod);
-        playback->error = TRUE;
+        upse_module_close(playback_mod);
         return FALSE;
     }
 
     upse_set_audio_callback(upse_aud_update, playback);
 
-    playback->playing = TRUE;
+    stop_flag = FALSE;
     playback->set_pb_ready(playback);
 
     for (;;)
     {
-        upse_eventloop_run(mod);
+        upse_eventloop_run(playback_mod);
 
-        if (playback->playing == FALSE)
+        if (stop_flag)
             break;
 
         if (seek)
         {
             playback->output->flush(seek);
 
-            upse_module_close(mod);
-            if(!(playback->data = upse_module_open(playback->filename, &upse_aud_iofuncs)))
+            upse_module_close(playback_mod);
+            if(!(playback_mod = upse_module_open(filename, &upse_aud_iofuncs)))
                 break;
 
             upse_seek(seek); 
@@ -151,39 +147,34 @@ static gboolean upse_aud_play(InputPlayback *playback, const gchar * filename, V
             continue;
         }
 
-        while (playback->output->buffer_playing())
-            g_usleep(10000);
-
         break;
     }
 
-    upse_module_close(mod);
+    upse_module_close(playback_mod);
 
     playback->output->close_audio();
-    playback->playing = FALSE;
-    playback->eof = TRUE;
-    playback->data = NULL;
+    stop_flag = FALSE;
 
     return TRUE;
 }
 
 static void upse_aud_stop(InputPlayback *playback)
 {
-    if (!playback->playing)
+    if (stop_flag)
         return;
 
     playback->output->pause(0);
-    playback->playing = FALSE;
+    stop_flag = TRUE;
 }
 
-static void upse_aud_pause(InputPlayback *playback, short p)
+static void upse_aud_pause(InputPlayback *playback, gboolean p)
 {
     playback->output->pause(p);
 }
 
-static void upse_aud_mseek(InputPlayback *playback, gulong time)
+static void upse_aud_mseek(InputPlayback *playback, gint time)
 {
-    if (!playback->playing)
+    if (stop_flag)
         return;
 
     seek = time;
@@ -211,7 +202,7 @@ static Tuple *upse_aud_get_tuple_psf(const gchar *fn, upse_psf_t *psf) {
     return tuple;
 }   
 
-static Tuple *get_tuple_psf(const gchar *fn) {
+static Tuple *get_tuple_psf(const gchar *fn, VFSFile *fd) {
     upse_psf_t *psf = upse_get_psf_metadata(fn, &upse_aud_iofuncs);
 
     if (psf != NULL) {
@@ -255,7 +246,7 @@ InputPlugin upse_ip =
     .stop = upse_aud_stop,
     .pause = upse_aud_pause,
     .mseek = upse_aud_mseek,
-    .get_song_tuple = get_tuple_psf,
+    .probe_for_tuple = get_tuple_psf,
     .is_our_file_from_vfs = is_our_fd,
     .vfs_extensions = upse_fmts,
 };
