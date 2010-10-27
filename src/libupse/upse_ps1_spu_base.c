@@ -492,11 +492,11 @@ int upse_ps1_spu_render(u32 cycles)
 		    vl = (s_chan[ch].spos >> 6) & ~3;
 		    gpos = s_chan[ch].SB[28];
 
-		    vr = ((gauss[vl] >> 2) * gval0) >> 6;
-		    vr += ((gauss[vl + 1] >> 2) * gval(1)) >> 6;
-		    vr += ((gauss[vl + 2] >> 2) * gval(2)) >> 6;
-		    vr += ((gauss[vl + 3] >> 2) * gval(3)) >> 6;
-		    fa = vr >> 2;
+		    vr = ((gauss[vl] >> 2) * gval0) >> 5;
+		    vr += ((gauss[vl + 1] >> 2) * gval(1)) >> 5;
+		    vr += ((gauss[vl + 2] >> 2) * gval(2)) >> 5;
+		    vr += ((gauss[vl + 3] >> 2) * gval(3)) >> 5;
+		    fa = vr >> 4;
 		}
 
 		s_chan[ch].sval = (MixADSR(ch) * fa) >> 10;	// / 1023;  // add adsr
@@ -566,9 +566,11 @@ int upse_ps1_spu_render(u32 cycles)
 	}
 	sampcount++;
 
+#if 0
 	/* fix dynamic range. */
 	sl >>= iVolume;
 	sr >>= iVolume;
+#endif
 
         CLIP(sl);
         CLIP(sr);
