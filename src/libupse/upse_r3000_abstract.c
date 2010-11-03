@@ -63,6 +63,8 @@ void psxShutdown()
 
 void psxException(u32 code, u32 bd)
 {
+    _DEBUG("exception, code %d bd %d.", code, bd);
+
     // Set the Cause
     upse_r3000_cpu_regs.CP0.n.Cause = code;
 

@@ -36,7 +36,7 @@ static u32 branchPC;
 
 #define execI() { \
 	upse_r3000_cpu_regs.code = BFLIP32(PSXMu32(upse_r3000_cpu_regs.pc)); \
-        	\
+	if (0) { _DEBUG("current PC: %x Cycle: %x Code: %d", upse_r3000_cpu_regs.pc, upse_r3000_cpu_regs.cycle, upse_r3000_cpu_regs.code >> 26); } \
 	upse_r3000_cpu_regs.pc+= 4; upse_r3000_cpu_regs.cycle++; \
 	psxBSC[upse_r3000_cpu_regs.code >> 26](); \
 }
@@ -51,7 +51,7 @@ static void delayRead(int reg, u32 bpc)
 {
     u32 rold, rnew;
 
-//      SysPrintf("delayRead at %x!\n", upse_r3000_cpu_regs.pc);
+    _DEBUG("delayRead, PC: %lx", upse_r3000_cpu_regs.pc);
 
     rold = upse_r3000_cpu_regs.GPR.r[reg];
     psxBSC[upse_r3000_cpu_regs.code >> 26] ();	// branch delay load
@@ -70,13 +70,7 @@ static void delayRead(int reg, u32 bpc)
 
 static void delayWrite(int reg, u32 bpc)
 {
-
-/*	SysPrintf("delayWrite at %x!\n", upse_r3000_cpu_regs.pc);
-
-//	SysPrintf("%s\n", disR3000AF(upse_r3000_cpu_regs.code, upse_r3000_cpu_regs.pc-4));
-//	SysPrintf("%s\n", disR3000AF(PSXMu32(bpc), bpc));*/
-
-    // no changes from normal behavior
+    _DEBUG("delayWrite, PC: %lx", upse_r3000_cpu_regs.pc);
 
     psxBSC[upse_r3000_cpu_regs.code >> 26] ();
 
@@ -88,8 +82,7 @@ static void delayWrite(int reg, u32 bpc)
 
 static void delayReadWrite(int reg, u32 bpc)
 {
-
-//      SysPrintf("delayReadWrite at %x!\n", upse_r3000_cpu_regs.pc);
+    _DEBUG("delayReadWrite, PC: %lx", upse_r3000_cpu_regs.pc);
 
     // the branch delay load is skipped
 
@@ -465,13 +458,6 @@ static void psxADDIU()
     if (!_Rt_)
 	return;
 
-    /* The IRX coprocessor does this to jump into the IOP interface.  Go figure. --nenolod */
-    if (((upse_r3000_cpu_regs.code >> 16) & 31) == 0) {
-        _DEBUG("IOP call? PC:%lx CODE:%lx", upse_r3000_cpu_regs.pc, upse_r3000_cpu_regs.code);
-        upse_ps2_iop_call(upse_r3000_cpu_regs.code & 0xffff);
-        return;
-    }
-
     _rRt_ = _u32(_rRs_) + _Imm_;
 }				// Rt = Rs + Im
 static void psxANDI()
@@ -760,8 +746,17 @@ RepBranchi32(!=)}		// Branch if Rs != Rt
 *********************************************************/
 static void psxJ()
 {
+#if 0
+    if (((upse_r3000_cpu_regs.code >> 16) & 31) == 0) {
+        _DEBUG("IOP call? PC:%lx CODE:%lx", upse_r3000_cpu_regs.pc, upse_r3000_cpu_regs.code);
+        upse_ps2_iop_call(upse_r3000_cpu_regs.code & 0xffff);
+        return;
+    }
+#endif
+
     doBranch(_JumpTarget_);
 }
+
 static void psxJAL()
 {
     _SetLink(31);
@@ -1005,9 +1000,7 @@ static void psxCTC0()
 *********************************************************/
 static void psxNULL()
 {
-#ifdef PSXCPU_LOG
-    PSXCPU_LOG("psx: Unimplemented op %x\n", upse_r3000_cpu_regs.code);
-#endif
+    _DEBUG("unimplemented opcode %x", upse_r3000_cpu_regs.code >> 26);
 }
 
 static void psxSPECIAL()
