@@ -1083,6 +1083,26 @@ void upse_r3000_cpu_execute(void)
     }
 }
 
+int upse_r3000_cpu_execute_render(s16 **s)
+{
+    for (;;)
+    {
+        int r;
+
+        if (!CounterSPURun())
+        {
+            psxShutdown();
+            return 0;
+        }
+
+        r = upse_ps1_spu_finalize_count(s);
+        if (r && *s)
+            return r;
+
+        execI();
+    }
+}
+
 void upse_r3000_cpu_execute_block(void)
 {
     branch2 = 0;

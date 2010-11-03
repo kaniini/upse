@@ -30,3 +30,12 @@ upse_eventloop_stop(upse_module_t *mod)
     if (mod->evloop_stop)
         mod->evloop_stop();
 }
+
+int
+upse_eventloop_render(upse_module_t *mod, s16 **samples)
+{
+    if (mod->evloop_render)
+        return mod->evloop_render(samples);
+
+    return 0;
+}

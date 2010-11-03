@@ -22,5 +22,6 @@
 
 void upse_eventloop_run(upse_module_t *mod);
 void upse_eventloop_stop(upse_module_t *mod);
+int upse_eventloop_render(upse_module_t *mod, s16 **samples);
 
 #endif

@@ -402,6 +402,7 @@ upse_load_psf2(void *fp, const char *path, upse_iofuncs_t *iofuncs)
     ret->opaque = fs;
     ret->evloop_run = upse_r3000_cpu_execute;
     ret->evloop_stop = upse_ps1_stop;
+    ret->evloop_render = upse_r3000_cpu_execute_render;
 
     return ret;
 }

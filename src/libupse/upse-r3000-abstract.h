@@ -109,6 +109,7 @@ void psxExecuteBios();
 int upse_r3000_cpu_init(void);
 void upse_r3000_cpu_reset(void);
 void upse_r3000_cpu_execute(void);
+int upse_r3000_cpu_execute_render(s16 **);
 void upse_r3000_cpu_execute_block(void);
 void upse_r3000_cpu_clear(u32 Addr, u32 Size);
 void upse_r3000_cpu_shutdown(void);

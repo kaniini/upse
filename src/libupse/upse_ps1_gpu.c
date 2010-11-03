@@ -44,16 +44,15 @@ typedef enum {
 
 struct {
     upse_gpu_status_t status;
-} upse_gpu_state = { 0 };
+} upse_gpu_state = { UPSE_PS1_GPU_INITIALIZED };
 
 void
 upse_ps1_gpu_set_status(u32 cmd)
 {
-    printf("dongs.\n\n\n");
     switch(cmd)
     {
         default:
-            _DEBUG("Unknown cmd [0x%x]", cmd);
+            _DEBUG("GPU: Unknown cmd [0x%x]", cmd);
             return;
     }
 }
@@ -61,5 +60,7 @@ upse_ps1_gpu_set_status(u32 cmd)
 u32
 upse_ps1_gpu_get_status(void)
 {
+    _DEBUG("GPU status: 0x%x", upse_gpu_state.status);
+
     return upse_gpu_state.status;
 }

@@ -622,6 +622,26 @@ void upse_ps1_spu_finalize(void)
     }
 }
 
+int upse_ps1_spu_finalize_count(s16 ** s)
+{
+    if ((seektime != (u32) ~ 0) && seektime > sampcount)
+    {
+        unsigned samples_skipped = ( (u8 *) pS - (u8 *) pSpuBuffer ) / 4;
+        pS = (s16 *) pSpuBuffer;
+        *s = NULL;
+        return 1;
+    }
+    else if ((u8 *) pS > ((u8 *) pSpuBuffer + 1024))
+    {
+        unsigned samples_rendered = ( (u8 *) pS - (u8 *) pSpuBuffer ) / 4;
+        pS = (s16 *) pSpuBuffer;
+        *s = pS;
+        return samples_rendered;
+    }
+
+    return 0;
+}
+
 #ifdef TIMEO
 static u64 begintime;
 static u64 SexyTime64(void)

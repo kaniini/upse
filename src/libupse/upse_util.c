@@ -33,11 +33,7 @@ upse_strtof(const char *value)
 
     _ENTER;
 
-#ifndef _WIN32
-    val = strtof(value, NULL);
-#else
-    val = (float) atoi(value);
-#endif
+    val = atof(value);
 
     _LEAVE;
 

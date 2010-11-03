@@ -8,3 +8,5 @@ void upse_ps1_spu_finalize(void);
 void SPUirq(void);
 void upse_ps1_spu_setvolume(int volume);
 void upse_ps1_stop(void);
+
+int upse_ps1_spu_finalize_count(s16 **s);

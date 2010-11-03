@@ -69,6 +69,9 @@ static char *_upse_resolve_path(const char *f, const char *newfile)
 	tp3 = ((char *) strrchr(f, '/'));
 	if (tp1 < tp3)
 	    tp1 = tp3;
+        tp3 = ((char *) strrchr(f, '|'));
+        if (tp1 < tp3)
+	    tp1 = tp3;
     }
 #endif
 #endif
@@ -80,8 +83,7 @@ static char *_upse_resolve_path(const char *f, const char *newfile)
     else
     {
 	ret = malloc(tp1 - f + 2 + strlen(newfile));	// 1(NULL), 1(/).
-	memcpy(ret, f, tp1 - f);
-	ret[tp1 - f] = '/';
+	memcpy(ret, f, tp1 - f + 1);
 	ret[tp1 - f + 1] = 0;
 	strcat(ret, newfile);
     }
@@ -295,6 +297,7 @@ upse_load_psf(void *fp, const char *path, upse_iofuncs_t * iofuncs)
     ret->metadata = psf;
     ret->evloop_run = upse_r3000_cpu_execute;
     ret->evloop_stop = upse_ps1_stop;
+    ret->evloop_render = upse_r3000_cpu_execute_render;
 
     _LEAVE;
     return ret;
