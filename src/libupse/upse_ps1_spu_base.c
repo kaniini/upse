@@ -476,7 +476,7 @@ int upse_ps1_spu_render(u32 cycles)
 		    fa = vr >> 4;
 		}
 
-		spu->s_chan[ch].sval = (MixADSR(spu, ch) * fa) >> 10;	// / 1023;  // add adsr
+		spu->s_chan[ch].sval = (MixADSR(spu, ch) * fa) >> 11;	// / 1023;  // add adsr
 		if (spu->s_chan[ch].bFMod == 2)	// fmod freq channel
 		{
 		    int NP = spu->s_chan[ch + 1].iRawPitch;
