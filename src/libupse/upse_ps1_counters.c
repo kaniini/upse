@@ -114,6 +114,26 @@ void psxRcntInit()
     last = 0;
 }
 
+void CounterDeadLoopSkip()
+{
+    s32 min, x, lmin;
+
+    lmin = 0x7FFFFFFF;
+
+    for (x = 0; x < 4; x++)
+    {
+	if (psxCounters[x].Cycle != 0xffffffff)
+        {
+            min = psxCounters[x].Cycle;
+            min -= (upse_r3000_cpu_regs.cycle - psxCounters[x].sCycle);
+            if (min < lmin)
+                lmin = min;
+        }
+    }
+
+    if (lmin > 0)
+        upse_r3000_cpu_regs.cycle += lmin;
+}
 
 int CounterSPURun(void)
 {
