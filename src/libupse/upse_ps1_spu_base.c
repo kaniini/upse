@@ -493,8 +493,8 @@ int upse_ps1_spu_render(u32 cycles)
 		    // ok, left/right sound volume (psx volume goes from 0 ... 0x3fff)
 		    int tmpl, tmpr;
 
-		    tmpl = (spu->s_chan[ch].sval * spu->s_chan[ch].iLeftVolume) >> 14;
-		    tmpr = (spu->s_chan[ch].sval * spu->s_chan[ch].iRightVolume) >> 14;
+		    tmpl = (spu->s_chan[ch].sval * spu->s_chan[ch].iLeftVolume) >> 13;
+		    tmpr = (spu->s_chan[ch].sval * spu->s_chan[ch].iRightVolume) >> 13;
 
                     CLIP(tmpl);
                     CLIP(tmpr);
