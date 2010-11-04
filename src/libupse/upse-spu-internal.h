@@ -176,19 +176,21 @@ typedef struct
     int IN_COEF_R;		// (coef.)
 } REVERBInfo;
 
-extern u16 regArea[0x200];
-extern u16 spuMem[256 * 1024];
-extern u8 *spuMemC;
-extern u8 *pSpuIrq;
-extern u8 *pSpuBuffer;
+typedef struct {
+    u16 regArea[0x200];
+    u16 spuMem[256 * 1024];
+    u8 *spuMemC;
+    u8 *pSpuIrq;
+    u8 *pSpuBuffer;
 
-extern u32 dwNoiseVal;		// global noise generator
+    u16 spuCtrl;		// some vars to store psx reg infos
+    u16 spuStat;
+    u16 spuIrq;
+    u32 spuAddr;		// address into spu mem
+    int bSPUIsOpen;
 
-extern u16 spuCtrl;		// some vars to store psx reg infos
-extern u16 spuStat;
-extern u16 spuIrq;
-extern u32 spuAddr;		// address into spu mem
-extern int bSPUIsOpen;
+    SPUCHAN s_chan[MAXCHAN + 1];	// channel + 1 infos (1 is security for fmod handling)
+    REVERBInfo rvb;
+} upse_spu_state_t;
 
-extern SPUCHAN s_chan[MAXCHAN + 1];	// channel + 1 infos (1 is security for fmod handling)
-extern REVERBInfo rvb;
+extern upse_spu_state_t *spu;

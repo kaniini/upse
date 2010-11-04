@@ -32,7 +32,7 @@
 void SPUwriteRegister(u32 reg, u16 val)
 {
     const u32 r = reg & 0xfff;
-    regArea[(r - 0xc00) >> 1] = val;
+    spu->regArea[(r - 0xc00) >> 1] = val;
 
     if (r >= 0x0c00 && r < 0x0d80)	// some channel info?
     {
@@ -56,17 +56,17 @@ void SPUwriteRegister(u32 reg, u16 val)
 	      break;
 	      //------------------------------------------------// start
 	  case 6:
-	      s_chan[ch].pStart = spuMemC + ((u32) val << 3);
+	      spu->s_chan[ch].pStart = spu->spuMemC + ((u32) val << 3);
 	      break;
 	      //------------------------------------------------// level with pre-calcs
 	  case 8:
 	  {
 	      const u32 lval = val;	// DEBUG CHECK
 	      //---------------------------------------------//
-	      s_chan[ch].ADSRX.AttackModeExp = (lval & 0x8000) ? 1 : 0;
-	      s_chan[ch].ADSRX.AttackRate = (lval >> 8) & 0x007f;
-	      s_chan[ch].ADSRX.DecayRate = (lval >> 4) & 0x000f;
-	      s_chan[ch].ADSRX.SustainLevel = lval & 0x000f;
+	      spu->s_chan[ch].ADSRX.AttackModeExp = (lval & 0x8000) ? 1 : 0;
+	      spu->s_chan[ch].ADSRX.AttackRate = (lval >> 8) & 0x007f;
+	      spu->s_chan[ch].ADSRX.DecayRate = (lval >> 4) & 0x000f;
+	      spu->s_chan[ch].ADSRX.SustainLevel = lval & 0x000f;
 	      //---------------------------------------------//
 	  }
 	      break;
@@ -76,11 +76,11 @@ void SPUwriteRegister(u32 reg, u16 val)
 	      const u32 lval = val;	// DEBUG CHECK
 
 	      //----------------------------------------------//
-	      s_chan[ch].ADSRX.SustainModeExp = (lval & 0x8000) ? 1 : 0;
-	      s_chan[ch].ADSRX.SustainIncrease = (lval & 0x4000) ? 0 : 1;
-	      s_chan[ch].ADSRX.SustainRate = (lval >> 6) & 0x007f;
-	      s_chan[ch].ADSRX.ReleaseModeExp = (lval & 0x0020) ? 1 : 0;
-	      s_chan[ch].ADSRX.ReleaseRate = lval & 0x001f;
+	      spu->s_chan[ch].ADSRX.SustainModeExp = (lval & 0x8000) ? 1 : 0;
+	      spu->s_chan[ch].ADSRX.SustainIncrease = (lval & 0x4000) ? 0 : 1;
+	      spu->s_chan[ch].ADSRX.SustainRate = (lval >> 6) & 0x007f;
+	      spu->s_chan[ch].ADSRX.ReleaseModeExp = (lval & 0x0020) ? 1 : 0;
+	      spu->s_chan[ch].ADSRX.ReleaseRate = lval & 0x001f;
 	      //----------------------------------------------//
 	  }
 	      break;
@@ -89,8 +89,8 @@ void SPUwriteRegister(u32 reg, u16 val)
 	      //  break;
 	      //------------------------------------------------//
 	  case 0xE:		// loop?
-	      s_chan[ch].pLoop = spuMemC + ((u32) val << 3);
-	      s_chan[ch].bIgnoreLoop = 1;
+	      spu->s_chan[ch].pLoop = spu->spuMemC + ((u32) val << 3);
+	      spu->s_chan[ch].bIgnoreLoop = 1;
 	      break;
 	      //------------------------------------------------//
 	}
@@ -101,43 +101,43 @@ void SPUwriteRegister(u32 reg, u16 val)
     {
 	  //-------------------------------------------------//
       case H_SPUaddr:
-	  spuAddr = (u32) val << 3;
+	  spu->spuAddr = (u32) val << 3;
 	  break;
 	  //-------------------------------------------------//
       case H_SPUdata:
-	  spuMem[spuAddr >> 1] = BFLIP16(val);
-	  spuAddr += 2;
-	  if (spuAddr > 0x7ffff)
-	      spuAddr = 0;
+	  spu->spuMem[spu->spuAddr >> 1] = BFLIP16(val);
+	  spu->spuAddr += 2;
+	  if (spu->spuAddr > 0x7ffff)
+	      spu->spuAddr = 0;
 	  break;
 	  //-------------------------------------------------//
       case H_SPUctrl:
-	  spuCtrl = val;
+	  spu->spuCtrl = val;
 	  break;
 	  //-------------------------------------------------//
       case H_SPUstat:
-	  spuStat = val & 0xf800;
+	  spu->spuStat = val & 0xf800;
 	  break;
 	  //-------------------------------------------------//
       case H_SPUReverbAddr:
 	  if (val == 0xFFFF || val <= 0x200)
 	  {
-	      rvb.StartAddr = rvb.CurrAddr = 0;
+	      spu->rvb.StartAddr = spu->rvb.CurrAddr = 0;
 	  }
 	  else
 	  {
 	      const s32 iv = (u32) val << 2;
-	      if (rvb.StartAddr != iv)
+	      if (spu->rvb.StartAddr != iv)
 	      {
-		  rvb.StartAddr = (u32) val << 2;
-		  rvb.CurrAddr = rvb.StartAddr;
+		  spu->rvb.StartAddr = (u32) val << 2;
+		  spu->rvb.CurrAddr = spu->rvb.StartAddr;
 	      }
 	  }
 	  break;
 	  //-------------------------------------------------//
       case H_SPUirqAddr:
-	  spuIrq = val;
-	  pSpuIrq = spuMemC + ((u32) val << 3);
+	  spu->spuIrq = val;
+	  spu->pSpuIrq = spu->spuMemC + ((u32) val << 3);
 	  break;
 	  //-------------------------------------------------//
 	  /* Volume settings appear to be at least 15-bit unsigned in this case.  
@@ -145,12 +145,12 @@ void SPUwriteRegister(u32 reg, u16 val)
 	     Check out "Chrono Cross:  Shadow's End Forest"
 	   */
       case H_SPUrvolL:
-	  rvb.VolLeft = (s16) val;
+	  spu->rvb.VolLeft = (s16) val;
 	  //printf("%d\n",val);
 	  break;
 	  //-------------------------------------------------//
       case H_SPUrvolR:
-	  rvb.VolRight = (s16) val;
+	  spu->rvb.VolRight = (s16) val;
 	  //printf("%d\n",val);
 	  break;
 	  //-------------------------------------------------//
@@ -216,113 +216,113 @@ void SPUwriteRegister(u32 reg, u16 val)
 	  break;
 	  //-------------------------------------------------//
       case H_RVBon1:
-	  rvb.Enabled &= ~0xFFFF;
-	  rvb.Enabled |= val;
+	  spu->rvb.Enabled &= ~0xFFFF;
+	  spu->rvb.Enabled |= val;
 	  break;
 
 	  //-------------------------------------------------//
       case H_RVBon2:
-	  rvb.Enabled &= 0xFFFF;
-	  rvb.Enabled |= val << 16;
+	  spu->rvb.Enabled &= 0xFFFF;
+	  spu->rvb.Enabled |= val << 16;
 	  break;
 
 	  //-------------------------------------------------//
       case H_Reverb + 0:
-	  rvb.FB_SRC_A = val;
+	  spu->rvb.FB_SRC_A = val;
 	  break;
 
       case H_Reverb + 2:
-	  rvb.FB_SRC_B = (s16) val;
+	  spu->rvb.FB_SRC_B = (s16) val;
 	  break;
       case H_Reverb + 4:
-	  rvb.IIR_ALPHA = (s16) val;
+	  spu->rvb.IIR_ALPHA = (s16) val;
 	  break;
       case H_Reverb + 6:
-	  rvb.ACC_COEF_A = (s16) val;
+	  spu->rvb.ACC_COEF_A = (s16) val;
 	  break;
       case H_Reverb + 8:
-	  rvb.ACC_COEF_B = (s16) val;
+	  spu->rvb.ACC_COEF_B = (s16) val;
 	  break;
       case H_Reverb + 10:
-	  rvb.ACC_COEF_C = (s16) val;
+	  spu->rvb.ACC_COEF_C = (s16) val;
 	  break;
       case H_Reverb + 12:
-	  rvb.ACC_COEF_D = (s16) val;
+	  spu->rvb.ACC_COEF_D = (s16) val;
 	  break;
       case H_Reverb + 14:
-	  rvb.IIR_COEF = (s16) val;
+	  spu->rvb.IIR_COEF = (s16) val;
 	  break;
       case H_Reverb + 16:
-	  rvb.FB_ALPHA = (s16) val;
+	  spu->rvb.FB_ALPHA = (s16) val;
 	  break;
       case H_Reverb + 18:
-	  rvb.FB_X = (s16) val;
+	  spu->rvb.FB_X = (s16) val;
 	  break;
       case H_Reverb + 20:
-	  rvb.IIR_DEST_A0 = (s16) val;
+	  spu->rvb.IIR_DEST_A0 = (s16) val;
 	  break;
       case H_Reverb + 22:
-	  rvb.IIR_DEST_A1 = (s16) val;
+	  spu->rvb.IIR_DEST_A1 = (s16) val;
 	  break;
       case H_Reverb + 24:
-	  rvb.ACC_SRC_A0 = (s16) val;
+	  spu->rvb.ACC_SRC_A0 = (s16) val;
 	  break;
       case H_Reverb + 26:
-	  rvb.ACC_SRC_A1 = (s16) val;
+	  spu->rvb.ACC_SRC_A1 = (s16) val;
 	  break;
       case H_Reverb + 28:
-	  rvb.ACC_SRC_B0 = (s16) val;
+	  spu->rvb.ACC_SRC_B0 = (s16) val;
 	  break;
       case H_Reverb + 30:
-	  rvb.ACC_SRC_B1 = (s16) val;
+	  spu->rvb.ACC_SRC_B1 = (s16) val;
 	  break;
       case H_Reverb + 32:
-	  rvb.IIR_SRC_A0 = (s16) val;
+	  spu->rvb.IIR_SRC_A0 = (s16) val;
 	  break;
       case H_Reverb + 34:
-	  rvb.IIR_SRC_A1 = (s16) val;
+	  spu->rvb.IIR_SRC_A1 = (s16) val;
 	  break;
       case H_Reverb + 36:
-	  rvb.IIR_DEST_B0 = (s16) val;
+	  spu->rvb.IIR_DEST_B0 = (s16) val;
 	  break;
       case H_Reverb + 38:
-	  rvb.IIR_DEST_B1 = (s16) val;
+	  spu->rvb.IIR_DEST_B1 = (s16) val;
 	  break;
       case H_Reverb + 40:
-	  rvb.ACC_SRC_C0 = (s16) val;
+	  spu->rvb.ACC_SRC_C0 = (s16) val;
 	  break;
       case H_Reverb + 42:
-	  rvb.ACC_SRC_C1 = (s16) val;
+	  spu->rvb.ACC_SRC_C1 = (s16) val;
 	  break;
       case H_Reverb + 44:
-	  rvb.ACC_SRC_D0 = (s16) val;
+	  spu->rvb.ACC_SRC_D0 = (s16) val;
 	  break;
       case H_Reverb + 46:
-	  rvb.ACC_SRC_D1 = (s16) val;
+	  spu->rvb.ACC_SRC_D1 = (s16) val;
 	  break;
       case H_Reverb + 48:
-	  rvb.IIR_SRC_B1 = (s16) val;
+	  spu->rvb.IIR_SRC_B1 = (s16) val;
 	  break;
       case H_Reverb + 50:
-	  rvb.IIR_SRC_B0 = (s16) val;
+	  spu->rvb.IIR_SRC_B0 = (s16) val;
 	  break;
       case H_Reverb + 52:
-	  rvb.MIX_DEST_A0 = (s16) val;
+	  spu->rvb.MIX_DEST_A0 = (s16) val;
 	  break;
       case H_Reverb + 54:
-	  rvb.MIX_DEST_A1 = (s16) val;
+	  spu->rvb.MIX_DEST_A1 = (s16) val;
 	  break;
       case H_Reverb + 56:
-	  rvb.MIX_DEST_B0 = (s16) val;
+	  spu->rvb.MIX_DEST_B0 = (s16) val;
 	  break;
       case H_Reverb + 58:
-	  rvb.MIX_DEST_B1 = (s16) val;
+	  spu->rvb.MIX_DEST_B1 = (s16) val;
 	  break;
       case H_Reverb + 60:
-	  rvb.IN_COEF_L = (s16) val;
+	  spu->rvb.IN_COEF_L = (s16) val;
 	  break;
       case H_Reverb + 62:
-	  rvb.IN_COEF_R = (s16) val;
+	  spu->rvb.IN_COEF_R = (s16) val;
 	  break;
     }
 
@@ -343,20 +343,20 @@ u16 SPUreadRegister(u32 reg)
 	  case 0xC:		// get adsr vol
 	  {
 	      const int ch = (r >> 4) - 0xc0;
-	      if (s_chan[ch].bNew)
+	      if (spu->s_chan[ch].bNew)
 		  return 1;	// we are started, but not processed? return 1
-	      if (s_chan[ch].ADSRX.lVolume &&	// same here... we haven't decoded one sample yet, so no envelope yet. return 1 as well
-		  !s_chan[ch].ADSRX.EnvelopeVol)
+	      if (spu->s_chan[ch].ADSRX.lVolume &&	// same here... we haven't decoded one sample yet, so no envelope yet. return 1 as well
+		  !spu->s_chan[ch].ADSRX.EnvelopeVol)
 		  return 1;
-	      return (u16) (s_chan[ch].ADSRX.EnvelopeVol >> 16);
+	      return (u16) (spu->s_chan[ch].ADSRX.EnvelopeVol >> 16);
 	  }
 
 	  case 0xE:		// get loop address
 	  {
 	      const int ch = (r >> 4) - 0xc0;
-	      if (s_chan[ch].pLoop == NULL)
+	      if (spu->s_chan[ch].pLoop == NULL)
 		  return 0;
-	      return (u16) ((s_chan[ch].pLoop - spuMemC) >> 3);
+	      return (u16) ((spu->s_chan[ch].pLoop - spu->spuMemC) >> 3);
 	  }
 	}
     }
@@ -364,25 +364,25 @@ u16 SPUreadRegister(u32 reg)
     switch (r)
     {
       case H_SPUctrl:
-	  return spuCtrl;
+	  return spu->spuCtrl;
 
       case H_SPUstat:
-	  return spuStat;
+	  return spu->spuStat;
 
       case H_SPUaddr:
-	  return (u16) (spuAddr >> 3);
+	  return (u16) (spu->spuAddr >> 3);
 
       case H_SPUdata:
       {
-	  u16 s = BFLIP16(spuMem[spuAddr >> 1]);
-	  spuAddr += 2;
-	  if (spuAddr > 0x7ffff)
-	      spuAddr = 0;
+	  u16 s = BFLIP16(spu->spuMem[spu->spuAddr >> 1]);
+	  spu->spuAddr += 2;
+	  if (spu->spuAddr > 0x7ffff)
+	      spu->spuAddr = 0;
 	  return s;
       }
 
       case H_SPUirqAddr:
-	  return spuIrq;
+	  return spu->spuIrq;
 
 	  //case H_SPUIsOn1:
 	  // return IsSoundOn(0,16);
@@ -392,7 +392,7 @@ u16 SPUreadRegister(u32 reg)
 
     }
 
-    return regArea[(r - 0xc00) >> 1];
+    return spu->regArea[(r - 0xc00) >> 1];
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -405,10 +405,10 @@ void SoundOn(int start, int end, u16 val)	// SOUND ON PSX COMAND
 
     for (ch = start; ch < end; ch++, val >>= 1)	// loop channels
     {
-	if ((val & 1) && s_chan[ch].pStart)	// mmm... start has to be set before key on !?!
+	if ((val & 1) && spu->s_chan[ch].pStart)	// mmm... start has to be set before key on !?!
 	{
-	    s_chan[ch].bIgnoreLoop = 0;
-	    s_chan[ch].bNew = 1;
+	    spu->s_chan[ch].bIgnoreLoop = 0;
+	    spu->s_chan[ch].bNew = 1;
 	}
     }
 }
@@ -422,9 +422,9 @@ void SoundOff(int start, int end, u16 val)	// SOUND OFF PSX COMMAND
     int ch;
     for (ch = start; ch < end; ch++, val >>= 1)	// loop channels
     {
-	if (val & 1)		// && s_chan[i].bOn)  mmm...
+	if (val & 1)		// && spu->s_chan[i].bOn)  mmm...
 	{
-	    s_chan[ch].bStop = 1;
+	    spu->s_chan[ch].bStop = 1;
 	}
     }
 }
@@ -443,13 +443,13 @@ void FModOn(int start, int end, u16 val)	// FMOD ON PSX COMMAND
 	{
 	    if (ch > 0)
 	    {
-		s_chan[ch].bFMod = 1;	// --> sound channel
-		s_chan[ch - 1].bFMod = 2;	// --> freq channel
+		spu->s_chan[ch].bFMod = 1;	// --> sound channel
+		spu->s_chan[ch - 1].bFMod = 2;	// --> freq channel
 	    }
 	}
 	else
 	{
-	    s_chan[ch].bFMod = 0;	// --> turn off fmod
+	    spu->s_chan[ch].bFMod = 0;	// --> turn off fmod
 	}
     }
 }
@@ -466,11 +466,11 @@ void NoiseOn(int start, int end, u16 val)	// NOISE ON PSX COMMAND
     {
 	if (val & 1)		// -> noise on/off
 	{
-	    s_chan[ch].bNoise = 1;
+	    spu->s_chan[ch].bNoise = 1;
 	}
 	else
 	{
-	    s_chan[ch].bNoise = 0;
+	    spu->s_chan[ch].bNoise = 0;
 	}
     }
 }
@@ -486,9 +486,9 @@ void SetVolumeLR(int right, u8 ch, s16 vol)	// LEFT VOLUME
     //if(vol&0xc000)
     //printf("%d %08x\n",right,vol);
     if (right)
-	s_chan[ch].iRightVolRaw = vol;
+	spu->s_chan[ch].iRightVolRaw = vol;
     else
-	s_chan[ch].iLeftVolRaw = vol;
+	spu->s_chan[ch].iLeftVolRaw = vol;
 
     if (vol & 0x8000)		// sweep?
     {
@@ -516,9 +516,9 @@ void SetVolumeLR(int right, u8 ch, s16 vol)	// LEFT VOLUME
 	// vol&=0x3fff;
     }
     if (right)
-	s_chan[ch].iRightVolume = vol;
+	spu->s_chan[ch].iRightVolume = vol;
     else
-	s_chan[ch].iLeftVolume = vol;	// store volume
+	spu->s_chan[ch].iLeftVolume = vol;	// store volume
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -533,10 +533,10 @@ void SetPitch(int ch, u16 val)	// SET PITCH
     else
 	NP = val;
 
-    s_chan[ch].iRawPitch = NP;
+    spu->s_chan[ch].iRawPitch = NP;
 
     NP = (44100L * NP) / 4096L;	// calc frequency
     if (NP < 1)
 	NP = 1;			// some security
-    s_chan[ch].iActFreq = NP;	// store frequency
+    spu->s_chan[ch].iActFreq = NP;	// store frequency
 }

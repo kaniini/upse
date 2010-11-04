@@ -42,7 +42,7 @@ typedef enum {
     UPSE_PS1_GPU_ODDLINES    = 0x80000000
 } upse_gpu_status_t;
 
-struct {
+static struct {
     upse_gpu_status_t status;
 } upse_gpu_state = { UPSE_PS1_GPU_INITIALIZED };
 
