@@ -589,6 +589,8 @@ void upse_ps1_spu_finalize(void)
     }
     else if ((u8 *) spu->pS > ((u8 *) spu->pSpuBuffer + 1024))
     {
+        upse_spu_lowpass_filter_process(spu, (s16 *) spu->pSpuBuffer, ((u8 *) spu->pS - (u8 *) spu->pSpuBuffer) / 4);
+
 	if (spu->cb != NULL)
 	    spu->cb((u8 *) spu->pSpuBuffer, (u8 *) spu->pS - (u8 *) spu->pSpuBuffer, spu->cb_userdata);
 
@@ -600,7 +602,6 @@ int upse_ps1_spu_finalize_count(s16 ** s)
 {
     if ((spu->seektime != (u32) ~ 0) && spu->seektime > spu->sampcount)
     {
-        unsigned samples_skipped = ( (u8 *) spu->pS - (u8 *) spu->pSpuBuffer ) / 4;
         spu->pS = (s16 *) spu->pSpuBuffer;
         *s = NULL;
         return 1;
@@ -608,6 +609,9 @@ int upse_ps1_spu_finalize_count(s16 ** s)
     else if ((u8 *) spu->pS > ((u8 *) spu->pSpuBuffer + 1024))
     {
         unsigned samples_rendered = ( (u8 *) spu->pS - (u8 *) spu->pSpuBuffer ) / 4;
+
+        upse_spu_lowpass_filter_process(spu, (s16 *) spu->pSpuBuffer, samples_rendered);
+
         spu->pS = (s16 *) spu->pSpuBuffer;
         *s = spu->pS;
         return samples_rendered;
@@ -702,6 +706,8 @@ int upse_ps1_spu_open(void)
 
     iVolume = 0;		// full volume (0dB), volume past this point is seen as a pad, where 8 = -64dB
     SetupStreams();		// prepare streaming
+
+    upse_spu_lowpass_filter_redesign(spu, 44100);
 
     spu->bSPUIsOpen = 1;
 

@@ -177,6 +177,30 @@ typedef struct
 } REVERBInfo;
 
 typedef struct {
+    float lx1;
+    float lx2;
+    float ly1;
+    float ly2;
+
+    float la0;
+    float la1;
+    float la2;
+    float lb1;
+    float lb2;
+
+    float hx1[2];
+    float hx2[2];
+    float hy1[2];
+    float hy2[2];
+
+    float ha0;
+    float ha1;
+    float ha2;
+    float hb1;
+    float hb2;
+} upse_spu_lowpass_info_t;
+
+typedef struct {
     u16 regArea[0x200];
     u16 spuMem[256 * 1024];
     u8 *spuMemC;
@@ -203,5 +227,10 @@ typedef struct {
 
     u32 seektime;
     s32 nextirq;
+
+    upse_spu_lowpass_info_t lowpass;
 } upse_spu_state_t;
 
+extern void upse_spu_lowpass_filter_reset(upse_spu_state_t *spu);
+extern void upse_spu_lowpass_filter_redesign(upse_spu_state_t *spu, int samplerate);
+extern void upse_spu_lowpass_filter_process(upse_spu_state_t *spu, s16 *samplebuf, int samplecount);
