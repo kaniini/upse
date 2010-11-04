@@ -89,6 +89,7 @@ upse_spu_lowpass_filter_redesign(upse_spu_state_t *spu, int samplerate)
 #define EPSILON (1e-10f)
 #define OVERALL_SCALE (0.87f)
 #define OVERFLOW_CHECK(x) if(fabsf((x)) < EPSILON) (x) = 0
+#define CLIP(x) { if(x > 32767) x = 32767; if(x < -32767) x = -32767; }
 
 void
 upse_spu_lowpass_filter_process(upse_spu_state_t *spu, s16 *samplebuf, int samplecount)
@@ -146,6 +147,9 @@ upse_spu_lowpass_filter_process(upse_spu_state_t *spu, s16 *samplebuf, int sampl
         spu->lowpass.hx2[1] = spu->lowpass.hx1[1]; spu->lowpass.hx1[1] = in;
         spu->lowpass.hy2[1] = spu->lowpass.hy1[1]; spu->lowpass.hy1[1] = out;
         r = out;
+
+        CLIP(l);
+        CLIP(r);
 
         samplebuf[0] = l;
         samplebuf[1] = r;
