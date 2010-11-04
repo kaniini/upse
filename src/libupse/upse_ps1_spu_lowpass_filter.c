@@ -113,14 +113,14 @@ upse_spu_lowpass_filter_process(upse_spu_state_t *spu, s16 *samplebuf, int sampl
 
     for (i = 0; i < samplecount; i++)
     {
-        s16 in, out;
-        s16 l, r;
+        s32 in, out;
+        s32 l, r;
 
         l = samplebuf[0];
         r = samplebuf[1];
 
-        s16 mid  = l + r;
-        s16 side = l - r;
+        s32 mid  = l + r;
+        s32 side = l - r;
 
         in = mid;
         out = spu->lowpass.la0 * in + spu->lowpass.la1 * spu->lowpass.lx1 + spu->lowpass.la2 * spu->lowpass.lx2 - spu->lowpass.lb1 * spu->lowpass.ly1 - spu->lowpass.lb2 * spu->lowpass.ly2;
