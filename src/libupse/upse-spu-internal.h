@@ -191,6 +191,18 @@ typedef struct {
 
     SPUCHAN s_chan[MAXCHAN + 1];	// channel + 1 infos (1 is security for fmod handling)
     REVERBInfo rvb;
+
+    upse_audio_callback_func_t cb;
+    void *cb_userdata;
+
+    u32 sampcount;
+    u32 decaybegin;
+    u32 decayend;
+
+    s16 *pS;
+
+    u32 seektime;
+    s32 nextirq;
 } upse_spu_state_t;
 
 extern upse_spu_state_t *spu;

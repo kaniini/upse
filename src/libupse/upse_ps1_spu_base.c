@@ -50,8 +50,6 @@ static const int f[5][2] = {
     {122, -60}
 };
 
-s16 *pS;
-
 ////////////////////////////////////////////////////////////////////////
 // CODE AREA
 ////////////////////////////////////////////////////////////////////////
@@ -245,10 +243,6 @@ static INLINE void StartSound(int ch)
 // basically the whole sound processing is done in this fat func!
 ////////////////////////////////////////////////////////////////////////
 
-static u32 sampcount;
-static u32 decaybegin;
-static u32 decayend;
-
 // Counting to 65536 results in full volume offage.
 void upse_ps1_spu_setlength(s32 stop, s32 fade)
 {
@@ -258,7 +252,7 @@ void upse_ps1_spu_setlength(s32 stop, s32 fade)
 
     if (stop == 0)
     {
-	decaybegin = 0;
+	spu->decaybegin = 0;
         _LEAVE;
     }
     else
@@ -266,8 +260,8 @@ void upse_ps1_spu_setlength(s32 stop, s32 fade)
 	stop = (stop * 441) / 10;
 	fade = (fade * 441) / 10;
 
-	decaybegin = stop;
-	decayend = stop + fade;
+	spu->decaybegin = stop;
+	spu->decayend = stop + fade;
     }
 
     _LEAVE;
@@ -287,12 +281,10 @@ void upse_ps1_spu_setvolume(int volume)
     _LEAVE;
 }
 
-static u32 seektime;
-static s32 poo;
 int upse_seek(u32 t)
 {
-    seektime = t * 441 / 10;
-    if (seektime > sampcount)
+    spu->seektime = t * 441 / 10;
+    if (spu->seektime > spu->sampcount)
 	return (1);
     return (0);
 }
@@ -300,14 +292,14 @@ int upse_seek(u32 t)
 #define CLIP(_x) {if(_x>32767) _x=32767; if(_x<-32767) _x=-32767;}
 int upse_ps1_spu_render(u32 cycles)
 {
-    static s32 dosampies;
+    s32 dosampies;
     s32 temp;
 
-    poo += cycles;
-    dosampies = poo / 384;
+    spu->nextirq += cycles;
+    dosampies = spu->nextirq / 384;
     if (!dosampies)
 	return (1);
-    poo -= dosampies * 384;
+    spu->nextirq -= dosampies * 384;
     temp = dosampies;
 
     while (temp)
@@ -538,19 +530,19 @@ int upse_ps1_spu_render(u32 cycles)
 	///////////////////////////////////////////////////////
 	// mix all channels (including reverb) into one buffer
 	MixREVERBLeftRight(&sl, &sr, revLeft, revRight);
-	if (decaybegin != 0 && sampcount >= decaybegin)
+	if (spu->decaybegin != 0 && spu->sampcount >= spu->decaybegin)
 	{
 	    s32 dmul;
-	    if (decaybegin != 0)
+	    if (spu->decaybegin != 0)
 	    {
-		if (sampcount >= decayend)
+		if (spu->sampcount >= spu->decayend)
 		    return (0);
-		dmul = 256 - (256 * (sampcount - decaybegin) / (decayend - decaybegin));
+		dmul = 256 - (256 * (spu->sampcount - spu->decaybegin) / (spu->decayend - spu->decaybegin));
 		sl = (sl * dmul) >> 8;
 		sr = (sr * dmul) >> 8;
 	    }
 	}
-	sampcount++;
+	spu->sampcount++;
 
 #if 0
 	/* fix dynamic range. */
@@ -561,8 +553,8 @@ int upse_ps1_spu_render(u32 cycles)
         CLIP(sl);
         CLIP(sr);
 
-	*pS++ = sl;
-	*pS++ = sr;
+	*spu->pS++ = sl;
+	*spu->pS++ = sr;
     }
 
     return (1);
@@ -570,58 +562,55 @@ int upse_ps1_spu_render(u32 cycles)
 
 void upse_ps1_stop(void)
 {
-    decaybegin = 1;
-    decayend = 0;
+    spu->decaybegin = 1;
+    spu->decayend = 0;
 }
-
-static upse_audio_callback_func_t _upse_audio_callback_f = NULL;
-static void *_upse_audio_cb_user_data = NULL;
 
 void upse_set_audio_callback(upse_audio_callback_func_t func, void *user_data)
 {
     _ENTER;
 
-    _upse_audio_callback_f = func;
-    _upse_audio_cb_user_data = user_data;
+    spu->cb = func;
+    spu->cb_userdata = user_data;
 
-    _DEBUG("set audio callback function to <%p>", _upse_audio_callback_f);
-    _DEBUG("set audio callback userdata to <%p>", _upse_audio_cb_user_data);
+    _DEBUG("set audio callback function to <%p>", spu->cb);
+    _DEBUG("set audio callback userdata to <%p>", spu->cb_userdata);
 
     _LEAVE;
 }
 
 void upse_ps1_spu_finalize(void)
 {
-    if ((seektime != (u32) ~ 0) && seektime > sampcount)
+    if ((spu->seektime != (u32) ~ 0) && spu->seektime > spu->sampcount)
     {
-	pS = (s16 *) spu->pSpuBuffer;
+	spu->pS = (s16 *) spu->pSpuBuffer;
 
-	if (_upse_audio_callback_f)
-	    _upse_audio_callback_f(0, 0, _upse_audio_cb_user_data);
+	if (spu->cb != NULL)
+	    spu->cb(0, 0, spu->cb_userdata);
     }
-    else if ((u8 *) pS > ((u8 *) spu->pSpuBuffer + 1024))
+    else if ((u8 *) spu->pS > ((u8 *) spu->pSpuBuffer + 1024))
     {
-	if (_upse_audio_callback_f)
-	    _upse_audio_callback_f((u8 *) spu->pSpuBuffer, (u8 *) pS - (u8 *) spu->pSpuBuffer, _upse_audio_cb_user_data);
+	if (spu->cb != NULL)
+	    spu->cb((u8 *) spu->pSpuBuffer, (u8 *) spu->pS - (u8 *) spu->pSpuBuffer, spu->cb_userdata);
 
-	pS = (s16 *) spu->pSpuBuffer;
+	spu->pS = (s16 *) spu->pSpuBuffer;
     }
 }
 
 int upse_ps1_spu_finalize_count(s16 ** s)
 {
-    if ((seektime != (u32) ~ 0) && seektime > sampcount)
+    if ((spu->seektime != (u32) ~ 0) && spu->seektime > spu->sampcount)
     {
-        unsigned samples_skipped = ( (u8 *) pS - (u8 *) spu->pSpuBuffer ) / 4;
-        pS = (s16 *) spu->pSpuBuffer;
+        unsigned samples_skipped = ( (u8 *) spu->pS - (u8 *) spu->pSpuBuffer ) / 4;
+        spu->pS = (s16 *) spu->pSpuBuffer;
         *s = NULL;
         return 1;
     }
-    else if ((u8 *) pS > ((u8 *) spu->pSpuBuffer + 1024))
+    else if ((u8 *) spu->pS > ((u8 *) spu->pSpuBuffer + 1024))
     {
-        unsigned samples_rendered = ( (u8 *) pS - (u8 *) spu->pSpuBuffer ) / 4;
-        pS = (s16 *) spu->pSpuBuffer;
-        *s = pS;
+        unsigned samples_rendered = ( (u8 *) spu->pS - (u8 *) spu->pSpuBuffer ) / 4;
+        spu->pS = (s16 *) spu->pSpuBuffer;
+        *s = spu->pS;
         return samples_rendered;
     }
 
@@ -658,8 +647,8 @@ int upse_ps1_spu_init(void)
     memset(spu->regArea, 0, sizeof(spu->regArea));
     memset(spu->spuMem, 0, sizeof(spu->spuMem));
     InitADSR();
-    sampcount = poo = 0;
-    seektime = (u32) ~ 0;
+    spu->sampcount = spu->nextirq = 0;
+    spu->seektime = (u32) ~ 0;
 #ifdef TIMEO
     begintime = SexyTime64();
 #endif
@@ -675,7 +664,7 @@ void SetupStreams(void)
     int i;
 
     spu->pSpuBuffer = (u8 *) malloc(32768);	// alloc mixing buffer
-    pS = (s16 *) spu->pSpuBuffer;
+    spu->pS = (s16 *) spu->pSpuBuffer;
 
     for (i = 0; i < MAXCHAN; i++)	// loop sound channels
     {
