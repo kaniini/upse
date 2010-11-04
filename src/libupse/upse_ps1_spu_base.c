@@ -378,6 +378,8 @@ int upse_ps1_spu_render(u32 cycles)
 			    s_2 = s_1;
 			    s_1 = fa;
 
+                            CLIP(fa);
+
 			    spu->s_chan[ch].SB[nSample++] = fa;
 			}
 
@@ -389,15 +391,8 @@ int upse_ps1_spu_render(u32 cycles)
 				 spu->pSpuIrq <= start) || ((flags & 1) &&	// special: irq on looping addr, when stop/loop flag is set 
 						       (spu->pSpuIrq > spu->s_chan[ch].pLoop - 16 && spu->pSpuIrq <= spu->s_chan[ch].pLoop)))
 			    {
-				//extern s32 spuirqvoodoo;
 				spu->s_chan[ch].iIrqDone = 1;	// -> debug flag
 				SPUirq();
-				//puts("IRQ");
-				//if(spuirqvoodoo!=-1)
-				//{
-				// spuirqvoodoo=temp*384;
-				// temp=0;
-				//}
 			    }
 			}
 
@@ -408,16 +403,10 @@ int upse_ps1_spu_render(u32 cycles)
 
 			if (flags & 1)	// 1: stop/loop
 			{
-			    // We play this block out first...
-			    //if(!(flags&2))                          // 1+2: do loop... otherwise: stop
-			    if (flags != 3 || spu->s_chan[ch].pLoop == NULL)	// PETE: if we don't check exactly for 3, loop hang ups will happen (DQ4, for example)
-			    {	// and checking if pLoop is set avoids crashes, yeah
+			    if (flags != 3 || spu->s_chan[ch].pLoop == NULL)
 				start = (u8 *) - 1;
-			    }
 			    else
-			    {
 				start = spu->s_chan[ch].pLoop;
-			    }
 			}
 
 			spu->s_chan[ch].pCurr = start;	// store values for next cycle
@@ -462,13 +451,14 @@ int upse_ps1_spu_render(u32 cycles)
 		    vl = (spu->s_chan[ch].spos >> 6) & ~3;
 		    gpos = spu->s_chan[ch].SB[28];
 
-		    vr = ((gauss[vl] >> 2) * gval0) >> 5;
-		    vr += ((gauss[vl + 1] >> 2) * gval(1)) >> 5;
-		    vr += ((gauss[vl + 2] >> 2) * gval(2)) >> 5;
-		    vr += ((gauss[vl + 3] >> 2) * gval(3)) >> 5;
-		    fa = vr >> 4;
+		    vr = ((gauss[vl]) * gval0) >> 13;
+		    vr += ((gauss[vl + 1]) * gval(1)) >> 13;
+		    vr += ((gauss[vl + 2]) * gval(2)) >> 13;
+		    vr += ((gauss[vl + 3]) * gval(3)) >> 13;
 
-                    CLIP(fa);
+                    CLIP(vr);
+
+		    fa = vr;
 		}
 
 		spu->s_chan[ch].sval = (MixADSR(spu, ch) * fa) >> 10;
@@ -503,8 +493,8 @@ int upse_ps1_spu_render(u32 cycles)
 		    // ok, left/right sound volume (psx volume goes from 0 ... 0x3fff)
 		    int tmpl, tmpr;
 
-		    tmpl = (spu->s_chan[ch].sval * spu->s_chan[ch].iLeftVolume) >> 15;
-		    tmpr = (spu->s_chan[ch].sval * spu->s_chan[ch].iRightVolume) >> 15;
+		    tmpl = (spu->s_chan[ch].sval * spu->s_chan[ch].iLeftVolume) >> 14;
+		    tmpr = (spu->s_chan[ch].sval * spu->s_chan[ch].iRightVolume) >> 14;
 
                     CLIP(tmpl);
                     CLIP(tmpr);
