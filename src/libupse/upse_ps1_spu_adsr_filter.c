@@ -57,7 +57,7 @@ void InitADSR(void)		// INIT ADSR
 
 ////////////////////////////////////////////////////////////////////////
 
-void StartADSR(int ch)		// MIX ADSR
+void StartADSR(upse_spu_state_t *spu, int ch)		// MIX ADSR
 {
     spu->s_chan[ch].ADSRX.lVolume = 1;	// and init some adsr vars
     spu->s_chan[ch].ADSRX.State = 0;
@@ -66,7 +66,7 @@ void StartADSR(int ch)		// MIX ADSR
 
 ////////////////////////////////////////////////////////////////////////
 
-int MixADSR(int ch)		// MIX ADSR
+int MixADSR(upse_spu_state_t *spu, int ch)		// MIX ADSR
 {
     static const int sexytable[8] = { 0, 4, 6, 8, 9, 10, 11, 12 };
 

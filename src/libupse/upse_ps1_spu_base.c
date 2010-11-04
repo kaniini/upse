@@ -218,7 +218,7 @@ static const int noisetable[] = {
 
 static INLINE void StartSound(int ch)
 {
-    StartADSR(ch);
+    StartADSR(spu, ch);
 
     spu->s_chan[ch].pCurr = spu->s_chan[ch].pStart;	// set sample start
 
@@ -477,7 +477,7 @@ int upse_ps1_spu_render(u32 cycles)
 		    fa = vr >> 4;
 		}
 
-		spu->s_chan[ch].sval = (MixADSR(ch) * fa) >> 10;	// / 1023;  // add adsr
+		spu->s_chan[ch].sval = (MixADSR(spu, ch) * fa) >> 10;	// / 1023;  // add adsr
 		if (spu->s_chan[ch].bFMod == 2)	// fmod freq channel
 		{
 		    int NP = spu->s_chan[ch + 1].iRawPitch;
@@ -529,7 +529,7 @@ int upse_ps1_spu_render(u32 cycles)
 
 	///////////////////////////////////////////////////////
 	// mix all channels (including reverb) into one buffer
-	MixREVERBLeftRight(&sl, &sr, revLeft, revRight);
+	MixREVERBLeftRight(spu, &sl, &sr, revLeft, revRight);
 	if (spu->decaybegin != 0 && spu->sampcount >= spu->decaybegin)
 	{
 	    s32 dmul;

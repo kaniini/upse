@@ -205,4 +205,3 @@ typedef struct {
     s32 nextirq;
 } upse_spu_state_t;
 
-extern upse_spu_state_t *spu;

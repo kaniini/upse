@@ -20,6 +20,6 @@
 #ifndef _UPSE__LIBUPSE__UPSE_PS1_SPU_REVERB_H__GUARD
 #define _UPSE__LIBUPSE__UPSE_PS1_SPU_REVERB_H__GUARD
 
-extern void MixREVERBLeftRight(s32 * oleft, s32 * oright, s32 inleft, s32 inright);
+extern void MixREVERBLeftRight(upse_spu_state_t *, s32 * oleft, s32 * oright, s32 inleft, s32 inright);
 
 #endif

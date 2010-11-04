@@ -20,7 +20,7 @@
 #define _UPSE__LIBUPSE__UPSE_PS1_SPU_ADSR_FILTER_H__GUARD
 
 void InitADSR(void);
-void StartADSR(int ch);
-int MixADSR(int ch);
+void StartADSR(upse_spu_state_t *spu, int ch);
+int MixADSR(upse_spu_state_t *spu, int ch);
 
 #endif
