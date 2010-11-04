@@ -298,7 +298,7 @@ int upse_ps1_spu_render(u32 cycles)
     {
 	s32 revLeft = 0, revRight = 0;
 	s32 sl = 0, sr = 0;
-	int ch, fa;
+	s32 ch, fa;
 
 	temp--;
 	//--------------------------------------------------//
@@ -467,6 +467,8 @@ int upse_ps1_spu_render(u32 cycles)
 		    vr += ((gauss[vl + 2] >> 2) * gval(2)) >> 5;
 		    vr += ((gauss[vl + 3] >> 2) * gval(3)) >> 5;
 		    fa = vr >> 4;
+
+                    CLIP(fa);
 		}
 
 		spu->s_chan[ch].sval = (MixADSR(spu, ch) * fa) >> 10;
@@ -501,11 +503,17 @@ int upse_ps1_spu_render(u32 cycles)
 		    // ok, left/right sound volume (psx volume goes from 0 ... 0x3fff)
 		    int tmpl, tmpr;
 
-		    tmpl = (spu->s_chan[ch].sval * spu->s_chan[ch].iLeftVolume) >> 14;
-		    tmpr = (spu->s_chan[ch].sval * spu->s_chan[ch].iRightVolume) >> 14;
+		    tmpl = (spu->s_chan[ch].sval * spu->s_chan[ch].iLeftVolume) >> 15;
+		    tmpr = (spu->s_chan[ch].sval * spu->s_chan[ch].iRightVolume) >> 15;
+
+                    CLIP(tmpl);
+                    CLIP(tmpr);
 
 		    sl += tmpl;
 		    sr += tmpr;
+
+                    CLIP(sl);
+                    CLIP(sr);
 
 		    if (((spu->rvb.Enabled >> ch) & 1) && (spu->spuCtrl & 0x80))
 		    {
@@ -535,9 +543,6 @@ int upse_ps1_spu_render(u32 cycles)
 	    }
 	}
 	spu->sampcount++;
-
-        sl = (sl * iVolume) >> 8;
-        sr = (sr * iVolume) >> 8;
 
         CLIP(sl);
         CLIP(sr);
