@@ -14,7 +14,7 @@
  *
  * UPSE is offered without any warranty of any kind, explicit or implicit.
  */
-#define UPSE_DEBUG
+
 #include "upse-internal.h"
 
 typedef enum {

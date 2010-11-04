@@ -15,7 +15,6 @@
  * UPSE is offered without any warranty of any kind, explicit or implicit.
  */
 
-#define UPSE_DEBUG
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
