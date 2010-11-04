@@ -270,6 +270,13 @@ void upse_ps1_spu_setvolume(int volume)
 {
     _ENTER;
 
+    if (volume >= 32)
+        iVolume = 0;
+    else
+        iVolume = (volume / 4);
+
+    _DEBUG("new volume [%d] [%d]", iVolume, volume);
+
     _LEAVE;
 }
 
@@ -469,11 +476,11 @@ int upse_ps1_spu_render(u32 cycles)
 		    fa = vr >> 4;
 		}
 
-		spu->s_chan[ch].sval = (MixADSR(spu, ch) * fa) >> 10;
+		spu->s_chan[ch].sval = (MixADSR(spu, ch) * fa) >> 11;	// / 1023;  // add adsr
 		if (spu->s_chan[ch].bFMod == 2)	// fmod freq channel
 		{
 		    int NP = spu->s_chan[ch + 1].iRawPitch;
-		    NP = ((32768L + spu->s_chan[ch].sval) * NP) >> 15;
+		    NP = ((32768L + spu->s_chan[ch].sval) * NP) >> 15;	///32768L;
 
 		    if (NP > 0x3fff)
 			NP = 0x3fff;
@@ -536,8 +543,11 @@ int upse_ps1_spu_render(u32 cycles)
 	}
 	spu->sampcount++;
 
-        sl = (sl * iVolume) >> 8;
-        sr = (sr * iVolume) >> 8;
+#if 0
+	/* fix dynamic range. */
+	sl >>= iVolume;
+	sr >>= iVolume;
+#endif
 
         CLIP(sl);
         CLIP(sr);
@@ -694,7 +704,7 @@ int upse_ps1_spu_open(void)
     memset((void *) spu->s_chan, 0, (MAXCHAN + 1) * sizeof(SPUCHAN));
     spu->pSpuIrq = 0;
 
-    iVolume = 60;
+    iVolume = 0;		// full volume (0dB), volume past this point is seen as a pad, where 8 = -64dB
     SetupStreams();		// prepare streaming
 
     upse_spu_lowpass_filter_redesign(spu, 44100);
