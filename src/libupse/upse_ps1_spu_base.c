@@ -35,8 +35,7 @@
 
 // psx buffer / addresses
 
-static upse_spu_state_t upse_spu_state;
-upse_spu_state_t *spu = &upse_spu_state;
+upse_spu_state_t *spu;
 
 // user settings          
 static int iVolume;
@@ -617,20 +616,6 @@ int upse_ps1_spu_finalize_count(s16 ** s)
     return 0;
 }
 
-#ifdef TIMEO
-static u64 begintime;
-static u64 SexyTime64(void)
-{
-    struct timeval tv;
-    u64 ret;
-
-    gettimeofday(&tv, 0);
-    ret = tv.tv_sec;
-    ret *= 1000000;
-    ret += tv.tv_usec;
-    return (ret);
-}
-#endif
 ////////////////////////////////////////////////////////////////////////
 // INIT/EXIT STUFF
 ////////////////////////////////////////////////////////////////////////
@@ -641,17 +626,6 @@ static u64 SexyTime64(void)
 
 int upse_ps1_spu_init(void)
 {
-    spu->spuMemC = (u8 *) spu->spuMem;	// just small setup
-    memset((void *) spu->s_chan, 0, MAXCHAN * sizeof(SPUCHAN));
-    memset((void *) &spu->rvb, 0, sizeof(REVERBInfo));
-    memset(spu->regArea, 0, sizeof(spu->regArea));
-    memset(spu->spuMem, 0, sizeof(spu->spuMem));
-    InitADSR();
-    spu->sampcount = spu->nextirq = 0;
-    spu->seektime = (u32) ~ 0;
-#ifdef TIMEO
-    begintime = SexyTime64();
-#endif
     return 0;
 }
 
@@ -704,6 +678,17 @@ void RemoveStreams(void)
 
 int upse_ps1_spu_open(void)
 {
+    spu = calloc(sizeof(upse_spu_state_t), 1);
+
+    spu->spuMemC = (u8 *) spu->spuMem;	// just small setup
+    memset((void *) spu->s_chan, 0, MAXCHAN * sizeof(SPUCHAN));
+    memset((void *) &spu->rvb, 0, sizeof(REVERBInfo));
+    memset(spu->regArea, 0, sizeof(spu->regArea));
+    memset(spu->spuMem, 0, sizeof(spu->spuMem));
+    InitADSR();
+    spu->sampcount = spu->nextirq = 0;
+    spu->seektime = (u32) ~ 0;
+
     if (spu->bSPUIsOpen)
 	return 0;		// security for some stupid main emus
     spu->spuIrq = 0;
@@ -731,12 +716,12 @@ int upse_ps1_spu_open(void)
 
 int upse_ps1_spu_close(void)
 {
-    if (!spu->bSPUIsOpen)
+    if (spu == NULL)
 	return 0;		// some security
 
-    spu->bSPUIsOpen = 0;	// no more open
-
     RemoveStreams();		// no more streaming
+
+    free(spu);
 
     return 0;
 }
