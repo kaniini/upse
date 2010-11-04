@@ -213,7 +213,7 @@ _upse_load_psf(void *fp, const char *path, int level, int type, upse_iofuncs_t *
 
 void upse_free_psf_metadata(upse_psf_t * info)
 {
-    if (info != NULL)
+    if (info == NULL)
         return;
 
     if (info->xsf != NULL)
