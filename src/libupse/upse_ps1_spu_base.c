@@ -451,19 +451,19 @@ int upse_ps1_spu_render(u32 cycles)
 		    vl = (spu->s_chan[ch].spos >> 6) & ~3;
 		    gpos = spu->s_chan[ch].SB[28];
 
-		    vr = ((gauss[vl]) * gval0) >> 13;
-		    vr += ((gauss[vl + 1]) * gval(1)) >> 13;
-		    vr += ((gauss[vl + 2]) * gval(2)) >> 13;
-		    vr += ((gauss[vl + 3]) * gval(3)) >> 13;
-
-                    CLIP(vr);
+		    vr = (gauss[vl]) * gval0;
+		    vr += (gauss[vl + 1]) * gval(1);
+		    vr += (gauss[vl + 2]) * gval(2);
+		    vr += (gauss[vl + 3]) * gval(3);
+                    vr >>= 11;
 
 		    fa = vr;
 		}
 
-		spu->s_chan[ch].sval = (MixADSR(spu, ch) * fa) >> 10;
+		spu->s_chan[ch].sval = (MixADSR(spu, ch) * fa) >> 15;
 		if (spu->s_chan[ch].bFMod == 2)	// fmod freq channel
 		{
+                    int srate;
 		    int NP = spu->s_chan[ch + 1].iRawPitch;
 		    NP = ((32768L + spu->s_chan[ch].sval) * NP) >> 15;
 
@@ -475,11 +475,11 @@ int upse_ps1_spu_render(u32 cycles)
 		    // mmmm... if I do this, all is screwed              
 		    //           spu->s_chan[ch+1].iRawPitch=NP;
 
-		    NP = (44100L * NP) / (4096L);	// calc frequency
+		    srate = (44100L * NP) / (4096L);	// calc frequency
 
-		    spu->s_chan[ch + 1].iActFreq = NP;
-		    spu->s_chan[ch + 1].iUsedFreq = NP;
-		    spu->s_chan[ch + 1].sinc = (((NP / 10) << 16) / 4410);
+		    spu->s_chan[ch + 1].iActFreq = srate;
+		    spu->s_chan[ch + 1].iUsedFreq = srate;
+		    spu->s_chan[ch + 1].sinc = NP << 4;
 		    if (!spu->s_chan[ch + 1].sinc)
 			spu->s_chan[ch + 1].sinc = 1;
 
@@ -493,8 +493,8 @@ int upse_ps1_spu_render(u32 cycles)
 		    // ok, left/right sound volume (psx volume goes from 0 ... 0x3fff)
 		    int tmpl, tmpr;
 
-		    tmpl = (spu->s_chan[ch].sval * spu->s_chan[ch].iLeftVolume) >> 12;
-		    tmpr = (spu->s_chan[ch].sval * spu->s_chan[ch].iRightVolume) >> 12;
+		    tmpl = (spu->s_chan[ch].sval * spu->s_chan[ch].iLeftVolume) >> 15;
+		    tmpr = (spu->s_chan[ch].sval * spu->s_chan[ch].iRightVolume) >> 15;
 
                     CLIP(tmpl);
                     CLIP(tmpr);
