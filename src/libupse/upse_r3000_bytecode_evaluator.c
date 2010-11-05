@@ -19,6 +19,7 @@
 
 #include <stdlib.h>
 
+#define UPSE_DEBUG
 #include "upse-internal.h"
 
 extern void upse_ps2_iop_call(uint32_t callnum);
@@ -1023,6 +1024,7 @@ static void psxCOP0()
 
 static void psxHLE()
 {
+    _DEBUG("HLE - PC: 0x%lx", upse_r3000_cpu_regs.pc);
     psxHLEt[upse_r3000_cpu_regs.code & 0xff] ();
 }
 
