@@ -28,6 +28,8 @@
 #include "upse.h"
 #include "upse-ps1-memory-manager.h"
 
+#include <math.h>
+
 void
 upse_spu_lowpass_filter_reset(upse_spu_state_t *spu)
 {
