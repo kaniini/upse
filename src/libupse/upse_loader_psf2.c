@@ -361,7 +361,7 @@ upse_load_psf2(void *fp, const char *path, upse_iofuncs_t *iofuncs)
         return NULL;
 
     psxInit();
-    psxReset();
+    psxReset(UPSE_PSX_REV_PS2_IOP);
 
     upse_ps1_spu_init();
     upse_ps1_spu_open();

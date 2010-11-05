@@ -250,7 +250,7 @@ upse_load_psf(void *fp, const char *path, upse_iofuncs_t * iofuncs)
     _ENTER;
 
     psxInit();
-    psxReset();
+    psxReset(UPSE_PSX_REV_PS1);
 
     upse_ps1_spu_init();
     upse_ps1_spu_open();

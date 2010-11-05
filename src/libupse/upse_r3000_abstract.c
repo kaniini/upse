@@ -33,7 +33,7 @@ int psxInit()
     return upse_r3000_cpu_init();
 }
 
-void psxReset()
+void psxReset(upse_psx_revision_t rev)
 {
     upse_r3000_cpu_reset();
     upse_ps1_memory_reset();
@@ -42,7 +42,16 @@ void psxReset()
 
     upse_r3000_cpu_regs.pc = 0xbfc00000;	// Start in bootstrap
     upse_r3000_cpu_regs.CP0.r[12] = 0x10900000;	// COP0 enabled | BEV = 1 | TS = 1
-    upse_r3000_cpu_regs.CP0.r[15] = 0x00000002;	// PRevID = Revision ID, same as R3000A
+
+    switch (rev)
+    {
+    case UPSE_PSX_REV_PS2_IOP:
+        upse_r3000_cpu_regs.CP0.r[15] = 0x00000010;	// PRevID = Revision ID, same as IOP
+        break;
+    case UPSE_PSX_REV_PS1:
+        upse_r3000_cpu_regs.CP0.r[15] = 0x00000002;	// PRevID = Revision ID, same as R3000A
+        break;
+    }
 
     upse_ps1_hal_reset();
     upse_ps1_bios_init();

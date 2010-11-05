@@ -24,6 +24,12 @@
 
 #include "upse-internal.h"
 
+typedef enum
+{
+    UPSE_PSX_REV_PS1 = 1,
+    UPSE_PSX_REV_PS2_IOP = 2
+} upse_psx_revision_t;
+
 typedef union
 {
     struct
@@ -100,7 +106,7 @@ extern upse_r3000_cpu_registers_t upse_r3000_cpu_regs;
 #define _SetLink(x)     upse_r3000_cpu_regs.GPR.r[x] = _PC_ + 4;	// Sets the return address in the link register
 
 int psxInit();
-void psxReset();
+void psxReset(upse_psx_revision_t rev);
 void psxShutdown();
 void psxException(u32 code, u32 bd);
 void psxBranchTest();
