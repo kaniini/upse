@@ -158,10 +158,7 @@ int CounterSPURun(void)
 
 void psxUpdateVSyncRate()
 {
-    //if (Config.PsxType) // ntsc - 0 | pal - 1
-    //     psxCounters[3].rate = (PSXCLK / 50);// / BIAS;
-    //else 
-    psxCounters[3].rate = (PSXCLK / 60);	// / BIAS;
+    psxCounters[3].rate = (PSXCLK / 60);
 }
 
 void psxRcntUpdate()
