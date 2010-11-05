@@ -528,6 +528,7 @@ int upse_ps1_spu_render(u32 cycles)
 		if (spu->sampcount >= spu->decayend)
 		    return (0);
 		dmul = 256 - (256 * (spu->sampcount - spu->decaybegin) / (spu->decayend - spu->decaybegin));
+		_DEBUG("dmul: %d", dmul);
 		sl = (sl * dmul) >> 8;
 		sr = (sr * dmul) >> 8;
 	    }
