@@ -22,7 +22,7 @@
 #define UPSE_DEBUG
 #include "upse-internal.h"
 
-extern void upse_ps2_iop_call(uint32_t callnum);
+extern void upse_ps2_iop_call(u32 callnum);
 
 static int branch;
 static int branch2;
