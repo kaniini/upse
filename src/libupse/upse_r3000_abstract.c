@@ -27,16 +27,23 @@ upse_r3000_cpu_registers_t upse_r3000_cpu_regs;
 
 int psxInit()
 {
+    int ret;
+
     if (upse_ps1_memory_init() == -1)
 	return -1;
 
-    return upse_r3000_cpu_init();
+    ret = upse_r3000_cpu_init();
+    upse_ps1_spu_init();
+
+    return ret;
 }
 
 void psxReset(upse_psx_revision_t rev)
 {
     upse_r3000_cpu_reset();
     upse_ps1_memory_reset();
+
+    upse_ps1_spu_open();
 
     memset(&upse_r3000_cpu_regs, 0, sizeof(upse_r3000_cpu_regs));
 

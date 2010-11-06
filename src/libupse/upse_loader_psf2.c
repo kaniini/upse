@@ -363,9 +363,6 @@ upse_load_psf2(void *fp, const char *path, upse_iofuncs_t *iofuncs)
     psxInit();
     psxReset(UPSE_PSX_REV_PS2_IOP);
 
-    upse_ps1_spu_init();
-    upse_ps1_spu_open();
-
     initialPC = upse_parse_psf2_elf(buf, buflen);
     initialSP = 0x801ffff0;
 
