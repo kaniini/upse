@@ -1024,7 +1024,7 @@ static void psxCOP0()
 
 static void psxHLE()
 {
-    _DEBUG("HLE - PC: 0x%lx", upse_r3000_cpu_regs.pc);
+    _DEBUG("HLE - PC: 0x%lx", upse_r3000_cpu_regs.pc & 0xff);
     psxHLEt[upse_r3000_cpu_regs.code & 0xff] ();
 }
 
