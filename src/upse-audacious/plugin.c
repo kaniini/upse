@@ -142,7 +142,7 @@ static gboolean upse_aud_play(InputPlayback *playback, const gchar * filename, V
             if(!(playback_mod = upse_module_open(filename, &upse_aud_iofuncs)))
                 break;
 
-            upse_seek(seek); 
+            upse_eventloop_seek(playback_mod, seek); 
             seek = 0;
             continue;
         }
