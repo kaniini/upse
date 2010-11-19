@@ -31,7 +31,7 @@
 #define H_SPUoff2        0x0d8e
 
 
-void SPUirq(void);
+void SPUirq(upse_module_instance_t *ins);
 u16 SPUreadRegister(upse_spu_state_t *spu, u32 reg);
 void SPUwriteRegister(upse_spu_state_t *spu, u32 reg, u16 val);
 int upse_ps1_spu_render(upse_spu_state_t *spu, u32 cycle);

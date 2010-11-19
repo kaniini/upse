@@ -136,7 +136,7 @@ upse_psf2_parse_filesystem(upse_filesystem_t *ret, char *curdir, u8 *filesys, u8
  * parse a PS2 elf image and return the initial PC addr.
  */
 u32
-upse_parse_psf2_elf(u8 *start, u32 len)
+upse_parse_psf2_elf(upse_module_instance_t *ins, u8 *start, u32 len)
 {
     u32 entry, phoff, shoff, phentsize, shentsize, phnum, shnum, shstrndx;
     u32 name, type, flags, addr, offset, size, shent;
@@ -205,7 +205,7 @@ upse_parse_psf2_elf(u8 *start, u32 len)
             break;
 
         case 1:
-            LoadPSXMem(loadAddr + addr, size, start + offset);
+            LoadPSXMem(ins, loadAddr + addr, size, start + offset);
             totallen += size;
             break;
 
@@ -214,7 +214,7 @@ upse_parse_psf2_elf(u8 *start, u32 len)
             break;
 
         case 8:
-            ClearPSXMem(loadAddr + addr, size);
+            ClearPSXMem(ins, loadAddr + addr, size);
             totallen += size;
             break;
 
@@ -269,7 +269,7 @@ upse_parse_psf2_elf(u8 *start, u32 len)
                     val = loadAddr + vallo;
                     target = (target & ~0xffff) | (val & 0xffff);
 
-                    PSXMu32(loadAddr+hi16offs) = BFLIP32(hi16target);
+                    PSXMu32(ins, loadAddr + hi16offs) = BFLIP32(hi16target);
                     break;
 
                 default:
@@ -311,8 +311,10 @@ upse_load_psf2(void *fp, const char *path, upse_iofuncs_t *iofuncs)
     upse_filesystem_t *fs;
     upse_module_t *ret;
     char curdir[4096] = "";
+    upse_module_instance_t *ins;
 
     ret = calloc(sizeof(upse_module_t), 1);
+    ins = &ret->instance;
 
     /* XXX: this is a magic value in HE.  who knows where Neill got it from... */
     loadAddr = 0x23f00;
@@ -362,10 +364,10 @@ upse_load_psf2(void *fp, const char *path, upse_iofuncs_t *iofuncs)
     if (buf == NULL)
         return NULL;
 
-    psxInit(&ret->instance);
-    psxReset(&ret->instance, UPSE_PSX_REV_PS2_IOP);
+    psxInit(ins);
+    psxReset(ins, UPSE_PSX_REV_PS2_IOP);
 
-    initialPC = upse_parse_psf2_elf(buf, buflen);
+    initialPC = upse_parse_psf2_elf(&ret->instance, buf, buflen);
     initialSP = 0x801ffff0;
 
     upse_r3000_cpu_regs.pc = initialPC;
@@ -377,7 +379,7 @@ upse_load_psf2(void *fp, const char *path, upse_iofuncs_t *iofuncs)
     upse_r3000_cpu_regs.GPR.n.a1 = 0x80000004;
 
     /* we're running upse:/psf2.irx, so our device prefix is upse:/. */
-    strcpy((char *) PSXM(upse_r3000_cpu_regs.GPR.n.a1), "upse:/psf2.irx");
+    strcpy((char *) PSXM(ins, upse_r3000_cpu_regs.GPR.n.a1), "upse:/psf2.irx");
 
     /* fill out our metadata struct. */
     psfi = calloc(sizeof(upse_psf_t), 1);

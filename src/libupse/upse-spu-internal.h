@@ -232,6 +232,8 @@ typedef struct {
     s32 nextirq;
 
     upse_spu_lowpass_info_t lowpass;
+
+    upse_module_instance_t *ins;
 } upse_spu_state_t;
 
 extern void upse_spu_lowpass_filter_reset(upse_spu_state_t *spu);

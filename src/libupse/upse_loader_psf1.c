@@ -90,10 +90,10 @@ static char *_upse_resolve_path(const char *f, const char *newfile)
 }
 
 // Type==1 for just info load.
-static upse_psf_t *_upse_load_psf(void *fp, const char *path, int level, int type, upse_iofuncs_t *funcs);
+static upse_psf_t *_upse_load_psf(upse_module_instance_t *ins, void *fp, const char *path, int level, int type, upse_iofuncs_t *funcs);
 
 static upse_psf_t *
-_upse_load_psf_from_file(const char *path, int level, int type, upse_iofuncs_t *funcs)
+_upse_load_psf_from_file(upse_module_instance_t *ins, const char *path, int level, int type, upse_iofuncs_t *funcs)
 {
     void *fp;
     upse_psf_t *ret;
@@ -104,14 +104,14 @@ _upse_load_psf_from_file(const char *path, int level, int type, upse_iofuncs_t *
 	return NULL;
     }
 
-    ret = _upse_load_psf(fp, path, level, type, funcs);
+    ret = _upse_load_psf(ins, fp, path, level, type, funcs);
     funcs->close_impl(fp);
 
     return ret;
 }
 
 static upse_psf_t *
-_upse_load_psf(void *fp, const char *path, int level, int type, upse_iofuncs_t *funcs)
+_upse_load_psf(upse_module_instance_t *ins, void *fp, const char *path, int level, int type, upse_iofuncs_t *funcs)
 {
     upse_exe_header_t tmpHead;
     unsigned char *in, *out = 0;
@@ -151,7 +151,7 @@ _upse_load_psf(void *fp, const char *path, int level, int type, upse_iofuncs_t *
     /* we are loading a psflib */
     if (level && !type)
     {
-        LoadPSXMem(BFLIP32(tmpHead.t_addr), BFLIP32(tmpHead.t_size), out + 0x800);
+        LoadPSXMem(ins, BFLIP32(tmpHead.t_addr), BFLIP32(tmpHead.t_size), out + 0x800);
         free(in);
         free(out);
 
@@ -167,7 +167,7 @@ _upse_load_psf(void *fp, const char *path, int level, int type, upse_iofuncs_t *
             char *tmpfn;
 
             tmpfn = _upse_resolve_path(path, xsf->lib);
-    	    tmpi = _upse_load_psf_from_file(tmpfn, level + 1, 0, funcs);
+    	    tmpi = _upse_load_psf_from_file(ins, tmpfn, level + 1, 0, funcs);
 
             free(tmpfn);
             upse_free_psf_metadata(tmpi);
@@ -181,7 +181,7 @@ _upse_load_psf(void *fp, const char *path, int level, int type, upse_iofuncs_t *
         int i;
         u32 ba[3]; /* table holding base addresses for restore after loading aux libs */
 
-        LoadPSXMem(BFLIP32(tmpHead.t_addr), BFLIP32(tmpHead.t_size), out + 0x800);
+        LoadPSXMem(ins, BFLIP32(tmpHead.t_addr), BFLIP32(tmpHead.t_size), out + 0x800);
         free(in);
         free(out);
 
@@ -194,7 +194,7 @@ _upse_load_psf(void *fp, const char *path, int level, int type, upse_iofuncs_t *
             ba[2] = upse_r3000_cpu_regs.GPR.n.sp;
 
             tmpfn = _upse_resolve_path(path, lib);
-    	    tmpi = _upse_load_psf_from_file(tmpfn, level + 1, 0, funcs);
+    	    tmpi = _upse_load_psf_from_file(ins, tmpfn, level + 1, 0, funcs);
             if (tmpi == NULL)
                 continue;
 
@@ -226,16 +226,22 @@ upse_psf_t *
 upse_get_psf_metadata(const char *path, upse_iofuncs_t * iofuncs)
 {
     upse_psf_t *ret;
+    upse_module_t mod;
 
     _ENTER;
 
-    if (!(ret = _upse_load_psf_from_file(path, 0, 1, iofuncs)))
+    psxInit(&mod.instance);
+    psxReset(&mod.instance, UPSE_PSX_REV_PS1);
+
+    if (!(ret = _upse_load_psf_from_file(&mod.instance, path, 0, 1, iofuncs)))
 	return NULL;
 
     if (ret->stop == (u32) ~ 0)
 	ret->fade = 0;
 
     ret->length = ret->stop + ret->fade;
+
+    psxShutdown(&mod.instance);
 
     _LEAVE;
     return ret;
@@ -246,17 +252,19 @@ upse_load_psf(void *fp, const char *path, upse_iofuncs_t * iofuncs)
 {
     upse_psf_t *psf;
     upse_module_t *ret;
+    upse_module_instance_t *ins;
 
     _ENTER;
 
     ret = (upse_module_t *) calloc(sizeof(upse_module_t), 1);
+    ins = &ret->instance;
 
-    psxInit(&ret->instance);
-    psxReset(&ret->instance, UPSE_PSX_REV_PS1);
+    psxInit(ins);
+    psxReset(ins, UPSE_PSX_REV_PS1);
 
-    if (!(psf = _upse_load_psf(fp, path, 0, 0, iofuncs)))
+    if (!(psf = _upse_load_psf(ins, fp, path, 0, 0, iofuncs)))
     {
-	psxShutdown(&ret->instance);
+	psxShutdown(ins);
         free(ret);
 	return NULL;
     }
@@ -282,17 +290,17 @@ upse_load_psf(void *fp, const char *path, upse_iofuncs_t * iofuncs)
      *     -- nenolod.
      */
     _DEBUG("checking for CaitSith2's JNE-delay-slot bug in this rip");
-    if (PSXMu32(0xbc090) == BFLIP32(0x0802f040)) {
+    if (PSXMu32(ins, 0xbc090) == BFLIP32(0x0802f040)) {
        _DEBUG("...fixing. :(");
-       PSXMu32(0xbc090) = BFLIP32(0);
-       PSXMu32(0xbc094) = BFLIP32(0x0802f040);
-       PSXMu32(0xbc098) = BFLIP32(0);
+       PSXMu32(ins, 0xbc090) = BFLIP32(0);
+       PSXMu32(ins, 0xbc094) = BFLIP32(0x0802f040);
+       PSXMu32(ins, 0xbc098) = BFLIP32(0);
     }
 
     _DEBUG("applying bugfixes for naughtydog replayers...");
-    if (PSXMu32(0x118b8) == BFLIP32(0x1060fffd)) {
+    if (PSXMu32(ins, 0x118b8) == BFLIP32(0x1060fffd)) {
        _DEBUG("naughtydog patch applied.");
-       PSXMu32(0x118b8) = BFLIP32(0);
+       PSXMu32(ins, 0x118b8) = BFLIP32(0);
     }
 
     ret->metadata = psf;

@@ -400,7 +400,7 @@ int upse_ps1_spu_render(upse_spu_state_t *spu, u32 cycles)
 						       (spu->pSpuIrq > spu->s_chan[ch].pLoop - 16 && spu->pSpuIrq <= spu->s_chan[ch].pLoop)))
 			    {
 				spu->s_chan[ch].iIrqDone = 1;	// -> debug flag
-				SPUirq();
+				SPUirq(spu->ins);
 			    }
 			}
 
@@ -655,7 +655,7 @@ upse_ps1_spu_remove_streams(upse_spu_state_t *spu)
 }
 
 upse_spu_state_t *
-upse_ps1_spu_open(void)
+upse_ps1_spu_open(upse_module_instance_t *ins)
 {
     upse_spu_state_t *spu = calloc(sizeof(upse_spu_state_t), 1);
 
@@ -668,6 +668,7 @@ upse_ps1_spu_open(void)
     spu->sampcount = spu->nextirq = 0;
     spu->seektime = (u32) ~ 0;
 
+    spu->ins = ins;
     spu->spuIrq = 0;
 
     spu->spuStat = spu->spuCtrl = 0;

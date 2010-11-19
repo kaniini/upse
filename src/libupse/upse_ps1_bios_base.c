@@ -544,8 +544,8 @@ static void bios_strncmp(upse_module_instance_t *ins)
 
     while (max > 0)
     {
-	u8 tmp1 = PSXMuR8(string1);
-	u8 tmp2 = PSXMuR8(string2);
+	u8 tmp1 = PSXMuR8(ins, string1);
+	u8 tmp2 = PSXMuR8(ins, string2);
 
 	if (!tmp1 || !tmp2)
 	    break;
@@ -555,7 +555,7 @@ static void bios_strncmp(upse_module_instance_t *ins)
 	    break;
 	if (!tmp1 || !tmp2)
 	    break;
-	if (!PSXM(string1) || !PSXM(string2))
+	if (!PSXM(ins, string1) || !PSXM(ins, string2))
 	    break;
 	max--;
 	string1++;
@@ -580,8 +580,8 @@ static void bios_strcpy(upse_module_instance_t *ins)
 
     do
     {
-	val = PSXMu8(src);
-	PSXMu8(dest) = val;
+	val = PSXMu8(ins, src);
+	PSXMu8(ins, dest) = val;
 	src++;
 	dest++;
     } while (val);
@@ -598,8 +598,8 @@ static void bios_strncpy(upse_module_instance_t *ins)
 
     do
     {
-	val = PSXMu8(src);
-	PSXMu8(dest) = val;
+	val = PSXMu8(ins, src);
+	PSXMu8(ins, dest) = val;
 	src++;
 	dest++;
 	max--;
@@ -615,7 +615,7 @@ static void bios_strlen(upse_module_instance_t *ins)
 {
     u32 src = a0;
 
-    while (PSXMu8(src))
+    while (PSXMu8(ins, src))
 	src++;
 
     v0 = src - a0;
@@ -740,7 +740,7 @@ static void bios_bcopy(upse_module_instance_t *ins)
 
     while (len--)
     {
-	PSXMu8(dest) = PSXMu8(src);
+	PSXMu8(ins, dest) = PSXMu8(ins, src);
 	dest++;
 	src++;
     }
@@ -755,7 +755,7 @@ static void bios_bzero(upse_module_instance_t *ins)
 
     while (len--)
     {
-	PSXMu8(dest) = 0;
+	PSXMu8(ins, dest) = 0;
 	dest++;
     }
 
@@ -780,7 +780,7 @@ static void bios_memcpy(upse_module_instance_t *ins)
 
     while (len--)
     {
-	PSXMu8(dest) = PSXMu8(src);
+	PSXMu8(ins, dest) = PSXMu8(ins, src);
 	dest++;
 	src++;
     }
@@ -796,8 +796,8 @@ static void bios_memset(upse_module_instance_t *ins)	/*0x2b */
 
     while (len--)
     {
-	if (PSXM(dest))
-	    PSXMu8(dest) = a1;
+	if (PSXM(ins, dest))
+	    PSXMu8(ins, dest) = a1;
 	dest++;
     }
     //memset(Ra0, a1, a2);
@@ -861,21 +861,21 @@ static void bios_malloc(upse_module_instance_t *ins)
     /* Search for first chunk that's large enough and not currently
        being used.
      */
-    while ((a0 > BFLIP32(((malloc_chunk *) PSXM(chunk))->size)) || (BFLIP32(((malloc_chunk *) PSXM(chunk))->stat) == INUSE))
-	chunk = ((malloc_chunk *) PSXM(chunk))->fd;
+    while ((a0 > BFLIP32(((malloc_chunk *) PSXM(ins, chunk))->size)) || (BFLIP32(((malloc_chunk *) PSXM(ins, chunk))->stat) == INUSE))
+	chunk = ((malloc_chunk *) PSXM(ins, chunk))->fd;
     //printf("%08x\n",chunk);
 
     /* split free chunk */
     fd = chunk + sizeof(malloc_chunk) + a0;
-    ((malloc_chunk *) PSXM(fd))->stat = ((malloc_chunk *) PSXM(chunk))->stat;
-    ((malloc_chunk *) PSXM(fd))->size = BFLIP32(BFLIP32(((malloc_chunk *) PSXM(chunk))->size) - a0);
-    ((malloc_chunk *) PSXM(fd))->fd = ((malloc_chunk *) PSXM(chunk))->fd;
-    ((malloc_chunk *) PSXM(fd))->bk = chunk;
+    ((malloc_chunk *) PSXM(ins, fd))->stat = ((malloc_chunk *) PSXM(ins, chunk))->stat;
+    ((malloc_chunk *) PSXM(ins, fd))->size = BFLIP32(BFLIP32(((malloc_chunk *) PSXM(ins, chunk))->size) - a0);
+    ((malloc_chunk *) PSXM(ins, fd))->fd = ((malloc_chunk *) PSXM(ins, chunk))->fd;
+    ((malloc_chunk *) PSXM(ins, fd))->bk = chunk;
 
     /* set new chunk */
-    ((malloc_chunk *) PSXM(chunk))->stat = BFLIP32(INUSE);
-    ((malloc_chunk *) PSXM(chunk))->size = BFLIP32(a0);
-    ((malloc_chunk *) PSXM(chunk))->fd = fd;
+    ((malloc_chunk *) PSXM(ins, chunk))->stat = BFLIP32(INUSE);
+    ((malloc_chunk *) PSXM(ins, chunk))->size = BFLIP32(a0);
+    ((malloc_chunk *) PSXM(ins, chunk))->fd = fd;
 
     v0 = chunk + sizeof(malloc_chunk);
     v0 |= 0x80000000;
@@ -889,7 +889,7 @@ static void bios_InitHeap(upse_module_instance_t *ins)
 
     heap_addr = a0;		// Ra0
 
-    chunk = (malloc_chunk *) PSXM(heap_addr);
+    chunk = (malloc_chunk *) PSXM(ins, heap_addr);
     chunk->stat = 0;
     if (((a0 & 0x1fffff) + a1) >= 0x200000)
 	chunk->size = BFLIP32(0x1ffffc - (a0 & 0x1fffff));
@@ -989,9 +989,9 @@ static void bios_StartRCnt(upse_module_instance_t *ins)
 
     a0 &= 0x3;
     if (a0 != 3)
-	psxHu32(0x1074) |= BFLIP32(1 << (a0 + 4));
+	psxHu32(ins, 0x1074) |= BFLIP32(1 << (a0 + 4));
     else
-	psxHu32(0x1074) |= BFLIP32(0x1);
+	psxHu32(ins, 0x1074) |= BFLIP32(0x1);
     v0 = 1;
     pc0 = ra;
 }
@@ -1001,9 +1001,9 @@ static void bios_StopRCnt(upse_module_instance_t *ins)
 
     a0 &= 0x3;
     if (a0 != 3)
-	psxHu32(0x1074) &= BFLIP32(~(1 << (a0 + 4)));
+	psxHu32(ins, 0x1074) &= BFLIP32(~(1 << (a0 + 4)));
     else
-	psxHu32(0x1074) &= BFLIP32(~0x1);
+	psxHu32(ins, 0x1074) &= BFLIP32(~0x1);
     pc0 = ra;
 }
 
@@ -1299,7 +1299,7 @@ static void bios_ChangeClearRCnt(upse_module_instance_t *ins)
 {				// 0a
     u32 *ptr;
 
-    ptr = (u32 *) PSXM((a0 << 2) + 0x8600);
+    ptr = (u32 *) PSXM(ins, (a0 << 2) + 0x8600);
     v0 = BFLIP32(*ptr);
     *ptr = BFLIP32(a1);
 
@@ -1321,7 +1321,7 @@ void (*biosA0[256]) (upse_module_instance_t *ins);
 void (*biosB0[256]) (upse_module_instance_t *ins);
 void (*biosC0[256]) (upse_module_instance_t *ins);
 
-void upse_ps1_bios_init()
+void upse_ps1_bios_init(upse_module_instance_t *ins)
 {
     u32 base, size;
     u32 *ptr;
@@ -1566,7 +1566,7 @@ void upse_ps1_bios_init()
 
     base = 0x1000;
     size = sizeof(EvCB) * 32;
-    Event = (void *) &psxR[base];
+    Event = (void *) &ins->psxR[base];
     base += size * 6;
     memset(Event, 0, size * 6);
     //HwEV = Event;
@@ -1576,47 +1576,47 @@ void upse_ps1_bios_init()
     //SwEV = Event + 32*4;
     //ThEV = Event + 32*5;
 
-    ptr = (u32 *) & psxM[0x0874];	// b0 table
+    ptr = (u32 *) & ins->psxM[0x0874];	// b0 table
     ptr[0] = BFLIP32(0x4c54 - 0x884);
 
-    ptr = (u32 *) & psxM[0x0674];	// c0 table
+    ptr = (u32 *) & ins->psxM[0x0674];	// c0 table
     ptr[6] = BFLIP32(0xc80);
 
     memset(SysIntRP, 0, sizeof(SysIntRP));
     memset(Thread, 0, sizeof(Thread));
     Thread[0].status = BFLIP32(2);	// main thread
 
-    psxMu32(0x0150) = BFLIP32(0x160);
-    psxMu32(0x0154) = BFLIP32(0x320);
-    psxMu32(0x0160) = BFLIP32(0x248);
-    strcpy(&psxM[0x248], "bu");
+    PSXMu32(ins, 0x0150) = BFLIP32(0x160);
+    PSXMu32(ins, 0x0154) = BFLIP32(0x320);
+    PSXMu32(ins, 0x0160) = BFLIP32(0x248);
+    strcpy(&ins->psxM[0x248], "bu");
 
-	psxMu32(0x0ca8) = BFLIP32(0x1f410004);
-	psxMu32(0x0cf0) = BFLIP32(0x3c020000);
-	psxMu32(0x0cf4) = BFLIP32(0x2442641c);
-	psxMu32(0x09e0) = BFLIP32(0x43d0);
-	psxMu32(0x4d98) = BFLIP32(0x946f000a);
+	PSXMu32(ins, 0x0ca8) = BFLIP32(0x1f410004);
+	PSXMu32(ins, 0x0cf0) = BFLIP32(0x3c020000);
+	PSXMu32(ins, 0x0cf4) = BFLIP32(0x2442641c);
+	PSXMu32(ins, 0x09e0) = BFLIP32(0x43d0);
+	PSXMu32(ins, 0x4d98) = BFLIP32(0x946f000a);
 
     // opcode HLE
-    psxRu32(0x0000) = BFLIP32((0x3b << 26) | 4);
-    psxMu32(0x0000) = BFLIP32((0x3b << 26) | 0);
-    psxMu32(0x00a0) = BFLIP32((0x3b << 26) | 1);
-    psxMu32(0x00b0) = BFLIP32((0x3b << 26) | 2);
-    psxMu32(0x00c0) = BFLIP32((0x3b << 26) | 3);
-    psxMu32(0x4c54) = BFLIP32((0x3b << 26) | 0);
-    psxMu32(0x8000) = BFLIP32((0x3b << 26) | 5);
-    psxMu32(0x07a0) = BFLIP32((0x3b << 26) | 0);
-    psxMu32(0x0884) = BFLIP32((0x3b << 26) | 0);
-    psxMu32(0x0894) = BFLIP32((0x3b << 26) | 0);
+    psxRu32(ins, 0x0000) = BFLIP32((0x3b << 26) | 4);
+    PSXMu32(ins, 0x0000) = BFLIP32((0x3b << 26) | 0);
+    PSXMu32(ins, 0x00a0) = BFLIP32((0x3b << 26) | 1);
+    PSXMu32(ins, 0x00b0) = BFLIP32((0x3b << 26) | 2);
+    PSXMu32(ins, 0x00c0) = BFLIP32((0x3b << 26) | 3);
+    PSXMu32(ins, 0x4c54) = BFLIP32((0x3b << 26) | 0);
+    PSXMu32(ins, 0x8000) = BFLIP32((0x3b << 26) | 5);
+    PSXMu32(ins, 0x07a0) = BFLIP32((0x3b << 26) | 0);
+    PSXMu32(ins, 0x0884) = BFLIP32((0x3b << 26) | 0);
+    PSXMu32(ins, 0x0894) = BFLIP32((0x3b << 26) | 0);
 }
 
-void upse_ps1_bios_shutdown()
+void upse_ps1_bios_shutdown(upse_module_instance_t *ins)
 {
 }
 
 void biosInterrupt(upse_module_instance_t *ins)
 {
-    if (BFLIP32(psxHu32(0x1070)) & 0x1)
+    if (BFLIP32(psxHu32(ins, 0x1070)) & 0x1)
     {				// Vsync
 	if (RcEV[3][1].status == BFLIP32S(EvStACTIVE))
 	{
@@ -1625,13 +1625,13 @@ void biosInterrupt(upse_module_instance_t *ins)
 	}
     }
 
-    if (BFLIP32(psxHu32(0x1070)) & 0x70)
+    if (BFLIP32(psxHu32(ins, 0x1070)) & 0x70)
     {				// Rcnt 0,1,2
 	int i;
 
 	for (i = 0; i < 3; i++)
 	{
-	    if (BFLIP32(psxHu32(0x1070)) & (1 << (i + 4)))
+	    if (BFLIP32(psxHu32(ins, 0x1070)) & (1 << (i + 4)))
 	    {
 		if (RcEV[i][1].status == BFLIP32S(EvStACTIVE))
 		{
@@ -1669,7 +1669,7 @@ void upse_ps1_bios_exception(upse_module_instance_t *ins)
 	  {
 	      if (SysIntRP[i])
 	      {
-		  u32 *queue = (u32 *) PSXM(SysIntRP[i]);
+		  u32 *queue = (u32 *) PSXM(ins, SysIntRP[i]);
 
 		  s0 = BFLIP32(queue[2]);
 		  softCall(ins, BFLIP32(queue[1]));

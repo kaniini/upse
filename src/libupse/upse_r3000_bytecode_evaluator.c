@@ -35,7 +35,7 @@ static u32 branchPC;
 //        printf("%08x ", upse_r3000_cpu_regs.pc);
 
 #define execI(ins) { \
-	upse_r3000_cpu_regs.code = BFLIP32(PSXMu32(upse_r3000_cpu_regs.pc)); \
+	upse_r3000_cpu_regs.code = BFLIP32(PSXMu32(ins, upse_r3000_cpu_regs.pc)); \
 	if (0) { _DEBUG("current PC: %x Cycle: %x Code: %d", upse_r3000_cpu_regs.pc, upse_r3000_cpu_regs.cycle, upse_r3000_cpu_regs.code >> 26); } \
 	upse_r3000_cpu_regs.pc+= 4; upse_r3000_cpu_regs.cycle++; \
 	psxBSC[upse_r3000_cpu_regs.code >> 26](ins); \
@@ -104,7 +104,7 @@ static void psxDelayTest(upse_module_instance_t *ins, u32 reg, u32 bpc)
 {
     u32 tmp;
 
-    tmp = BFLIP32(PSXMu32(bpc));
+    tmp = BFLIP32(PSXMu32(ins, bpc));
     branch = 1;
 
     switch (tmp >> 26)
@@ -405,7 +405,7 @@ static INLINE void doBranch(upse_module_instance_t *ins, u32 tar)
     branch2 = branch = 1;
     branchPC = tar;
 
-    upse_r3000_cpu_regs.code = BFLIP32(PSXMu32(upse_r3000_cpu_regs.pc));
+    upse_r3000_cpu_regs.code = BFLIP32(PSXMu32(ins, upse_r3000_cpu_regs.pc));
 
     upse_r3000_cpu_regs.pc += 4;
     upse_r3000_cpu_regs.cycle++;

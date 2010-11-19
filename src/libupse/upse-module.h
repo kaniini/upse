@@ -21,6 +21,12 @@
 typedef struct {
     void *spu;
     void *ctrstate;
+
+    char *psxM;
+    char *psxP;
+    char *psxR;
+    char *psxH;
+    char **upse_ps1_memory_LUT;
 } upse_module_instance_t;
 
 typedef void (*upse_eventloop_func_t)(upse_module_instance_t *ins);

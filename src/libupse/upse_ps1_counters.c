@@ -51,7 +51,7 @@ static void psxRcntReset(upse_module_instance_t *ins, u32 index)
     ctrstate->psxCounters[index].count = 0;
     psxRcntUpd(ins, index);
 
-    psxHu32(0x1070) |= BFLIP32(ctrstate->psxCounters[index].interrupt);
+    psxHu32(ins, 0x1070) |= BFLIP32(ctrstate->psxCounters[index].interrupt);
     if (!(ctrstate->psxCounters[index].mode & 0x40))
     {				// Only 1 interrupt
 	ctrstate->psxCounters[index].Cycle = 0xffffffff;
@@ -176,7 +176,7 @@ void psxRcntUpdate(upse_module_instance_t *ins)
     if ((upse_r3000_cpu_regs.cycle - ctrstate->psxCounters[3].sCycle) >= ctrstate->psxCounters[3].Cycle)
     {
 	psxRcntUpd(ins, 3);
-	psxHu32(0x1070) |= BFLIP32(1);
+	psxHu32(ins, 0x1070) |= BFLIP32(1);
     }
     if ((upse_r3000_cpu_regs.cycle - ctrstate->psxCounters[0].sCycle) >= ctrstate->psxCounters[0].Cycle)
     {

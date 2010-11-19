@@ -54,11 +54,11 @@
 #define ra (upse_r3000_cpu_regs.GPR.n.ra)
 #define pc0 (upse_r3000_cpu_regs.pc)
 
-#define Ra0 ((char*)PSXM(a0))
-#define Ra1 ((char*)PSXM(a1))
-#define Ra2 ((char*)PSXM(a2))
-#define Ra3 ((char*)PSXM(a3))
-#define Rv0 ((char*)PSXM(v0))
-#define Rsp ((char*)PSXM(sp))
+#define Ra0 ((char*)PSXM(ins, a0))
+#define Ra1 ((char*)PSXM(ins, a1))
+#define Ra2 ((char*)PSXM(ins, a2))
+#define Ra3 ((char*)PSXM(ins, a3))
+#define Rv0 ((char*)PSXM(ins, v0))
+#define Rsp ((char*)PSXM(ins, sp))
 
 #endif

@@ -22,16 +22,16 @@
 
 #include "upse-internal.h"
 
-#define HW_DMA4_MADR (psxHu32(0x10c0))	// SPU DMA
-#define HW_DMA4_BCR  (psxHu32(0x10c4))
-#define HW_DMA4_CHCR (psxHu32(0x10c8))
+#define HW_DMA4_MADR (psxHu32(ins, 0x10c0))	// SPU DMA
+#define HW_DMA4_BCR  (psxHu32(ins, 0x10c4))
+#define HW_DMA4_CHCR (psxHu32(ins, 0x10c8))
 
-#define HW_DMA_PCR   (psxHu32(0x10f0))
-#define HW_DMA_ICR   (psxHu32(0x10f4))
+#define HW_DMA_PCR   (psxHu32(ins, 0x10f0))
+#define HW_DMA_ICR   (psxHu32(ins, 0x10f4))
 
 void upse_ps1_hal_reset(upse_module_instance_t *ins)
 {
-    memset(psxH, 0, 0x10000);
+    memset(ins->psxH, 0, 0x10000);
     psxRcntInit(ins);
 }
 
@@ -42,7 +42,7 @@ u8 upse_ps1_hal_read_8(upse_module_instance_t *ins, u32 add)
     switch (add)
     {
       default:
-	  hard = psxHu8(add);
+	  hard = psxHu8(ins, add);
 	  return hard;
     }
     return hard;
@@ -83,16 +83,16 @@ u16 upse_ps1_hal_read_16(upse_module_instance_t *ins, u32 add)
 	  hard = ctrstate->psxCounters[2].target;
 	  return hard;
       case 0x1f801070:
-          hard = psxHu16(0x1070);
+          hard = psxHu16(ins, 0x1070);
 	  return hard;
       case 0x1f801074:
-          hard = psxHu16(0x1074);
+          hard = psxHu16(ins, 0x1074);
 	  return hard;
       case 0x1f8010f0:
-          hard = psxHu16(0x10f0);
+          hard = psxHu16(ins, 0x10f0);
 	  return hard;
       case 0x1f8010f4:
-          hard = psxHu16(0x10f4);
+          hard = psxHu16(ins, 0x10f4);
 	  return hard;
       default:
 	  if (add >= 0x1f801c00 && add < 0x1f801e00)
@@ -102,7 +102,7 @@ u16 upse_ps1_hal_read_16(upse_module_instance_t *ins, u32 add)
 	  else
 	  {
               _DEBUG("unknown address [0x%x]", add);
-	      hard = BFLIP16(psxHu16(add));
+	      hard = BFLIP16(psxHu16(ins, add));
 	  }
 	  return hard;
     }
@@ -148,23 +148,23 @@ u32 upse_ps1_hal_read_32(upse_module_instance_t *ins, u32 add)
 	  hard = ctrstate->psxCounters[2].target;
 	  return hard;
       case 0x1f801070:
-          hard = psxHu32(0x1070);
+          hard = psxHu32(ins, 0x1070);
 	  return hard;
       case 0x1f801074:
-          hard = psxHu32(0x1074);
+          hard = psxHu32(ins, 0x1074);
 	  return hard;
       case 0x1f8010f0:
-          hard = psxHu32(0x10f0);
+          hard = psxHu32(ins, 0x10f0);
 	  return hard;
       case 0x1f8010f4:
-          hard = psxHu32(0x10f4);
+          hard = psxHu32(ins, 0x10f4);
 	  return hard;
       case 0x1f801814:
           hard = BFLIP32(upse_ps1_gpu_get_status());
           return hard;
       default:
           _DEBUG("unknown address [0x%x]", add);
-	  hard = BFLIP32(psxHu32(add));
+	  hard = BFLIP32(psxHu32(ins, add));
 	  return hard;
     }
     return hard;
@@ -175,10 +175,10 @@ void upse_ps1_hal_write_8(upse_module_instance_t *ins, u32 add, u8 value)
     switch (add)
     {
       default:
-	  psxHu8(add) = value;
+	  psxHu8(ins, add) = value;
 	  return;
     }
-    psxHu8(add) = value;
+    psxHu8(ins, add) = value;
 }
 
 void upse_ps1_hal_write_16(upse_module_instance_t *ins, u32 add, u16 value)
@@ -216,12 +216,12 @@ void upse_ps1_hal_write_16(upse_module_instance_t *ins, u32 add, u16 value)
 	  return;
 
       case 0x1f801070:
-          psxHu16(0x1070) |= BFLIP16(0x200);
-          psxHu16(0x1070) &= BFLIP16((psxHu16(0x1074) & value));
+          psxHu16(ins, 0x1070) |= BFLIP16(0x200);
+          psxHu16(ins, 0x1070) &= BFLIP16((psxHu16(ins, 0x1074) & value));
           return;
 
       case 0x1f801074:
-          psxHu16(0x1074) = BFLIP16(value);
+          psxHu16(ins, 0x1074) = BFLIP16(value);
           upse_r3000_cpu_regs.interrupt |= 0x80000000;
           return;
 
@@ -233,16 +233,16 @@ void upse_ps1_hal_write_16(upse_module_instance_t *ins, u32 add, u16 value)
 	  }
 
           _DEBUG("unknown address [0x%x]", add);
-	  psxHu16(add) = BFLIP16(value);
+	  psxHu16(ins, add) = BFLIP16(value);
 	  return;
     }
-    psxHu16(add) = BFLIP16(value);
+    psxHu16(ins, add) = BFLIP16(value);
 }
 
 #define	DMA_INTERRUPT(ins, n) \
 	if (BFLIP32(HW_DMA_ICR) & (1 << (16 + n))) { \
 		HW_DMA_ICR|= BFLIP32(1 << (24 + n)); \
-		psxHu32(0x1070) |= BFLIP32(8); \
+		psxHu32(ins, 0x1070) |= BFLIP32(8); \
 	}
 
 #define DmaExec(ins, n) { \
@@ -309,11 +309,11 @@ void upse_ps1_hal_write_32(upse_module_instance_t *ins, u32 add, u32 value)
           return;
 
       case 0x1f801070:
-          psxHu32(0x1070) |= BFLIP32(0x200);
-          psxHu32(0x1070) &= BFLIP32((psxHu32(0x1074) & value));
+          psxHu32(ins, 0x1070) |= BFLIP32(0x200);
+          psxHu32(ins, 0x1070) &= BFLIP32((psxHu32(ins, 0x1074) & value));
           return;
       case 0x1f801074:
-          psxHu32(0x1074) = BFLIP32(value);
+          psxHu32(ins, 0x1074) = BFLIP32(value);
           upse_r3000_cpu_regs.interrupt |= 0x80000000;
           return;
 
@@ -323,13 +323,13 @@ void upse_ps1_hal_write_32(upse_module_instance_t *ins, u32 add, u32 value)
 
       default:
           _DEBUG("unknown address [0x%x]", add);
-	  psxHu32(add) = BFLIP32(value);
+	  psxHu32(ins, add) = BFLIP32(value);
 	  return;
     }
-    psxHu32(add) = BFLIP32(value);
+    psxHu32(ins, add) = BFLIP32(value);
 }
 
-void SPUirq(void)
+void SPUirq(upse_module_instance_t *ins)
 {
-    psxHu32(0x1070) |= BFLIP32(0x200);
+    psxHu32(ins, 0x1070) |= BFLIP32(0x200);
 }

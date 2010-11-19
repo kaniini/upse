@@ -22,18 +22,8 @@
 
 #include "upse-internal.h"
 
-char *psxM;
-
-char *psxP;
-char *psxR;
-
-char *psxH;
-
-char **upse_ps1_memory_LUT;
-
-void LoadPSXMem(u32 address, s32 length, unsigned char *data)
+void LoadPSXMem(upse_module_instance_t *ins, u32 address, s32 length, unsigned char *data)
 {
-    //printf("%08x %08x\n",address,length);
     while (length > 0)
     {
 	if (address & 65535)
@@ -41,17 +31,16 @@ void LoadPSXMem(u32 address, s32 length, unsigned char *data)
 	    u32 tmplen;
 
 	    tmplen = ((65536 - (address & 65535)) > (u32) length) ? (u32) length : 65536 - (address & 65535);
-	    if (upse_ps1_memory_LUT[address >> 16])
-		memcpy((char *) (upse_ps1_memory_LUT[address >> 16] + (address & 65535)), data, tmplen);
+	    if (ins->upse_ps1_memory_LUT[address >> 16])
+		memcpy((char *) (ins->upse_ps1_memory_LUT[address >> 16] + (address & 65535)), data, tmplen);
 	    address += tmplen;
 	    data += tmplen;
 	    length -= tmplen;
-	    //printf("%08x %08x\n",address,tmplen);
 	    continue;
 	}
-	if (upse_ps1_memory_LUT[address >> 16])
+	if (ins->upse_ps1_memory_LUT[address >> 16])
 	{
-	    memcpy((char *) (upse_ps1_memory_LUT[address >> 16]), data, (length < 65536) ? length : 65536);
+	    memcpy((char *) (ins->upse_ps1_memory_LUT[address >> 16]), data, (length < 65536) ? length : 65536);
 	}
 	data += 65536;
 	address += 65536;
@@ -59,7 +48,7 @@ void LoadPSXMem(u32 address, s32 length, unsigned char *data)
     }
 }
 
-void ClearPSXMem(u32 address, s32 length)
+void ClearPSXMem(upse_module_instance_t *ins, u32 address, s32 length)
 {
     while (length > 0)
     {
@@ -68,16 +57,15 @@ void ClearPSXMem(u32 address, s32 length)
 	    u32 tmplen;
 
 	    tmplen = ((65536 - (address & 65535)) > (u32) length) ? (u32) length : 65536 - (address & 65535);
-	    if (upse_ps1_memory_LUT[address >> 16])
-		memset((char *) (upse_ps1_memory_LUT[address >> 16] + (address & 65535)), '\0', tmplen);
+	    if (ins->upse_ps1_memory_LUT[address >> 16])
+		memset((char *) (ins->upse_ps1_memory_LUT[address >> 16] + (address & 65535)), '\0', tmplen);
 	    address += tmplen;
 	    length -= tmplen;
-	    //printf("%08x %08x\n",address,tmplen);
 	    continue;
 	}
-	if (upse_ps1_memory_LUT[address >> 16])
+	if (ins->upse_ps1_memory_LUT[address >> 16])
 	{
-	    memset((char *) (upse_ps1_memory_LUT[address >> 16]), '\0', (length < 65536) ? length : 65536);
+	    memset((char *) (ins->upse_ps1_memory_LUT[address >> 16]), '\0', (length < 65536) ? length : 65536);
 	}
 	address += 65536;
 	length -= 65536;
@@ -85,47 +73,47 @@ void ClearPSXMem(u32 address, s32 length)
 }
 
 static int writeok;
-int upse_ps1_memory_init()
+int upse_ps1_memory_init(upse_module_instance_t *ins)
 {
     int i;
 
     writeok = 1;
 
-    upse_ps1_memory_LUT = malloc(0x10000 * sizeof *upse_ps1_memory_LUT);
-    memset(upse_ps1_memory_LUT, 0, 0x10000 * sizeof *upse_ps1_memory_LUT);
+    ins->upse_ps1_memory_LUT = malloc(0x10000 * sizeof *ins->upse_ps1_memory_LUT);
+    memset(ins->upse_ps1_memory_LUT, 0, 0x10000 * sizeof *ins->upse_ps1_memory_LUT);
 
-    psxM = (char *) malloc(0x00200000);
-    psxP = (char *) malloc(0x00010000);
-    psxH = (char *) malloc(0x00010000);
-    psxR = (char *) malloc(0x00080000);
-    if (upse_ps1_memory_LUT == NULL || psxM == NULL || psxP == NULL || psxH == NULL || psxR == NULL)
+    ins->psxM = (char *) malloc(0x00200000);
+    ins->psxP = (char *) malloc(0x00010000);
+    ins->psxH = (char *) malloc(0x00010000);
+    ins->psxR = (char *) malloc(0x00080000);
+    if (ins->upse_ps1_memory_LUT == NULL || ins->psxM == NULL || ins->psxP == NULL || ins->psxH == NULL || ins->psxR == NULL)
     {
 	printf("Error allocating memory");
 	return -1;
     }
 
     for (i = 0; i < 0x80; i++)
-	upse_ps1_memory_LUT[i + 0x0000] = &psxM[(i & 0x1f) << 16];
+	ins->upse_ps1_memory_LUT[i + 0x0000] = &ins->psxM[(i & 0x1f) << 16];
 
-    memcpy(upse_ps1_memory_LUT + 0x8000, upse_ps1_memory_LUT, 0x80 * sizeof *upse_ps1_memory_LUT);
-    memcpy(upse_ps1_memory_LUT + 0xa000, upse_ps1_memory_LUT, 0x80 * sizeof *upse_ps1_memory_LUT);
-
-    for (i = 0; i < 0x01; i++)
-	upse_ps1_memory_LUT[i + 0x1f00] = &psxP[i << 16];
+    memcpy(ins->upse_ps1_memory_LUT + 0x8000, ins->upse_ps1_memory_LUT, 0x80 * sizeof *ins->upse_ps1_memory_LUT);
+    memcpy(ins->upse_ps1_memory_LUT + 0xa000, ins->upse_ps1_memory_LUT, 0x80 * sizeof *ins->upse_ps1_memory_LUT);
 
     for (i = 0; i < 0x01; i++)
-	upse_ps1_memory_LUT[i + 0x1f80] = &psxH[i << 16];
+	ins->upse_ps1_memory_LUT[i + 0x1f00] = &ins->psxP[i << 16];
+
+    for (i = 0; i < 0x01; i++)
+	ins->upse_ps1_memory_LUT[i + 0x1f80] = &ins->psxH[i << 16];
 
     for (i = 0; i < 0x08; i++)
-	upse_ps1_memory_LUT[i + 0xbfc0] = &psxR[i << 16];
+	ins->upse_ps1_memory_LUT[i + 0xbfc0] = &ins->psxR[i << 16];
 
     return 0;
 }
 
-void upse_ps1_memory_reset()
+void upse_ps1_memory_reset(upse_module_instance_t *ins)
 {
-    memset(psxM, 0, 0x00200000);
-    memset(psxP, 0, 0x00010000);
+    memset(ins->psxM, 0, 0x00200000);
+    memset(ins->psxP, 0, 0x00010000);
 
     if (upse_has_custom_bios())
     {
@@ -136,34 +124,34 @@ void upse_ps1_memory_reset()
         f = fopen(upse_get_custom_bios(), "rb");
         if (f == NULL) {
             _DEBUG("opening custom bios failed");
-            memset(psxR, 0, 0x80000);
+            memset(ins->psxR, 0, 0x80000);
             upse_set_custom_bios(NULL);
         } else {
-            fread(psxR, 1, 0x80000, f);
+            fread(ins->psxR, 1, 0x80000, f);
             fclose(f);
         }
     }
 }
 
-void upse_ps1_memory_shutdown()
+void upse_ps1_memory_shutdown(upse_module_instance_t *ins)
 {
-    if (psxM)
-	free(psxM);
+    if (ins->psxM)
+	free(ins->psxM);
 
-    if (psxP)
-	free(psxP);
+    if (ins->psxP)
+	free(ins->psxP);
 
-    if (psxH)
-	free(psxH);
+    if (ins->psxH)
+	free(ins->psxH);
 
-    if (psxR)
-	free(psxR);
+    if (ins->psxR)
+	free(ins->psxR);
 
-    if (upse_ps1_memory_LUT)
-	free(upse_ps1_memory_LUT);
+    if (ins->upse_ps1_memory_LUT)
+	free(ins->upse_ps1_memory_LUT);
 
-    psxM = psxP = psxH = psxR = NULL;
-    upse_ps1_memory_LUT = NULL;
+    ins->psxM = ins->psxP = ins->psxH = ins->psxR = NULL;
+    ins->upse_ps1_memory_LUT = NULL;
 }
 
 u8 upse_ps1_memory_read_8(upse_module_instance_t *ins, u32 mem)
@@ -175,13 +163,13 @@ u8 upse_ps1_memory_read_8(upse_module_instance_t *ins, u32 mem)
     if (t == 0x1f80)
     {
 	if (mem < 0x1f801000)
-	    return psxHu8(mem);
+	    return psxHu8(ins, mem);
 	else
 	    return upse_ps1_hal_read_8(ins, mem);
     }
     else
     {
-	p = (char *) (upse_ps1_memory_LUT[t]);
+	p = (char *) (ins->upse_ps1_memory_LUT[t]);
 	if (p != NULL)
 	{
 	    return *(u8 *) (p + (mem & 0xffff));
@@ -202,13 +190,13 @@ u16 upse_ps1_memory_read_16(upse_module_instance_t *ins, u32 mem)
     if (t == 0x1f80)
     {
 	if (mem < 0x1f801000)
-	    return BFLIP16(psxHu16(mem));
+	    return BFLIP16(psxHu16(ins, mem));
 	else
 	    return upse_ps1_hal_read_16(ins, mem);
     }
     else
     {
-	p = (char *) (upse_ps1_memory_LUT[t]);
+	p = (char *) (ins->upse_ps1_memory_LUT[t]);
 	if (p != NULL)
 	{
 	    return BFLIP16(*(u16 *) (p + (mem & 0xffff)));
@@ -229,13 +217,13 @@ u32 upse_ps1_memory_read_32(upse_module_instance_t *ins, u32 mem)
     if (t == 0x1f80)
     {
 	if (mem < 0x1f801000)
-	    return BFLIP32(psxHu32(mem));
+	    return BFLIP32(psxHu32(ins, mem));
 	else
 	    return upse_ps1_hal_read_32(ins, mem);
     }
     else
     {
-	p = (char *) (upse_ps1_memory_LUT[t]);
+	p = (char *) (ins->upse_ps1_memory_LUT[t]);
 	if (p != NULL)
 	{
 	    return BFLIP32(*(u32 *) (p + (mem & 0xffff)));
@@ -256,13 +244,13 @@ void upse_ps1_memory_write_8(upse_module_instance_t *ins, u32 mem, u8 value)
     if (t == 0x1f80)
     {
 	if (mem < 0x1f801000)
-	    psxHu8(mem) = value;
+	    psxHu8(ins, mem) = value;
 	else
 	    upse_ps1_hal_write_8(ins, mem, value);
     }
     else
     {
-	p = (char *) (upse_ps1_memory_LUT[t]);
+	p = (char *) (ins->upse_ps1_memory_LUT[t]);
 	if (p != NULL)
 	{
 	    *(u8 *) (p + (mem & 0xffff)) = value;
@@ -279,13 +267,13 @@ void upse_ps1_memory_write_16(upse_module_instance_t *ins, u32 mem, u16 value)
     if (t == 0x1f80)
     {
 	if (mem < 0x1f801000)
-	    psxHu16(mem) = BFLIP16(value);
+	    psxHu16(ins, mem) = BFLIP16(value);
 	else
 	    upse_ps1_hal_write_16(ins, mem, value);
     }
     else
     {
-	p = (char *) (upse_ps1_memory_LUT[t]);
+	p = (char *) (ins->upse_ps1_memory_LUT[t]);
 	if (p != NULL)
 	{
 	    *(u16 *) (p + (mem & 0xffff)) = BFLIP16(value);
@@ -302,13 +290,13 @@ void upse_ps1_memory_write_32(upse_module_instance_t *ins, u32 mem, u32 value)
     if (t == 0x1f80)
     {
 	if (mem < 0x1f801000)
-	    psxHu32(mem) = BFLIP32(value);
+	    psxHu32(ins, mem) = BFLIP32(value);
 	else
 	    upse_ps1_hal_write_32(ins, mem, value);
     }
     else
     {
-	p = (char *) (upse_ps1_memory_LUT[t]);
+	p = (char *) (ins->upse_ps1_memory_LUT[t]);
 	if (p != NULL)
 	{
 	    *(u32 *) (p + (mem & 0xffff)) = BFLIP32(value);
@@ -330,18 +318,18 @@ void upse_ps1_memory_write_32(upse_module_instance_t *ins, u32 mem, u32 value)
 		      if (writeok == 0)
 			  break;
 		      writeok = 0;
-		      memset(upse_ps1_memory_LUT + 0x0000, 0, 0x80 * sizeof *upse_ps1_memory_LUT);
-		      memset(upse_ps1_memory_LUT + 0x8000, 0, 0x80 * sizeof *upse_ps1_memory_LUT);
-		      memset(upse_ps1_memory_LUT + 0xa000, 0, 0x80 * sizeof *upse_ps1_memory_LUT);
+		      memset(ins->upse_ps1_memory_LUT + 0x0000, 0, 0x80 * sizeof *ins->upse_ps1_memory_LUT);
+		      memset(ins->upse_ps1_memory_LUT + 0x8000, 0, 0x80 * sizeof *ins->upse_ps1_memory_LUT);
+		      memset(ins->upse_ps1_memory_LUT + 0xa000, 0, 0x80 * sizeof *ins->upse_ps1_memory_LUT);
 		      break;
 		  case 0x1e988:
 		      if (writeok == 1)
 			  break;
 		      writeok = 1;
 		      for (i = 0; i < 0x80; i++)
-			  upse_ps1_memory_LUT[i + 0x0000] = &psxM[(i & 0x1f) << 16];
-		      memcpy(upse_ps1_memory_LUT + 0x8000, upse_ps1_memory_LUT, 0x80 * sizeof *upse_ps1_memory_LUT);
-		      memcpy(upse_ps1_memory_LUT + 0xa000, upse_ps1_memory_LUT, 0x80 * sizeof *upse_ps1_memory_LUT);
+			  ins->upse_ps1_memory_LUT[i + 0x0000] = &ins->psxM[(i & 0x1f) << 16];
+		      memcpy(ins->upse_ps1_memory_LUT + 0x8000, ins->upse_ps1_memory_LUT, 0x80 * sizeof *ins->upse_ps1_memory_LUT);
+		      memcpy(ins->upse_ps1_memory_LUT + 0xa000, ins->upse_ps1_memory_LUT, 0x80 * sizeof *ins->upse_ps1_memory_LUT);
 		      break;
 		  default:
 		      break;

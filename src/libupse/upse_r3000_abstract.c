@@ -30,7 +30,7 @@ int psxInit(upse_module_instance_t *ins)
 {
     int ret;
 
-    if (upse_ps1_memory_init() == -1)
+    if (upse_ps1_memory_init(ins) == -1)
 	return -1;
 
     ret = upse_r3000_cpu_init();
@@ -41,9 +41,9 @@ int psxInit(upse_module_instance_t *ins)
 void psxReset(upse_module_instance_t *ins, upse_psx_revision_t rev)
 {
     upse_r3000_cpu_reset();
-    upse_ps1_memory_reset();
+    upse_ps1_memory_reset(ins);
 
-    ins->spu = upse_ps1_spu_open();
+    ins->spu = upse_ps1_spu_open(ins);
 
     memset(&upse_r3000_cpu_regs, 0, sizeof(upse_r3000_cpu_regs));
 
@@ -61,7 +61,7 @@ void psxReset(upse_module_instance_t *ins, upse_psx_revision_t rev)
     }
 
     upse_ps1_hal_reset(ins);
-    upse_ps1_bios_init();
+    upse_ps1_bios_init(ins);
 
     /* start up the bios */
     if (upse_has_custom_bios())
@@ -70,8 +70,8 @@ void psxReset(upse_module_instance_t *ins, upse_psx_revision_t rev)
 
 void psxShutdown(upse_module_instance_t *ins)
 {
-    upse_ps1_memory_shutdown();
-    upse_ps1_bios_shutdown();
+    upse_ps1_memory_shutdown(ins);
+    upse_ps1_bios_shutdown(ins);
 
     upse_r3000_cpu_shutdown();
 
@@ -120,7 +120,7 @@ void psxBranchTest(upse_module_instance_t *ins)
     if ((upse_r3000_cpu_regs.cycle - ctrstate->psxNextsCounter) >= ctrstate->psxNextCounter)
 	psxRcntUpdate(ins);
 
-    if (psxHu32(0x1070) & psxHu32(0x1074))
+    if (psxHu32(ins, 0x1070) & psxHu32(ins, 0x1074))
     {
 	if ((upse_r3000_cpu_regs.CP0.n.Status & 0x401) == 0x401)
 	{

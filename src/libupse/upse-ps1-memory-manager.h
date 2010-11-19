@@ -54,33 +54,24 @@ static INLINE s16 BFLIP16S(s16 x)
     return (s16) BFLIP16((u16) x);
 }
 
-extern char *psxM;
-#define psxMu32(mem)	(*(u32*)&psxM[(mem) & 0x1fffff])
+#define psxMu32(ins, mem)	(*(u32*)&ins->psxM[(mem) & 0x1fffff])
+#define psxRu32(ins, mem)	(*(u32*)&ins->psxR[(mem) & 0x7ffff])
 
-extern char *psxP;
-extern char *psxR;
-#define psxRu32(mem)	(*(u32*)&psxR[(mem) & 0x7ffff])
+#define psxHu8(ins, mem)	(*(u8*) &ins->psxH[(mem) & 0xffff])
+#define psxHu16(ins, mem)   	(*(u16*)&ins->psxH[(mem) & 0xffff])
+#define psxHu32(ins, mem)   	(*(u32*)&ins->psxH[(mem) & 0xffff])
 
-extern char *psxH;
+#define PSXM(ins, mem)		(ins->upse_ps1_memory_LUT[(mem) >> 16] == 0 ? NULL : (void*)(ins->upse_ps1_memory_LUT[(mem) >> 16] + ((mem) & 0xffff)))
 
-#define psxHu8(mem)	(*(u8*) &psxH[(mem) & 0xffff])
+#define PSXMu8(ins, mem)	(*(u8 *)PSXM(ins, mem))
+#define PSXMu32(ins, mem)       (*(u32*)PSXM(ins, mem))
 
-#define psxHu16(mem)   	(*(u16*)&psxH[(mem) & 0xffff])
-#define psxHu32(mem)   	(*(u32*)&psxH[(mem) & 0xffff])
+#define PSXMuR8(ins, mem)        (PSXM(ins, mem) ? PSXMu8(ins, mem) : 0)
+#define PSXMuW8(ins, mem, val)   (PSXM(ins, mem) ? PSXMu8(ins, mem) = val : ;)
 
-extern char **upse_ps1_memory_LUT;
-
-#define PSXM(mem)		(upse_ps1_memory_LUT[(mem) >> 16] == 0 ? NULL : (void*)(upse_ps1_memory_LUT[(mem) >> 16] + ((mem) & 0xffff)))
-
-#define PSXMu8(mem)	(*(u8 *)PSXM(mem))
-#define PSXMu32(mem)    (*(u32*)PSXM(mem))
-
-#define PSXMuR8(mem)        (PSXM(mem)?PSXMu8(mem):0)
-#define PSXMuW8(mem,val)    (PSXM(mem)?PSXMu8(mem)=val:;)
-
-int upse_ps1_memory_init();
-void upse_ps1_memory_reset();
-void upse_ps1_memory_shutdown();
+int upse_ps1_memory_init(upse_module_instance_t *ins);
+void upse_ps1_memory_reset(upse_module_instance_t *ins);
+void upse_ps1_memory_shutdown(upse_module_instance_t *ins);
 
 u8 upse_ps1_memory_read_8(upse_module_instance_t *ins, u32 mem);
 u16 upse_ps1_memory_read_16(upse_module_instance_t *ins, u32 mem);
@@ -89,7 +80,7 @@ void upse_ps1_memory_write_8(upse_module_instance_t *ins, u32 mem, u8 value);
 void upse_ps1_memory_write_16(upse_module_instance_t *ins, u32 mem, u16 value);
 void upse_ps1_memory_write_32(upse_module_instance_t *ins, u32 mem, u32 value);
 
-void LoadPSXMem(u32 address, s32 length, unsigned char *data);
-void ClearPSXMem(u32 address, s32 length);
+void LoadPSXMem(upse_module_instance_t *ins, u32 address, s32 length, unsigned char *data);
+void ClearPSXMem(upse_module_instance_t *ins, u32 address, s32 length);
 
 #endif /* __PSXMEMORY_H__ */

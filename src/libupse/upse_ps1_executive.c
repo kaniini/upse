@@ -83,7 +83,7 @@ typedef struct
 
 static void upse_ps1_executive_task_switch(upse_module_instance_t *ins)
 {
-    upse_ps1_executive_exec_record_t *header = (upse_ps1_executive_exec_record_t *) PSXM(upse_r3000_cpu_regs.GPR.n.s0);
+    upse_ps1_executive_exec_record_t *header = (upse_ps1_executive_exec_record_t *) PSXM(ins, upse_r3000_cpu_regs.GPR.n.s0);
 
     //SysPrintf("ExecRet %x: %x\n", upse_r3000_cpu_regs.GPR.n.s0, header->ret);
 

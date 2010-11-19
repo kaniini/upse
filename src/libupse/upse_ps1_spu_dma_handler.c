@@ -36,7 +36,7 @@ void SPUreadDMAMem(upse_spu_state_t *spu, u32 usPSXMem, int iSize)
 
     for (i = 0; i < iSize; i++)
     {
-	*(u16 *) PSXM(usPSXMem) = spu->spuMem[spu->spuAddr >> 1];	// spu addr got by writeregister
+	*(u16 *) PSXM(spu->ins, usPSXMem) = spu->spuMem[spu->spuAddr >> 1];	// spu addr got by writeregister
 	usPSXMem += 2;
 	spu->spuAddr += 2;		// inc spu addr
 	if (spu->spuAddr > 0x7ffff)
@@ -62,7 +62,7 @@ void SPUwriteDMAMem(upse_spu_state_t *spu, u32 usPSXMem, int iSize)
 
     for (i = 0; i < iSize; i++)
     {
-	spu->spuMem[spu->spuAddr >> 1] = *(u16 *) PSXM(usPSXMem);
+	spu->spuMem[spu->spuAddr >> 1] = *(u16 *) PSXM(spu->ins, usPSXMem);
 	usPSXMem += 2;		// spu addr got by writeregister
 	spu->spuAddr += 2;		// inc spu addr
 	if (spu->spuAddr > 0x7ffff)

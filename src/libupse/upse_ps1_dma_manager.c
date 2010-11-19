@@ -38,7 +38,7 @@ void psxDma4(upse_module_instance_t *ins, u32 madr, u32 bcr, u32 chcr)
 
 void psxDma6(upse_module_instance_t *ins, u32 madr, u32 bcr, u32 chcr)
 {
-    u32 *mem = (u32 *) PSXM(madr);
+    u32 *mem = (u32 *) PSXM(ins, madr);
 
     if (chcr == 0x11000002)
     {
