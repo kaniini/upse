@@ -222,7 +222,7 @@ void upse_ps1_hal_write_16(upse_module_instance_t *ins, u32 add, u16 value)
 
       case 0x1f801074:
           psxHu16(ins, 0x1074) = BFLIP16(value);
-          upse_r3000_cpu_regs.interrupt |= 0x80000000;
+          ins->cpustate.interrupt |= 0x80000000;
           return;
 
       default:
@@ -314,7 +314,7 @@ void upse_ps1_hal_write_32(upse_module_instance_t *ins, u32 add, u32 value)
           return;
       case 0x1f801074:
           psxHu32(ins, 0x1074) = BFLIP32(value);
-          upse_r3000_cpu_regs.interrupt |= 0x80000000;
+          ins->cpustate.interrupt |= 0x80000000;
           return;
 
       case 0x1f801814:

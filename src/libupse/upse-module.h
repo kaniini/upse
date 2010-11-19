@@ -18,6 +18,41 @@
 #ifndef __UPSE__LIBUPSE__UPSE_MODULE_H__GUARD
 #define __UPSE__LIBUPSE__UPSE_MODULE_H__GUARD
 
+typedef union
+{
+    struct
+    {
+     	u32 r0, at, v0, v1, a0, a1, a2, a3, t0, t1, t2, t3, t4, t5, t6, t7, s0, s1, s2, s3, s4, s5, s6, s7, t8, t9, k0, k1, gp, sp, s8, ra, lo, hi;
+    } n upse_packed_t;
+    u32 r[34];                  /* Lo, Hi in r[33] and r[34] */
+} upse_r3000_gpr_regs_t;
+
+typedef union
+{
+    struct
+    {
+     	u32 Index, Random, EntryLo0, EntryLo1,
+            Context, PageMask, Wired, Reserved0,
+            BadVAddr, Count, EntryHi, Compare,
+            Status, Cause, EPC, PRid, Config, LLAddr, WatchLO, WatchHI, XContext, Reserved1, Reserved2, Reserved3, Reserved4, Reserved5, ECC, CacheErr, TagLo, TagHi, ErrorEPC, Reserved6;
+    } n upse_packed_t;
+    u32 r[32];
+} upse_r3000_cp0_regs_t;
+
+typedef struct
+{
+    upse_r3000_gpr_regs_t GPR;          /* General Purpose Registers */
+    upse_r3000_cp0_regs_t CP0;          /* Coprocessor0 Registers */
+    u32 pc;                     /* Program counter */
+    u32 code;                   /* The instruction */
+    u32 cycle;
+    u32 interrupt;
+
+    int branch;
+    int branch2;
+    u32 branchPC;
+} upse_r3000_cpu_registers_t;
+
 typedef struct {
     void *spu;
     void *ctrstate;
@@ -27,6 +62,8 @@ typedef struct {
     char *psxR;
     char *psxH;
     char **upse_ps1_memory_LUT;
+
+    upse_r3000_cpu_registers_t cpustate;
 } upse_module_instance_t;
 
 typedef void (*upse_eventloop_func_t)(upse_module_instance_t *ins);

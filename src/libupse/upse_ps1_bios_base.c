@@ -476,7 +476,7 @@ static void bios_setjmp(upse_module_instance_t *ins)
     jmp_buf[1] = BFLIP32(sp);
     jmp_buf[2] = BFLIP32(fp);
     for (i = 0; i < 8; i++)	// s0-s7
-	jmp_buf[3 + i] = BFLIP32(upse_r3000_cpu_regs.GPR.r[16 + i]);
+	jmp_buf[3 + i] = BFLIP32(ins->cpustate.GPR.r[16 + i]);
     jmp_buf[11] = BFLIP32(gp);
 
     v0 = 0;
@@ -492,7 +492,7 @@ static void bios_longjmp(upse_module_instance_t *ins)
     sp = BFLIP32(jmp_buf[1]);	/* sp */
     fp = BFLIP32(jmp_buf[2]);	/* fp */
     for (i = 0; i < 8; i++)	// s0-s7
-	upse_r3000_cpu_regs.GPR.r[16 + i] = BFLIP32(jmp_buf[3 + i]);
+	ins->cpustate.GPR.r[16 + i] = BFLIP32(jmp_buf[3 + i]);
     gp = BFLIP32(jmp_buf[11]);	/* gp */
 
     v0 = a1;
@@ -1202,10 +1202,10 @@ static void bios_ChangeTh(upse_module_instance_t *ins)
 	{
 	    Thread[CurThread].status = BFLIP32S(1);
 	    Thread[CurThread].func = BFLIP32(ra);
-	    memcpy(Thread[CurThread].reg, upse_r3000_cpu_regs.GPR.r, 32 * 4);
+	    memcpy(Thread[CurThread].reg, ins->cpustate.GPR.r, 32 * 4);
 	}
 
-	memcpy(upse_r3000_cpu_regs.GPR.r, Thread[th].reg, 32 * 4);
+	memcpy(ins->cpustate.GPR.r, Thread[th].reg, 32 * 4);
 	pc0 = BFLIP32(Thread[th].func);
 	Thread[th].status = BFLIP32(2);
 	CurThread = th;
@@ -1214,15 +1214,15 @@ static void bios_ChangeTh(upse_module_instance_t *ins)
 
 static void bios_ReturnFromException(upse_module_instance_t *ins)
 {				// 17
-    memcpy(upse_r3000_cpu_regs.GPR.r, regs, 32 * 4);
-    upse_r3000_cpu_regs.GPR.n.lo = regs[32];
-    upse_r3000_cpu_regs.GPR.n.hi = regs[33];
+    memcpy(ins->cpustate.GPR.r, regs, 32 * 4);
+    ins->cpustate.GPR.n.lo = regs[32];
+    ins->cpustate.GPR.n.hi = regs[33];
 
-    pc0 = upse_r3000_cpu_regs.CP0.n.EPC;
-    if (upse_r3000_cpu_regs.CP0.n.Cause & 0x80000000)
+    pc0 = ins->cpustate.CP0.n.EPC;
+    if (ins->cpustate.CP0.n.Cause & 0x80000000)
 	pc0 += 4;
 
-    upse_r3000_cpu_regs.CP0.n.Status = (upse_r3000_cpu_regs.CP0.n.Status & 0xfffffff0) | ((upse_r3000_cpu_regs.CP0.n.Status & 0x3c) >> 2);
+    ins->cpustate.CP0.n.Status = (ins->cpustate.CP0.n.Status & 0xfffffff0) | ((ins->cpustate.CP0.n.Status & 0x3c) >> 2);
 }
 
 static void bios_ResetEntryInt(upse_module_instance_t *ins)
@@ -1303,7 +1303,7 @@ static void bios_ChangeClearRCnt(upse_module_instance_t *ins)
     v0 = BFLIP32(*ptr);
     *ptr = BFLIP32(a1);
 
-    upse_r3000_cpu_regs.CP0.n.Status|= 0x404;
+    ins->cpustate.CP0.n.Status|= 0x404;
     pc0 = ra;
 }
 
@@ -1645,17 +1645,17 @@ void biosInterrupt(upse_module_instance_t *ins)
 
 static INLINE void SaveRegs(upse_module_instance_t *ins)
 {
-    memcpy(regs, upse_r3000_cpu_regs.GPR.r, 32 * 4);
-    regs[32] = upse_r3000_cpu_regs.GPR.n.lo;
-    regs[33] = upse_r3000_cpu_regs.GPR.n.hi;
-    regs[34] = upse_r3000_cpu_regs.pc;
+    memcpy(regs, ins->cpustate.GPR.r, 32 * 4);
+    regs[32] = ins->cpustate.GPR.n.lo;
+    regs[33] = ins->cpustate.GPR.n.hi;
+    regs[34] = ins->cpustate.pc;
 }
 
 void upse_ps1_bios_exception(upse_module_instance_t *ins)
 {
     int i;
 
-    switch (upse_r3000_cpu_regs.CP0.n.Cause & 0x3c)
+    switch (ins->cpustate.CP0.n.Cause & 0x3c)
     {
       case 0x00:		// Interrupt
 #ifdef PSXCPU_LOG
@@ -1686,7 +1686,7 @@ void upse_ps1_bios_exception(upse_module_instance_t *ins)
 	      sp = BFLIP32(jmp_int[1]);
 	      fp = BFLIP32(jmp_int[2]);
 	      for (i = 0; i < 8; i++)	// s0-s7
-		  upse_r3000_cpu_regs.GPR.r[16 + i] = BFLIP32(jmp_int[3 + i]);
+		  ins->cpustate.GPR.r[16 + i] = BFLIP32(jmp_int[3 + i]);
 	      gp = BFLIP32(jmp_int[11]);
 
 	      v0 = 1;
@@ -1702,24 +1702,24 @@ void upse_ps1_bios_exception(upse_module_instance_t *ins)
 	  switch (a0)
 	  {
 	    case 1:		// EnterCritical - disable irq's
-		upse_r3000_cpu_regs.CP0.n.Status &= ~0x404;
+		ins->cpustate.CP0.n.Status &= ~0x404;
 		break;
 	    case 2:		// ExitCritical - enable irq's
-		upse_r3000_cpu_regs.CP0.n.Status |= 0x404;
+		ins->cpustate.CP0.n.Status |= 0x404;
 		break;
 	  }
-	  pc0 = upse_r3000_cpu_regs.CP0.n.EPC + 4;
+	  pc0 = ins->cpustate.CP0.n.EPC + 4;
 
-	  upse_r3000_cpu_regs.CP0.n.Status = (upse_r3000_cpu_regs.CP0.n.Status & 0xfffffff0) | ((upse_r3000_cpu_regs.CP0.n.Status & 0x3c) >> 2);
+	  ins->cpustate.CP0.n.Status = (ins->cpustate.CP0.n.Status & 0xfffffff0) | ((ins->cpustate.CP0.n.Status & 0x3c) >> 2);
 	  return;
       default:
-          _DEBUG("WTF: unknown exception <%x>", upse_r3000_cpu_regs.CP0.n.Cause & 0x3c);
+          _DEBUG("WTF: unknown exception <%x>", ins->cpustate.CP0.n.Cause & 0x3c);
 	  break;
     }
 
-    pc0 = upse_r3000_cpu_regs.CP0.n.EPC;
-    if (upse_r3000_cpu_regs.CP0.n.Cause & 0x80000000)
+    pc0 = ins->cpustate.CP0.n.EPC;
+    if (ins->cpustate.CP0.n.Cause & 0x80000000)
 	pc0 += 4;
 
-    upse_r3000_cpu_regs.CP0.n.Status = (upse_r3000_cpu_regs.CP0.n.Status & 0xfffffff0) | ((upse_r3000_cpu_regs.CP0.n.Status & 0x3c) >> 2);
+    ins->cpustate.CP0.n.Status = (ins->cpustate.CP0.n.Status & 0xfffffff0) | ((ins->cpustate.CP0.n.Status & 0x3c) >> 2);
 }

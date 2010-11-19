@@ -370,16 +370,16 @@ upse_load_psf2(void *fp, const char *path, upse_iofuncs_t *iofuncs)
     initialPC = upse_parse_psf2_elf(&ret->instance, buf, buflen);
     initialSP = 0x801ffff0;
 
-    upse_r3000_cpu_regs.pc = initialPC;
-    upse_r3000_cpu_regs.GPR.n.sp = initialSP;
-    upse_r3000_cpu_regs.GPR.n.ra = 0x80000000;
+    ins->cpustate.pc = initialPC;
+    ins->cpustate.GPR.n.sp = initialSP;
+    ins->cpustate.GPR.n.ra = 0x80000000;
 
     /* set up argc and argv */
-    upse_r3000_cpu_regs.GPR.n.a0 = 2;
-    upse_r3000_cpu_regs.GPR.n.a1 = 0x80000004;
+    ins->cpustate.GPR.n.a0 = 2;
+    ins->cpustate.GPR.n.a1 = 0x80000004;
 
     /* we're running upse:/psf2.irx, so our device prefix is upse:/. */
-    strcpy((char *) PSXM(ins, upse_r3000_cpu_regs.GPR.n.a1), "upse:/psf2.irx");
+    strcpy((char *) PSXM(ins, ins->cpustate.GPR.n.a1), "upse:/psf2.irx");
 
     /* fill out our metadata struct. */
     psfi = calloc(sizeof(upse_psf_t), 1);

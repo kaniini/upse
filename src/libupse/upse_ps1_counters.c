@@ -28,7 +28,7 @@ static void psxRcntUpd(upse_module_instance_t *ins, u32 index)
 {
     upse_psx_counter_state_t *ctrstate = ins->ctrstate;
 
-    ctrstate->psxCounters[index].sCycle = upse_r3000_cpu_regs.cycle;
+    ctrstate->psxCounters[index].sCycle = ins->cpustate.cycle;
     if (((!(ctrstate->psxCounters[index].mode & 1)) || (index != 2)) && ctrstate->psxCounters[index].mode & 0x30)
     {
 	if (ctrstate->psxCounters[index].mode & 0x10)
@@ -64,7 +64,7 @@ static void psxRcntSet(upse_module_instance_t *ins)
     upse_psx_counter_state_t *ctrstate = ins->ctrstate;
 
     ctrstate->psxNextCounter = 0x7fffffff;
-    ctrstate->psxNextsCounter = upse_r3000_cpu_regs.cycle;
+    ctrstate->psxNextsCounter = ins->cpustate.cycle;
 
     for (i = 0; i < cnts; i++)
     {
@@ -73,7 +73,7 @@ static void psxRcntSet(upse_module_instance_t *ins)
 	if (ctrstate->psxCounters[i].Cycle == 0xffffffff)
 	    continue;
 
-	count = ctrstate->psxCounters[i].Cycle - (upse_r3000_cpu_regs.cycle - ctrstate->psxCounters[i].sCycle);
+	count = ctrstate->psxCounters[i].Cycle - (ins->cpustate.cycle - ctrstate->psxCounters[i].sCycle);
 
 	if (count < 0)
 	{
@@ -131,33 +131,33 @@ void CounterDeadLoopSkip(upse_module_instance_t *ins)
 	if (ctrstate->psxCounters[x].Cycle != 0xffffffff)
         {
             min = ctrstate->psxCounters[x].Cycle;
-            min -= (upse_r3000_cpu_regs.cycle - ctrstate->psxCounters[x].sCycle);
+            min -= (ins->cpustate.cycle - ctrstate->psxCounters[x].sCycle);
             if (min < lmin)
                 lmin = min;
         }
     }
 
     if (lmin > 0)
-        upse_r3000_cpu_regs.cycle += lmin;
+        ins->cpustate.cycle += lmin;
 }
 
 int CounterSPURun(upse_module_instance_t *ins)
 {
     u32 cycles;
 
-    if (upse_r3000_cpu_regs.cycle < last)
+    if (ins->cpustate.cycle < last)
     {
 	cycles = 0xFFFFFFFF - last;
-	cycles += upse_r3000_cpu_regs.cycle;
+	cycles += ins->cpustate.cycle;
     }
     else
-	cycles = upse_r3000_cpu_regs.cycle - last;
+	cycles = ins->cpustate.cycle - last;
 
     if (cycles >= 16)
     {
 	if (!upse_ps1_spu_render(ins->spu, cycles))
 	    return (0);
-	last = upse_r3000_cpu_regs.cycle;
+	last = ins->cpustate.cycle;
     }
     return (1);
 }
@@ -173,22 +173,22 @@ void psxRcntUpdate(upse_module_instance_t *ins)
 {
     upse_psx_counter_state_t *ctrstate = ins->ctrstate;
 
-    if ((upse_r3000_cpu_regs.cycle - ctrstate->psxCounters[3].sCycle) >= ctrstate->psxCounters[3].Cycle)
+    if ((ins->cpustate.cycle - ctrstate->psxCounters[3].sCycle) >= ctrstate->psxCounters[3].Cycle)
     {
 	psxRcntUpd(ins, 3);
 	psxHu32(ins, 0x1070) |= BFLIP32(1);
     }
-    if ((upse_r3000_cpu_regs.cycle - ctrstate->psxCounters[0].sCycle) >= ctrstate->psxCounters[0].Cycle)
+    if ((ins->cpustate.cycle - ctrstate->psxCounters[0].sCycle) >= ctrstate->psxCounters[0].Cycle)
     {
 	psxRcntReset(ins, 0);
     }
 
-    if ((upse_r3000_cpu_regs.cycle - ctrstate->psxCounters[1].sCycle) >= ctrstate->psxCounters[1].Cycle)
+    if ((ins->cpustate.cycle - ctrstate->psxCounters[1].sCycle) >= ctrstate->psxCounters[1].Cycle)
     {
 	psxRcntReset(ins, 1);
     }
 
-    if ((upse_r3000_cpu_regs.cycle - ctrstate->psxCounters[2].sCycle) >= ctrstate->psxCounters[2].Cycle)
+    if ((ins->cpustate.cycle - ctrstate->psxCounters[2].sCycle) >= ctrstate->psxCounters[2].Cycle)
     {
 	psxRcntReset(ins, 2);
     }
@@ -269,11 +269,11 @@ u32 psxRcntRcount(upse_module_instance_t *ins, u32 index)
 
     if (ctrstate->psxCounters[index].mode & 0x08)
     {				// Wrap at target
-	ret = (ctrstate->psxCounters[index].count + BIAS * ((upse_r3000_cpu_regs.cycle - ctrstate->psxCounters[index].sCycle) / ctrstate->psxCounters[index].rate)) & 0xffff;
+	ret = (ctrstate->psxCounters[index].count + BIAS * ((ins->cpustate.cycle - ctrstate->psxCounters[index].sCycle) / ctrstate->psxCounters[index].rate)) & 0xffff;
     }
     else
     {				// Wrap at 0xffff
-	ret = (ctrstate->psxCounters[index].count + BIAS * (upse_r3000_cpu_regs.cycle / ctrstate->psxCounters[index].rate)) & 0xffff;
+	ret = (ctrstate->psxCounters[index].count + BIAS * (ins->cpustate.cycle / ctrstate->psxCounters[index].rate)) & 0xffff;
     }
 
     return ret;

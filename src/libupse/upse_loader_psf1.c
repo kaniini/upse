@@ -141,11 +141,11 @@ _upse_load_psf(upse_module_instance_t *ins, void *fp, const char *path, int leve
     /* if querying information, we do not want to upset the emulator. */
     if (!type)
     {
-        upse_r3000_cpu_regs.pc = BFLIP32(tmpHead.pc0);
-        upse_r3000_cpu_regs.GPR.n.gp = BFLIP32(tmpHead.gp0);
-        upse_r3000_cpu_regs.GPR.n.sp = BFLIP32(tmpHead.s_addr);
-        if (upse_r3000_cpu_regs.GPR.n.sp == 0)
-            upse_r3000_cpu_regs.GPR.n.sp = 0x801fff00; /* first executable block in memory */
+        ins->cpustate.pc = BFLIP32(tmpHead.pc0);
+        ins->cpustate.GPR.n.gp = BFLIP32(tmpHead.gp0);
+        ins->cpustate.GPR.n.sp = BFLIP32(tmpHead.s_addr);
+        if (ins->cpustate.GPR.n.sp == 0)
+            ins->cpustate.GPR.n.sp = 0x801fff00; /* first executable block in memory */
     }
 
     /* we are loading a psflib */
@@ -189,9 +189,9 @@ _upse_load_psf(upse_module_instance_t *ins, void *fp, const char *path, int leve
         {
             char *tmpfn;
 
-            ba[0] = upse_r3000_cpu_regs.pc;
-            ba[1] = upse_r3000_cpu_regs.GPR.n.gp;
-            ba[2] = upse_r3000_cpu_regs.GPR.n.sp;
+            ba[0] = ins->cpustate.pc;
+            ba[1] = ins->cpustate.GPR.n.gp;
+            ba[2] = ins->cpustate.GPR.n.sp;
 
             tmpfn = _upse_resolve_path(path, lib);
     	    tmpi = _upse_load_psf_from_file(ins, tmpfn, level + 1, 0, funcs);
@@ -201,9 +201,9 @@ _upse_load_psf(upse_module_instance_t *ins, void *fp, const char *path, int leve
             free(tmpfn);
             upse_free_psf_metadata(tmpi);
 
-            upse_r3000_cpu_regs.pc = ba[0];
-            upse_r3000_cpu_regs.GPR.n.gp = ba[1];
-            upse_r3000_cpu_regs.GPR.n.sp = ba[2];
+            ins->cpustate.pc = ba[0];
+            ins->cpustate.GPR.n.gp = ba[1];
+            ins->cpustate.GPR.n.sp = ba[2];
         }
     }
 

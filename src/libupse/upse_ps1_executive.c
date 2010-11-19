@@ -30,14 +30,14 @@
 
 static void upse_ps1_executive_dummy(upse_module_instance_t *ins)
 {
-    upse_r3000_cpu_regs.pc = upse_r3000_cpu_regs.GPR.n.ra;
+    ins->cpustate.pc = ins->cpustate.GPR.n.ra;
 
     psxBranchTest(ins);
 }
 
 static void upse_ps1_executive_run_bios_A0(upse_module_instance_t *ins)
 {
-    u32 call = upse_r3000_cpu_regs.GPR.n.t1 & 0xff;
+    u32 call = ins->cpustate.GPR.n.t1 & 0xff;
 
     _CALL(ins, biosA0, biosA0n);
 
@@ -46,7 +46,7 @@ static void upse_ps1_executive_run_bios_A0(upse_module_instance_t *ins)
 
 static void upse_ps1_executive_run_bios_B0(upse_module_instance_t *ins)
 {
-    u32 call = upse_r3000_cpu_regs.GPR.n.t1 & 0xff;
+    u32 call = ins->cpustate.GPR.n.t1 & 0xff;
 
     _CALL(ins, biosB0, biosB0n);
 
@@ -55,7 +55,7 @@ static void upse_ps1_executive_run_bios_B0(upse_module_instance_t *ins)
 
 static void upse_ps1_executive_run_bios_C0(upse_module_instance_t *ins)
 {
-    u32 call = upse_r3000_cpu_regs.GPR.n.t1 & 0xff;
+    u32 call = ins->cpustate.GPR.n.t1 & 0xff;
 
     _CALL(ins, biosC0, biosC0n);
 
@@ -83,18 +83,18 @@ typedef struct
 
 static void upse_ps1_executive_task_switch(upse_module_instance_t *ins)
 {
-    upse_ps1_executive_exec_record_t *header = (upse_ps1_executive_exec_record_t *) PSXM(ins, upse_r3000_cpu_regs.GPR.n.s0);
+    upse_ps1_executive_exec_record_t *header = (upse_ps1_executive_exec_record_t *) PSXM(ins, ins->cpustate.GPR.n.s0);
 
-    //SysPrintf("ExecRet %x: %x\n", upse_r3000_cpu_regs.GPR.n.s0, header->ret);
+    //SysPrintf("ExecRet %x: %x\n", ins->cpustate.GPR.n.s0, header->ret);
 
-    upse_r3000_cpu_regs.GPR.n.ra = BFLIP32(header->ret);
-    upse_r3000_cpu_regs.GPR.n.sp = BFLIP32(header->_sp);
-    upse_r3000_cpu_regs.GPR.n.s8 = BFLIP32(header->_fp);
-    upse_r3000_cpu_regs.GPR.n.gp = BFLIP32(header->_gp);
-    upse_r3000_cpu_regs.GPR.n.s0 = BFLIP32(header->base);
+    ins->cpustate.GPR.n.ra = BFLIP32(header->ret);
+    ins->cpustate.GPR.n.sp = BFLIP32(header->_sp);
+    ins->cpustate.GPR.n.s8 = BFLIP32(header->_fp);
+    ins->cpustate.GPR.n.gp = BFLIP32(header->_gp);
+    ins->cpustate.GPR.n.s0 = BFLIP32(header->base);
 
-    upse_r3000_cpu_regs.GPR.n.v0 = 1;
-    upse_r3000_cpu_regs.pc = upse_r3000_cpu_regs.GPR.n.ra;
+    ins->cpustate.GPR.n.v0 = 1;
+    ins->cpustate.pc = ins->cpustate.GPR.n.ra;
 }
 
 void (*psxHLEt[256])(upse_module_instance_t *ins) =
