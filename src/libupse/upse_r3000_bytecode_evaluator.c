@@ -19,7 +19,6 @@
 
 #include <stdlib.h>
 
-#define UPSE_DEBUG
 #include "upse-internal.h"
 
 extern void upse_ps2_iop_call(u32 callnum);
@@ -35,53 +34,53 @@ static u32 branchPC;
 
 //        printf("%08x ", upse_r3000_cpu_regs.pc);
 
-#define execI() { \
+#define execI(ins) { \
 	upse_r3000_cpu_regs.code = BFLIP32(PSXMu32(upse_r3000_cpu_regs.pc)); \
 	if (0) { _DEBUG("current PC: %x Cycle: %x Code: %d", upse_r3000_cpu_regs.pc, upse_r3000_cpu_regs.cycle, upse_r3000_cpu_regs.code >> 26); } \
 	upse_r3000_cpu_regs.pc+= 4; upse_r3000_cpu_regs.cycle++; \
-	psxBSC[upse_r3000_cpu_regs.code >> 26](); \
+	psxBSC[upse_r3000_cpu_regs.code >> 26](ins); \
 }
 
 // Subsets
-static void (*psxBSC[64]) ();
-static void (*psxSPC[64]) ();
-static void (*psxREG[32]) ();
-static void (*psxCP0[32]) ();
+static void (*psxBSC[64]) (upse_module_instance_t *ins);
+static void (*psxSPC[64]) (upse_module_instance_t *ins);
+static void (*psxREG[32]) (upse_module_instance_t *ins);
+static void (*psxCP0[32]) (upse_module_instance_t *ins);
 
-static void delayRead(int reg, u32 bpc)
+static void delayRead(upse_module_instance_t *ins, int reg, u32 bpc)
 {
     u32 rold, rnew;
 
     _DEBUG("delayRead, PC: %lx", upse_r3000_cpu_regs.pc);
 
     rold = upse_r3000_cpu_regs.GPR.r[reg];
-    psxBSC[upse_r3000_cpu_regs.code >> 26] ();	// branch delay load
+    psxBSC[upse_r3000_cpu_regs.code >> 26] (ins);	// branch delay load
     rnew = upse_r3000_cpu_regs.GPR.r[reg];
 
     upse_r3000_cpu_regs.pc = bpc;
 
-    psxBranchTest();
+    psxBranchTest(ins);
 
     upse_r3000_cpu_regs.GPR.r[reg] = rold;
-    execI();			// first branch opcode
+    execI(ins);
     upse_r3000_cpu_regs.GPR.r[reg] = rnew;
 
     branch = 0;
 }
 
-static void delayWrite(int reg, u32 bpc)
+static void delayWrite(upse_module_instance_t *ins, int reg, u32 bpc)
 {
     _DEBUG("delayWrite, PC: %lx", upse_r3000_cpu_regs.pc);
 
-    psxBSC[upse_r3000_cpu_regs.code >> 26] ();
+    psxBSC[upse_r3000_cpu_regs.code >> 26] (ins);
 
     branch = 0;
     upse_r3000_cpu_regs.pc = bpc;
 
-    psxBranchTest();
+    psxBranchTest(ins);
 }
 
-static void delayReadWrite(int reg, u32 bpc)
+static void delayReadWrite(upse_module_instance_t *ins, int reg, u32 bpc)
 {
     _DEBUG("delayReadWrite, PC: %lx", upse_r3000_cpu_regs.pc);
 
@@ -90,7 +89,7 @@ static void delayReadWrite(int reg, u32 bpc)
     branch = 0;
     upse_r3000_cpu_regs.pc = bpc;
 
-    psxBranchTest();
+    psxBranchTest(ins);
 }
 
 // this defines shall be used with the tmp 
@@ -101,7 +100,7 @@ static void delayReadWrite(int reg, u32 bpc)
 #define _tRs_     ((tmp >> 21) & 0x1F)	// The rs part of the instruction register
 #define _tSa_     ((tmp >>  6) & 0x1F)	// The sa part of the instruction register
 
-static void psxDelayTest(u32 reg, u32 bpc)
+static void psxDelayTest(upse_module_instance_t *ins, u32 reg, u32 bpc)
 {
     u32 tmp;
 
@@ -120,17 +119,17 @@ static void psxDelayTest(u32 reg, u32 bpc)
 	    case 0x03:		// SRL/SRA
 		if (_tRd_ == reg && _tRt_ == reg)
 		{
-		    delayReadWrite(reg, bpc);
+		    delayReadWrite(ins, reg, bpc);
 		    return;
 		}
 		else if (_tRt_ == reg)
 		{
-		    delayRead(reg, bpc);
+		    delayRead(ins, reg, bpc);
 		    return;
 		}
 		else if (_tRd_ == reg)
 		{
-		    delayWrite(reg, bpc);
+		    delayWrite(ins, reg, bpc);
 		    return;
 		}
 		break;
@@ -138,24 +137,24 @@ static void psxDelayTest(u32 reg, u32 bpc)
 	    case 0x08:		// JR
 		if (_tRs_ == reg)
 		{
-		    delayRead(reg, bpc);
+		    delayRead(ins, reg, bpc);
 		    return;
 		}
 		break;
 	    case 0x09:		// JALR
 		if (_tRd_ == reg && _tRs_ == reg)
 		{
-		    delayReadWrite(reg, bpc);
+		    delayReadWrite(ins, reg, bpc);
 		    return;
 		}
 		else if (_tRs_ == reg)
 		{
-		    delayRead(reg, bpc);
+		    delayRead(ins, reg, bpc);
 		    return;
 		}
 		else if (_tRd_ == reg)
 		{
-		    delayWrite(reg, bpc);
+		    delayWrite(ins, reg, bpc);
 		    return;
 		}
 		break;
@@ -177,17 +176,17 @@ static void psxDelayTest(u32 reg, u32 bpc)
 	    case 0x07:		// SLLV...
 		if (_tRd_ == reg && (_tRt_ == reg || _tRs_ == reg))
 		{
-		    delayReadWrite(reg, bpc);
+		    delayReadWrite(ins, reg, bpc);
 		    return;
 		}
 		else if (_tRt_ == reg || _tRs_ == reg)
 		{
-		    delayRead(reg, bpc);
+		    delayRead(ins, reg, bpc);
 		    return;
 		}
 		else if (_tRd_ == reg)
 		{
-		    delayWrite(reg, bpc);
+		    delayWrite(ins, reg, bpc);
 		    return;
 		}
 		break;
@@ -196,7 +195,7 @@ static void psxDelayTest(u32 reg, u32 bpc)
 	    case 0x12:		// MFHI/MFLO
 		if (_tRd_ == reg)
 		{
-		    delayWrite(reg, bpc);
+		    delayWrite(ins, reg, bpc);
 		    return;
 		}
 		break;
@@ -204,7 +203,7 @@ static void psxDelayTest(u32 reg, u32 bpc)
 	    case 0x13:		// MTHI/MTLO
 		if (_tRs_ == reg)
 		{
-		    delayRead(reg, bpc);
+		    delayRead(ins, reg, bpc);
 		    return;
 		}
 		break;
@@ -215,7 +214,7 @@ static void psxDelayTest(u32 reg, u32 bpc)
 	    case 0x1b:		// MULT/DIV...
 		if (_tRt_ == reg || _tRs_ == reg)
 		{
-		    delayRead(reg, bpc);
+		    delayRead(ins, reg, bpc);
 		    return;
 		}
 		break;
@@ -231,7 +230,7 @@ static void psxDelayTest(u32 reg, u32 bpc)
 	    case 0x12:		// BLTZ/BGEZ...
 		if (_tRs_ == reg)
 		{
-		    delayRead(reg, bpc);
+		    delayRead(ins, reg, bpc);
 		    return;
 		}
 		break;
@@ -242,7 +241,7 @@ static void psxDelayTest(u32 reg, u32 bpc)
       case 0x03:		// JAL
 	  if (31 == reg)
 	  {
-	      delayWrite(reg, bpc);
+	      delayWrite(ins, reg, bpc);
 	      return;
 	  }
 	  break;
@@ -251,7 +250,7 @@ static void psxDelayTest(u32 reg, u32 bpc)
       case 0x05:		// BEQ/BNE
 	  if (_tRs_ == reg || _tRt_ == reg)
 	  {
-	      delayRead(reg, bpc);
+	      delayRead(ins, reg, bpc);
 	      return;
 	  }
 	  break;
@@ -260,7 +259,7 @@ static void psxDelayTest(u32 reg, u32 bpc)
       case 0x07:		// BLEZ/BGTZ
 	  if (_tRs_ == reg)
 	  {
-	      delayRead(reg, bpc);
+	      delayRead(ins, reg, bpc);
 	      return;
 	  }
 	  break;
@@ -274,17 +273,17 @@ static void psxDelayTest(u32 reg, u32 bpc)
       case 0x0e:		// ADDI/ADDIU...
 	  if (_tRt_ == reg && _tRs_ == reg)
 	  {
-	      delayReadWrite(reg, bpc);
+	      delayReadWrite(ins, reg, bpc);
 	      return;
 	  }
 	  else if (_tRs_ == reg)
 	  {
-	      delayRead(reg, bpc);
+	      delayRead(ins, reg, bpc);
 	      return;
 	  }
 	  else if (_tRt_ == reg)
 	  {
-	      delayWrite(reg, bpc);
+	      delayWrite(ins, reg, bpc);
 	      return;
 	  }
 	  break;
@@ -292,7 +291,7 @@ static void psxDelayTest(u32 reg, u32 bpc)
       case 0x0f:		// LUI
 	  if (_tRt_ == reg)
 	  {
-	      delayWrite(reg, bpc);
+	      delayWrite(ins, reg, bpc);
 	      return;
 	  }
 	  break;
@@ -303,28 +302,28 @@ static void psxDelayTest(u32 reg, u32 bpc)
 	    case 0x00:		// MFC0
 		if (_tRt_ == reg)
 		{
-		    delayWrite(reg, bpc);
+		    delayWrite(ins, reg, bpc);
 		    return;
 		}
 		break;
 	    case 0x02:		// CFC0
 		if (_tRt_ == reg)
 		{
-		    delayWrite(reg, bpc);
+		    delayWrite(ins, reg, bpc);
 		    return;
 		}
 		break;
 	    case 0x04:		// MTC0
 		if (_tRt_ == reg)
 		{
-		    delayRead(reg, bpc);
+		    delayRead(ins, reg, bpc);
 		    return;
 		}
 		break;
 	    case 0x06:		// CTC0
 		if (_tRt_ == reg)
 		{
-		    delayRead(reg, bpc);
+		    delayRead(ins, reg, bpc);
 		    return;
 		}
 		break;
@@ -336,12 +335,12 @@ static void psxDelayTest(u32 reg, u32 bpc)
       case 0x26:		// LWL/LWR
 	  if (_tRt_ == reg)
 	  {
-	      delayReadWrite(reg, bpc);
+	      delayReadWrite(ins, reg, bpc);
 	      return;
 	  }
 	  else if (_tRs_ == reg)
 	  {
-	      delayRead(reg, bpc);
+	      delayRead(ins, reg, bpc);
 	      return;
 	  }
 	  break;
@@ -353,17 +352,17 @@ static void psxDelayTest(u32 reg, u32 bpc)
       case 0x25:		// LB/LH/LW/LBU/LHU
 	  if (_tRt_ == reg && _tRs_ == reg)
 	  {
-	      delayReadWrite(reg, bpc);
+	      delayReadWrite(ins, reg, bpc);
 	      return;
 	  }
 	  else if (_tRs_ == reg)
 	  {
-	      delayRead(reg, bpc);
+	      delayRead(ins, reg, bpc);
 	      return;
 	  }
 	  else if (_tRt_ == reg)
 	  {
-	      delayWrite(reg, bpc);
+	      delayWrite(ins, reg, bpc);
 	      return;
 	  }
 	  break;
@@ -375,7 +374,7 @@ static void psxDelayTest(u32 reg, u32 bpc)
       case 0x2e:		// SB/SH/SWL/SW/SWR
 	  if (_tRt_ == reg || _tRs_ == reg)
 	  {
-	      delayRead(reg, bpc);
+	      delayRead(ins, reg, bpc);
 	      return;
 	  }
 	  break;
@@ -384,22 +383,22 @@ static void psxDelayTest(u32 reg, u32 bpc)
       case 0x3a:		// LWC2/SWC2
 	  if (_tRs_ == reg)
 	  {
-	      delayRead(reg, bpc);
+	      delayRead(ins, reg, bpc);
 	      return;
 	  }
 	  break;
     }
-    psxBSC[upse_r3000_cpu_regs.code >> 26] ();
+    psxBSC[upse_r3000_cpu_regs.code >> 26] (ins);
 
     branch = 0;
     upse_r3000_cpu_regs.pc = bpc;
 
-    psxBranchTest();
+    psxBranchTest(ins);
 }
 
-static void psxNULL(void);
+static void psxNULL(upse_module_instance_t *ins);
 
-static INLINE void doBranch(u32 tar)
+static INLINE void doBranch(upse_module_instance_t *ins, u32 tar)
 {
     u32 tmp;
 
@@ -420,31 +419,31 @@ static INLINE void doBranch(u32 tar)
 	  {
 	    case 0x00:		// MFC0
 	    case 0x02:		// CFC0
-		psxDelayTest(_Rt_, branchPC);
+		psxDelayTest(ins, _Rt_, branchPC);
 		return;
 	  }
 	  break;
       case 0x32:		// LWC2
-	  psxDelayTest(_Rt_, branchPC);
+	  psxDelayTest(ins, _Rt_, branchPC);
 	  return;
       default:
 	  if (tmp >= 0x20 && tmp <= 0x26)
 	  {			// LB/LH/LWL/LW/LBU/LHU/LWR
-	      psxDelayTest(_Rt_, branchPC);
+	      psxDelayTest(ins, _Rt_, branchPC);
 	      return;
 	  }
 	  break;
     }
 
-    psxBSC[upse_r3000_cpu_regs.code >> 26] ();
+    psxBSC[upse_r3000_cpu_regs.code >> 26] (ins);
 
     if ((upse_r3000_cpu_regs.pc - 8) == branchPC && !(upse_r3000_cpu_regs.code >> 26))
-        CounterDeadLoopSkip();
+        CounterDeadLoopSkip(ins);
 
     branch = 0;
     upse_r3000_cpu_regs.pc = branchPC;
 
-    psxBranchTest();
+    psxBranchTest(ins);
 }
 
 /*********************************************************
@@ -602,27 +601,27 @@ static void psxMULTU()
 * Register branch logic                                  *
 * Format:  OP rs, offset                                 *
 *********************************************************/
-#define RepZBranchi32(op)      if(_i32(_rRs_) op 0) doBranch(_BranchTarget_);
-#define RepZBranchLinki32(op)  if(_i32(_rRs_) op 0) { _SetLink(31); doBranch(_BranchTarget_); }
+#define RepZBranchi32(ins, op)      if(_i32(_rRs_) op 0) doBranch(ins, _BranchTarget_);
+#define RepZBranchLinki32(ins, op)  if(_i32(_rRs_) op 0) { _SetLink(31); doBranch(ins, _BranchTarget_); }
 
-static void psxBGEZ()
+static void psxBGEZ(upse_module_instance_t *ins)
 {
-RepZBranchi32(>=)}		// Branch if Rs >= 0
-static void psxBGEZAL()
+RepZBranchi32(ins, >=)}		// Branch if Rs >= 0
+static void psxBGEZAL(upse_module_instance_t *ins)
 {
-RepZBranchLinki32(>=)}		// Branch if Rs >= 0 and link
-static void psxBGTZ()
+RepZBranchLinki32(ins, >=)}		// Branch if Rs >= 0 and link
+static void psxBGTZ(upse_module_instance_t *ins)
 {
-RepZBranchi32(>)}		// Branch if Rs >  0
-static void psxBLEZ()
+RepZBranchi32(ins, >)}		// Branch if Rs >  0
+static void psxBLEZ(upse_module_instance_t *ins)
 {
-RepZBranchi32(<=)}		// Branch if Rs <= 0
-static void psxBLTZ()
+RepZBranchi32(ins, <=)}		// Branch if Rs <= 0
+static void psxBLTZ(upse_module_instance_t *ins)
 {
-RepZBranchi32(<)}		// Branch if Rs <  0
-static void psxBLTZAL()
+RepZBranchi32(ins, <)}		// Branch if Rs <  0
+static void psxBLTZAL(upse_module_instance_t *ins)
 {
-RepZBranchLinki32(<)}		// Branch if Rs <  0 and link
+RepZBranchLinki32(ins, <)}		// Branch if Rs <  0 and link
 
 /*********************************************************
 * Shift arithmetic with constant shift                   *
@@ -720,10 +719,10 @@ static void psxBREAK()
     // Break exception - psx rom doens't handles this
 }
 
-static void psxSYSCALL()
+static void psxSYSCALL(upse_module_instance_t *ins)
 {
     upse_r3000_cpu_regs.pc -= 4;
-    psxException(0x20, branch);
+    psxException(ins, 0x20, branch);
 }
 
 static void psxRFE()
@@ -735,20 +734,20 @@ static void psxRFE()
 * Register branch logic                                  *
 * Format:  OP rs, rt, offset                             *
 *********************************************************/
-#define RepBranchi32(op)      if(_i32(_rRs_) op _i32(_rRt_)) { doBranch(_BranchTarget_); }
+#define RepBranchi32(ins, op)      if(_i32(_rRs_) op _i32(_rRt_)) { doBranch(ins, _BranchTarget_); }
 
-static void psxBEQ()
+static void psxBEQ(upse_module_instance_t *ins)
 {
-RepBranchi32( ==)}		// Branch if Rs == Rt
-static void psxBNE()
+RepBranchi32(ins, ==)}		// Branch if Rs == Rt
+static void psxBNE(upse_module_instance_t *ins)
 {
-RepBranchi32(!=)}		// Branch if Rs != Rt
+RepBranchi32(ins, !=)}		// Branch if Rs != Rt
 
 /*********************************************************
 * Jump to target                                         *
 * Format:  OP target                                     *
 *********************************************************/
-static void psxJ()
+static void psxJ(upse_module_instance_t *ins)
 {
 #if 0
     if (((upse_r3000_cpu_regs.code >> 16) & 31) == 0) {
@@ -758,30 +757,30 @@ static void psxJ()
     }
 #endif
 
-    doBranch(_JumpTarget_);
+    doBranch(ins, _JumpTarget_);
 }
 
-static void psxJAL()
+static void psxJAL(upse_module_instance_t *ins)
 {
     _SetLink(31);
-    doBranch(_JumpTarget_);
+    doBranch(ins, _JumpTarget_);
 }
 
 /*********************************************************
 * Register jump                                          *
 * Format:  OP rs, rd                                     *
 *********************************************************/
-static void psxJR()
+static void psxJR(upse_module_instance_t *ins)
 {
-    doBranch(_u32(_rRs_));
+    doBranch(ins, _u32(_rRs_));
 }
-static void psxJALR()
+static void psxJALR(upse_module_instance_t *ins)
 {
     if (_Rd_)
     {
 	_SetLink(_Rd_);
     }
-    doBranch(_u32(_rRs_));
+    doBranch(ins, _u32(_rRs_));
 }
 
 /*********************************************************
@@ -791,74 +790,74 @@ static void psxJALR()
 
 #define _oB_ (_u32(_rRs_) + _Imm_)
 
-static void psxLB()
+static void psxLB(upse_module_instance_t *ins)
 {
     if (_Rt_)
     {
-	_rRt_ = (s8) upse_ps1_memory_read_8(_oB_);
+	_rRt_ = (s8) upse_ps1_memory_read_8(ins, _oB_);
     }
     else
     {
-	upse_ps1_memory_read_8(_oB_);
+	upse_ps1_memory_read_8(ins, _oB_);
     }
 }
 
-static void psxLBU()
+static void psxLBU(upse_module_instance_t *ins)
 {
     if (_Rt_)
     {
-	_rRt_ = upse_ps1_memory_read_8(_oB_);
+	_rRt_ = upse_ps1_memory_read_8(ins, _oB_);
     }
     else
     {
-	upse_ps1_memory_read_8(_oB_);
+	upse_ps1_memory_read_8(ins, _oB_);
     }
 }
 
-static void psxLH()
+static void psxLH(upse_module_instance_t *ins)
 {
     if (_Rt_)
     {
-	_rRt_ = (s16) upse_ps1_memory_read_16(_oB_);
+	_rRt_ = (s16) upse_ps1_memory_read_16(ins, _oB_);
     }
     else
     {
-	upse_ps1_memory_read_16(_oB_);
+	upse_ps1_memory_read_16(ins, _oB_);
     }
 }
 
-static void psxLHU()
+static void psxLHU(upse_module_instance_t *ins)
 {
     if (_Rt_)
     {
-	_rRt_ = upse_ps1_memory_read_16(_oB_);
+	_rRt_ = upse_ps1_memory_read_16(ins, _oB_);
     }
     else
     {
-	upse_ps1_memory_read_16(_oB_);
+	upse_ps1_memory_read_16(ins, _oB_);
     }
 }
 
-static void psxLW()
+static void psxLW(upse_module_instance_t *ins)
 {
     if (_Rt_)
     {
-	_rRt_ = upse_ps1_memory_read_32(_oB_);
+	_rRt_ = upse_ps1_memory_read_32(ins, _oB_);
     }
     else
     {
-	upse_ps1_memory_read_32(_oB_);
+	upse_ps1_memory_read_32(ins, _oB_);
     }
 }
 
 static u32 LWL_MASK[4] = { 0xffffff, 0xffff, 0xff, 0 };
 static u32 LWL_SHIFT[4] = { 24, 16, 8, 0 };
 
-static void psxLWL()
+static void psxLWL(upse_module_instance_t *ins)
 {
     u32 addr = _oB_;
     u32 shift = addr & 3;
-    u32 mem = upse_ps1_memory_read_32(addr & ~3);
+    u32 mem = upse_ps1_memory_read_32(ins, addr & ~3);
 
     if (!_Rt_)
 	return;
@@ -877,11 +876,11 @@ static void psxLWL()
 static u32 LWR_MASK[4] = { 0, 0xff000000, 0xffff0000, 0xffffff00 };
 static u32 LWR_SHIFT[4] = { 0, 8, 16, 24 };
 
-static void psxLWR()
+static void psxLWR(upse_module_instance_t *ins)
 {
     u32 addr = _oB_;
     u32 shift = addr & 3;
-    u32 mem = upse_ps1_memory_read_32(addr & ~3);
+    u32 mem = upse_ps1_memory_read_32(ins, addr & ~3);
 
     if (!_Rt_)
 	return;
@@ -897,29 +896,29 @@ static void psxLWR()
      */
 }
 
-static void psxSB()
+static void psxSB(upse_module_instance_t *ins)
 {
-    upse_ps1_memory_write_8(_oB_, _u8(_rRt_));
+    upse_ps1_memory_write_8(ins, _oB_, _u8(_rRt_));
 }
-static void psxSH()
+static void psxSH(upse_module_instance_t *ins)
 {
-    upse_ps1_memory_write_16(_oB_, _u16(_rRt_));
+    upse_ps1_memory_write_16(ins, _oB_, _u16(_rRt_));
 }
-static void psxSW()
+static void psxSW(upse_module_instance_t *ins)
 {
-    upse_ps1_memory_write_32(_oB_, _u32(_rRt_));
+    upse_ps1_memory_write_32(ins, _oB_, _u32(_rRt_));
 }
 
 static const u32 SWL_MASK[4] = { 0xffffff00, 0xffff0000, 0xff000000, 0 };
 static const u32 SWL_SHIFT[4] = { 24, 16, 8, 0 };
 
-static void psxSWL()
+static void psxSWL(upse_module_instance_t *ins)
 {
     u32 addr = _oB_;
     u32 shift = addr & 3;
-    u32 mem = upse_ps1_memory_read_32(addr & ~3);
+    u32 mem = upse_ps1_memory_read_32(ins, addr & ~3);
 
-    upse_ps1_memory_write_32(addr & ~3, (_u32(_rRt_) >> SWL_SHIFT[shift]) | (mem & SWL_MASK[shift]));
+    upse_ps1_memory_write_32(ins, addr & ~3, (_u32(_rRt_) >> SWL_SHIFT[shift]) | (mem & SWL_MASK[shift]));
     /*
        Mem = 1234.  Reg = abcd
 
@@ -933,13 +932,13 @@ static void psxSWL()
 static const u32 SWR_MASK[4] = { 0, 0xff, 0xffff, 0xffffff };
 static const u32 SWR_SHIFT[4] = { 0, 8, 16, 24 };
 
-static void psxSWR()
+static void psxSWR(upse_module_instance_t *ins)
 {
     u32 addr = _oB_;
     u32 shift = addr & 3;
-    u32 mem = upse_ps1_memory_read_32(addr & ~3);
+    u32 mem = upse_ps1_memory_read_32(ins, addr & ~3);
 
-    upse_ps1_memory_write_32(addr & ~3, (_u32(_rRt_) << SWR_SHIFT[shift]) | (mem & SWR_MASK[shift]));
+    upse_ps1_memory_write_32(ins, addr & ~3, (_u32(_rRt_) << SWR_SHIFT[shift]) | (mem & SWR_MASK[shift]));
 
     /*
        Mem = 1234.  Reg = abcd
@@ -955,20 +954,20 @@ static void psxSWR()
 * Moves between GPR and COPx                             *
 * Format:  OP rt, fs                                     *
 *********************************************************/
-static void psxMFC0()
+static void psxMFC0(upse_module_instance_t *ins)
 {
     if (!_Rt_)
 	return;
     _rRt_ = (int) _rFs_;
 }
-static void psxCFC0()
+static void psxCFC0(upse_module_instance_t *ins)
 {
     if (!_Rt_)
 	return;
     _rRt_ = (int) _rFs_;
 }
 
-static INLINE void MTC0(int reg, u32 val)
+static INLINE void MTC0(upse_module_instance_t *ins, int reg, u32 val)
 {
     switch (reg)
     {
@@ -979,7 +978,7 @@ static INLINE void MTC0(int reg, u32 val)
 	  // tell me if it works ok or not (linuzappz)
 	  if (upse_r3000_cpu_regs.CP0.n.Cause & upse_r3000_cpu_regs.CP0.n.Status & 0x0300 && upse_r3000_cpu_regs.CP0.n.Status & 0x1)
 	  {
-	      psxException(upse_r3000_cpu_regs.CP0.n.Cause, 0);
+	      psxException(ins, upse_r3000_cpu_regs.CP0.n.Cause, 0);
 	  }
 	  break;
 
@@ -989,46 +988,46 @@ static INLINE void MTC0(int reg, u32 val)
     }
 }
 
-static void psxMTC0()
+static void psxMTC0(upse_module_instance_t *ins)
 {
-    MTC0(_Rd_, _u32(_rRt_));
+    MTC0(ins, _Rd_, _u32(_rRt_));
 }
-static void psxCTC0()
+static void psxCTC0(upse_module_instance_t *ins)
 {
-    MTC0(_Rd_, _u32(_rRt_));
+    MTC0(ins, _Rd_, _u32(_rRt_));
 }
 
 /*********************************************************
 * Unknow instruction (would generate an exception)       *
 * Format:  ?                                             *
 *********************************************************/
-static void psxNULL()
+static void psxNULL(upse_module_instance_t *ins)
 {
     _DEBUG("unimplemented opcode %x", upse_r3000_cpu_regs.code >> 26);
 }
 
-static void psxSPECIAL()
+static void psxSPECIAL(upse_module_instance_t *ins)
 {
-    psxSPC[_Funct_] ();
+    psxSPC[_Funct_] (ins);
 }
 
-static void psxREGIMM()
+static void psxREGIMM(upse_module_instance_t *ins)
 {
-    psxREG[_Rt_] ();
+    psxREG[_Rt_] (ins);
 }
 
-static void psxCOP0()
+static void psxCOP0(upse_module_instance_t *ins)
 {
-    psxCP0[_Rs_] ();
+    psxCP0[_Rs_] (ins);
 }
 
-static void psxHLE()
+static void psxHLE(upse_module_instance_t *ins)
 {
     _DEBUG("HLE - PC: 0x%lx", upse_r3000_cpu_regs.pc & 0xff);
-    psxHLEt[upse_r3000_cpu_regs.code & 0xff] ();
+    psxHLEt[upse_r3000_cpu_regs.code & 0xff] (ins);
 }
 
-static void (*psxBSC[64]) () =
+static void (*psxBSC[64]) (upse_module_instance_t *ins) =
 {
 psxSPECIAL, psxREGIMM, psxJ, psxJAL, psxBEQ, psxBNE, psxBLEZ, psxBGTZ,
 	psxADDI, psxADDIU, psxSLTI, psxSLTIU, psxANDI, psxORI, psxXORI, psxLUI,
@@ -1039,7 +1038,7 @@ psxSPECIAL, psxREGIMM, psxJ, psxJAL, psxBEQ, psxBNE, psxBLEZ, psxBGTZ,
 	psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxHLE, psxNULL, psxNULL, psxNULL, psxNULL};
 
 
-static void (*psxSPC[64]) () =
+static void (*psxSPC[64]) (upse_module_instance_t *ins) =
 {
 psxSLL, psxNULL, psxSRL, psxSRA, psxSLLV, psxNULL, psxSRLV, psxSRAV,
 	psxJR, psxJALR, psxNULL, psxNULL, psxSYSCALL, psxBREAK, psxNULL, psxNULL,
@@ -1049,13 +1048,13 @@ psxSLL, psxNULL, psxSRL, psxSRA, psxSLLV, psxNULL, psxSRLV, psxSRAV,
 	psxNULL, psxNULL, psxSLT, psxSLTU, psxNULL, psxNULL, psxNULL, psxNULL,
 	psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL};
 
-static void (*psxREG[32]) () =
+static void (*psxREG[32]) (upse_module_instance_t *ins) =
 {
 psxBLTZ, psxBGEZ, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,
 	psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,
 	psxBLTZAL, psxBGEZAL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL};
 
-static void (*psxCP0[32]) () =
+static void (*psxCP0[32]) (upse_module_instance_t *ins) =
 {
 psxMFC0, psxNULL, psxCFC0, psxNULL, psxMTC0, psxNULL, psxCTC0, psxNULL,
 	psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,
@@ -1074,45 +1073,45 @@ void upse_r3000_cpu_reset(void)
     branch = branch2 = 0;
 }
 
-void upse_r3000_cpu_execute(void)
+void upse_r3000_cpu_execute(upse_module_instance_t *ins)
 {
     for (;;)
     {
-	if (!CounterSPURun())
+	if (!CounterSPURun(ins))
 	{
-	    psxShutdown();
+	    psxShutdown(ins);
 	    return;
 	}
-	upse_ps1_spu_finalize();
-	execI();
+	upse_ps1_spu_finalize(ins->spu);
+	execI(ins);
     }
 }
 
-int upse_r3000_cpu_execute_render(s16 **s)
+int upse_r3000_cpu_execute_render(upse_module_instance_t *ins, s16 **s)
 {
     for (;;)
     {
         int r;
 
-        if (!CounterSPURun())
+        if (!CounterSPURun(ins))
         {
-            psxShutdown();
+            psxShutdown(ins);
             return 0;
         }
 
-        r = upse_ps1_spu_finalize_count(s);
+        r = upse_ps1_spu_finalize_count(ins->spu, s);
         if (r && *s)
             return r;
 
-        execI();
+        execI(ins);
     }
 }
 
-void upse_r3000_cpu_execute_block(void)
+void upse_r3000_cpu_execute_block(upse_module_instance_t *ins)
 {
     branch2 = 0;
     while (!branch2)
-	execI();
+	execI(ins);
 }
 
 void upse_r3000_cpu_clear(u32 Addr, u32 Size)

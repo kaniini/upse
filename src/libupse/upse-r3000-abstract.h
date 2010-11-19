@@ -105,18 +105,18 @@ extern upse_r3000_cpu_registers_t upse_r3000_cpu_regs;
 
 #define _SetLink(x)     upse_r3000_cpu_regs.GPR.r[x] = _PC_ + 4;	// Sets the return address in the link register
 
-int psxInit();
-void psxReset(upse_psx_revision_t rev);
-void psxShutdown();
-void psxException(u32 code, u32 bd);
-void psxBranchTest();
-void psxExecuteBios();
+int psxInit(upse_module_instance_t *ins);
+void psxReset(upse_module_instance_t *ins, upse_psx_revision_t rev);
+void psxShutdown(upse_module_instance_t *ins);
+void psxException(upse_module_instance_t *ins, u32 code, u32 bd);
+void psxBranchTest(upse_module_instance_t *ins);
+void psxExecuteBios(upse_module_instance_t *ins);
 
 int upse_r3000_cpu_init(void);
 void upse_r3000_cpu_reset(void);
-void upse_r3000_cpu_execute(void);
-int upse_r3000_cpu_execute_render(s16 **);
-void upse_r3000_cpu_execute_block(void);
+void upse_r3000_cpu_execute(upse_module_instance_t *ins);
+int upse_r3000_cpu_execute_render(upse_module_instance_t *ins, s16 **);
+void upse_r3000_cpu_execute_block(upse_module_instance_t *ins);
 void upse_r3000_cpu_clear(u32 Addr, u32 Size);
 void upse_r3000_cpu_shutdown(void);
 

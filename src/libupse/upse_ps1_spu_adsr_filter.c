@@ -17,7 +17,7 @@
  */
 
 #include "upse-types.h"
-#include "upse-spu-internal.h"
+#include "upse-internal.h"
 
 ////////////////////////////////////////////////////////////////////////
 // ADSR func

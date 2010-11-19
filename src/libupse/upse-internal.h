@@ -54,7 +54,6 @@ void __Log(char *fmt, ...);
 #include "upse-debug.h"
 #include "upse-r3000-abstract.h"
 #include "upse-eventloop.h"
-#include "upse-module.h"
 #include "upse-loader.h"
 #include "upse-ps1-memory-manager.h"
 #include "upse-ps1-hal.h"
@@ -63,10 +62,11 @@ void __Log(char *fmt, ...);
 #include "upse-ps1-dma-manager.h"
 #include "upse-ps1-counters.h"
 #include "upse-ps1-executive.h"
-#include "upse-ps1-spu-abstract.h"
 #include "upse-ps1-spu-base.h"
+#include "upse-ps1-spu-abstract.h"
 #include "upse-container-xsf.h"
 #include "upse-filesystem.h"
+#include "upse-module.h"
 
 u8 *upse_get_buffer(void *fp, upse_iofuncs_t *funcs, u32 *len);
 

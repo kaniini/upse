@@ -39,7 +39,7 @@ u32 psxRcntRcount(u32 index);
 
 void psxUpdateVSyncRate();
 
-int CounterSPURun(void);
-void CounterDeadLoopSkip();
+int CounterSPURun(upse_module_instance_t *ins);
+void CounterDeadLoopSkip(upse_module_instance_t *ins);
 
 #endif /* __PSXCOUNTERS_H__ */

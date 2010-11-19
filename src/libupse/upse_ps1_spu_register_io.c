@@ -25,13 +25,11 @@
 #include "upse.h"
 #include "upse-ps1-memory-manager.h"
 
-extern upse_spu_state_t *spu;
-
 ////////////////////////////////////////////////////////////////////////
 // WRITE REGISTERS: called by main emu
 ////////////////////////////////////////////////////////////////////////
 
-void SPUwriteRegister(u32 reg, u16 val)
+void SPUwriteRegister(upse_spu_state_t *spu, u32 reg, u16 val)
 {
     const u32 r = reg & 0xfff;
     spu->regArea[(r - 0xc00) >> 1] = val;
@@ -46,15 +44,15 @@ void SPUwriteRegister(u32 reg, u16 val)
 	{
 	      //------------------------------------------------// r volume
 	  case 0:
-	      SetVolumeLR(0, (u8) ch, val);
+	      SetVolumeLR(spu, 0, (u8) ch, val);
 	      break;
 	      //------------------------------------------------// l volume
 	  case 2:
-	      SetVolumeLR(1, (u8) ch, val);
+	      SetVolumeLR(spu, 1, (u8) ch, val);
 	      break;
 	      //------------------------------------------------// pitch
 	  case 4:
-	      SetPitch(ch, val);
+	      SetPitch(spu, ch, val);
 	      break;
 	      //------------------------------------------------// start
 	  case 6:
@@ -184,37 +182,37 @@ void SPUwriteRegister(u32 reg, u16 val)
 */
 	  //-------------------------------------------------//
       case H_SPUon1:
-	  SoundOn(0, 16, val);
+	  SoundOn(spu, 0, 16, val);
 	  break;
 	  //-------------------------------------------------//
       case H_SPUon2:
 	  // printf("Boop: %08x: %04x\n",reg,val);
-	  SoundOn(16, 24, val);
+	  SoundOn(spu, 16, 24, val);
 	  break;
 	  //-------------------------------------------------//
       case H_SPUoff1:
-	  SoundOff(0, 16, val);
+	  SoundOff(spu, 0, 16, val);
 	  break;
 	  //-------------------------------------------------//
       case H_SPUoff2:
-	  SoundOff(16, 24, val);
+	  SoundOff(spu, 16, 24, val);
 	  // printf("Boop: %08x: %04x\n",reg,val);
 	  break;
 	  //-------------------------------------------------//
       case H_FMod1:
-	  FModOn(0, 16, val);
+	  FModOn(spu, 0, 16, val);
 	  break;
 	  //-------------------------------------------------//
       case H_FMod2:
-	  FModOn(16, 24, val);
+	  FModOn(spu, 16, 24, val);
 	  break;
 	  //-------------------------------------------------//
       case H_Noise1:
-	  NoiseOn(0, 16, val);
+	  NoiseOn(spu, 0, 16, val);
 	  break;
 	  //-------------------------------------------------//
       case H_Noise2:
-	  NoiseOn(16, 24, val);
+	  NoiseOn(spu, 16, 24, val);
 	  break;
 	  //-------------------------------------------------//
       case H_RVBon1:
@@ -334,7 +332,7 @@ void SPUwriteRegister(u32 reg, u16 val)
 // READ REGISTER: called by main emu
 ////////////////////////////////////////////////////////////////////////
 
-u16 SPUreadRegister(u32 reg)
+u16 SPUreadRegister(upse_spu_state_t *spu, u32 reg)
 {
     const u32 r = reg & 0xfff;
 
@@ -401,7 +399,7 @@ u16 SPUreadRegister(u32 reg)
 // SOUND ON register write
 ////////////////////////////////////////////////////////////////////////
 
-void SoundOn(int start, int end, u16 val)	// SOUND ON PSX COMAND
+void SoundOn(upse_spu_state_t *spu, int start, int end, u16 val)	// SOUND ON PSX COMAND
 {
     int ch;
 
@@ -419,7 +417,7 @@ void SoundOn(int start, int end, u16 val)	// SOUND ON PSX COMAND
 // SOUND OFF register write
 ////////////////////////////////////////////////////////////////////////
 
-void SoundOff(int start, int end, u16 val)	// SOUND OFF PSX COMMAND
+void SoundOff(upse_spu_state_t *spu, int start, int end, u16 val)	// SOUND OFF PSX COMMAND
 {
     int ch;
     for (ch = start; ch < end; ch++, val >>= 1)	// loop channels
@@ -435,7 +433,7 @@ void SoundOff(int start, int end, u16 val)	// SOUND OFF PSX COMMAND
 // FMOD register write
 ////////////////////////////////////////////////////////////////////////
 
-void FModOn(int start, int end, u16 val)	// FMOD ON PSX COMMAND
+void FModOn(upse_spu_state_t *spu, int start, int end, u16 val)	// FMOD ON PSX COMMAND
 {
     int ch;
 
@@ -460,7 +458,7 @@ void FModOn(int start, int end, u16 val)	// FMOD ON PSX COMMAND
 // NOISE register write
 ////////////////////////////////////////////////////////////////////////
 
-void NoiseOn(int start, int end, u16 val)	// NOISE ON PSX COMMAND
+void NoiseOn(upse_spu_state_t *spu, int start, int end, u16 val)	// NOISE ON PSX COMMAND
 {
     int ch;
 
@@ -483,7 +481,7 @@ void NoiseOn(int start, int end, u16 val)	// NOISE ON PSX COMMAND
 
 // please note: sweep is wrong.
 
-void SetVolumeLR(int right, u8 ch, s16 vol)	// LEFT VOLUME
+void SetVolumeLR(upse_spu_state_t *spu, int right, u8 ch, s16 vol)	// LEFT VOLUME
 {
     //if(vol&0xc000)
     //printf("%d %08x\n",right,vol);
@@ -527,7 +525,7 @@ void SetVolumeLR(int right, u8 ch, s16 vol)	// LEFT VOLUME
 // PITCH register write
 ////////////////////////////////////////////////////////////////////////
 
-void SetPitch(int ch, u16 val)	// SET PITCH
+void SetPitch(upse_spu_state_t *spu, int ch, u16 val)	// SET PITCH
 {
     int NP;
     if (val > 0x3fff)

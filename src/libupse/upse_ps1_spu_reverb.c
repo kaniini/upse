@@ -17,7 +17,7 @@
  * UPSE is offered without any warranty of any kind, explicit or implicit.
  */
 
-#include "upse-types.h"
+#include "upse-internal.h"
 #include "upse-spu-internal.h"
 #include "upse-debug.h"
 

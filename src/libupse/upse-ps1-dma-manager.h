@@ -20,12 +20,7 @@
 #ifndef _UPSE__LIBUPSE__UPSE_PS1_DMA_MANAGER_H__GUARD
 #define _UPSE__LIBUPSE__UPSE_PS1_DMA_MANAGER_H__GUARD
 
-void psxDma2(u32 madr, u32 bcr, u32 chcr);
-
-void psxDma3(u32 madr, u32 bcr, u32 chcr);
-
-void psxDma4(u32 madr, u32 bcr, u32 chcr);
-
-void psxDma6(u32 madr, u32 bcr, u32 chcr);
+void psxDma4(upse_module_instance_t *ins, u32 madr, u32 bcr, u32 chcr);
+void psxDma6(upse_module_instance_t *ins, u32 madr, u32 bcr, u32 chcr);
 
 #endif

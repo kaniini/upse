@@ -19,7 +19,7 @@
 
 #include "upse-internal.h"
 
-void psxDma4(u32 madr, u32 bcr, u32 chcr)
+void psxDma4(upse_module_instance_t *ins, u32 madr, u32 bcr, u32 chcr)
 {				// SPU
     switch (chcr)
     {
@@ -27,16 +27,16 @@ void psxDma4(u32 madr, u32 bcr, u32 chcr)
 	  bcr = (bcr >> 16) * (bcr & 0xffff) * 2;
 
 	  //printf("%08x, %08x\n",madr,bcr);
-	  SPUwriteDMAMem(madr, bcr);
+	  SPUwriteDMAMem(ins->spu, madr, bcr);
 	  break;
       case 0x01000200:		//spu to cpu transfer
 	  //printf("%08x\n",madr);
-	  SPUreadDMAMem(madr, (bcr >> 16) * (bcr & 0xffff) * 2);
+	  SPUreadDMAMem(ins->spu, madr, (bcr >> 16) * (bcr & 0xffff) * 2);
 	  break;
     }
 }
 
-void psxDma6(u32 madr, u32 bcr, u32 chcr)
+void psxDma6(upse_module_instance_t *ins, u32 madr, u32 bcr, u32 chcr)
 {
     u32 *mem = (u32 *) PSXM(madr);
 

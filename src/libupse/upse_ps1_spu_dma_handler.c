@@ -26,13 +26,11 @@
 #include "upse.h"
 #include "upse-ps1-memory-manager.h"
 
-extern upse_spu_state_t *spu;
-
 ////////////////////////////////////////////////////////////////////////
 // READ DMA (many values)
 ////////////////////////////////////////////////////////////////////////
 
-void SPUreadDMAMem(u32 usPSXMem, int iSize)
+void SPUreadDMAMem(upse_spu_state_t *spu, u32 usPSXMem, int iSize)
 {
     int i;
 
@@ -58,7 +56,7 @@ void SPUreadDMAMem(u32 usPSXMem, int iSize)
 // WRITE DMA (many values)
 ////////////////////////////////////////////////////////////////////////
 
-void SPUwriteDMAMem(u32 usPSXMem, int iSize)
+void SPUwriteDMAMem(upse_spu_state_t *spu, u32 usPSXMem, int iSize)
 {
     int i;
 

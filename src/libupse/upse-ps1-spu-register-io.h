@@ -143,18 +143,18 @@
 #define H_SPU_ADSRLevel22  0x0d68
 #define H_SPU_ADSRLevel23  0x0d78
 
-void SoundOn(int start, int end, u16 val);
+void SoundOn(upse_spu_state_t *spu, int start, int end, u16 val);
 
-void SoundOff(int start, int end, u16 val);
+void SoundOff(upse_spu_state_t *spu, int start, int end, u16 val);
 
-void FModOn(int start, int end, u16 val);
+void FModOn(upse_spu_state_t *spu, int start, int end, u16 val);
 
-void NoiseOn(int start, int end, u16 val);
+void NoiseOn(upse_spu_state_t *spu, int start, int end, u16 val);
 
-void SetVolumeLR(int right, u8 ch, s16 vol);
+void SetVolumeLR(upse_spu_state_t *spu, int right, u8 ch, s16 vol);
 
-void SetPitch(int ch, u16 val);
+void SetPitch(upse_spu_state_t *spu, int ch, u16 val);
 
-void SPUwriteRegister(u32 reg, u16 val);
+void SPUwriteRegister(upse_spu_state_t *spu, u32 reg, u16 val);
 
 

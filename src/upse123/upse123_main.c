@@ -174,7 +174,7 @@ upse123_write_audio(unsigned char* data, long bytes, void *unused)
 }
 
 void
-upse123_init_audio(int rate)
+upse123_init_audio(upse_module_t *mod, int rate)
 {
 #ifndef _WIN32
 #ifndef HAVE_AO
@@ -240,13 +240,12 @@ upse123_init_audio(int rate)
 #endif
 #endif
 
-    upse_set_audio_callback(upse123_write_audio, NULL);
+    upse_eventloop_set_audio_callback(mod, upse123_write_audio, NULL);
 }
 
 void
 upse123_close_audio(void)
 {
-    upse_set_audio_callback(NULL, NULL);
 #ifndef _WIN32
 #ifndef HAVE_AO
     if (oss_audio_fd > 0)
@@ -384,7 +383,7 @@ main(int argc, char *argv[])
 
 	printf("\n");
 
-        upse123_init_audio(mod->metadata->rate);
+        upse123_init_audio(mod, mod->metadata->rate);
         upse_eventloop_run(mod);
         upse_module_close(mod);
         mod = NULL;

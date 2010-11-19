@@ -29,13 +29,13 @@
 #define HW_DMA_PCR   (psxHu32(0x10f0))
 #define HW_DMA_ICR   (psxHu32(0x10f4))
 
-void upse_ps1_hal_reset()
+void upse_ps1_hal_reset(upse_module_instance_t *ins)
 {
     memset(psxH, 0, 0x10000);
     psxRcntInit();
 }
 
-u8 upse_ps1_hal_read_8(u32 add)
+u8 upse_ps1_hal_read_8(upse_module_instance_t *ins, u32 add)
 {
     u8 hard;
 
@@ -48,7 +48,7 @@ u8 upse_ps1_hal_read_8(u32 add)
     return hard;
 }
 
-u16 upse_ps1_hal_read_16(u32 add)
+u16 upse_ps1_hal_read_16(upse_module_instance_t *ins, u32 add)
 {
     u16 hard;
 
@@ -96,7 +96,7 @@ u16 upse_ps1_hal_read_16(u32 add)
       default:
 	  if (add >= 0x1f801c00 && add < 0x1f801e00)
 	  {
-	      hard = SPUreadRegister(add);
+	      hard = SPUreadRegister(ins->spu, add);
 	  }
 	  else
 	  {
@@ -108,7 +108,7 @@ u16 upse_ps1_hal_read_16(u32 add)
     return hard;
 }
 
-u32 upse_ps1_hal_read_32(u32 add)
+u32 upse_ps1_hal_read_32(upse_module_instance_t *ins, u32 add)
 {
     u32 hard;
 
@@ -168,7 +168,7 @@ u32 upse_ps1_hal_read_32(u32 add)
     return hard;
 }
 
-void upse_ps1_hal_write_8(u32 add, u8 value)
+void upse_ps1_hal_write_8(upse_module_instance_t *ins, u32 add, u8 value)
 {
     switch (add)
     {
@@ -179,7 +179,7 @@ void upse_ps1_hal_write_8(u32 add, u8 value)
     psxHu8(add) = value;
 }
 
-void upse_ps1_hal_write_16(u32 add, u16 value)
+void upse_ps1_hal_write_16(upse_module_instance_t *ins, u32 add, u16 value)
 {
     switch (add)
     {
@@ -226,7 +226,7 @@ void upse_ps1_hal_write_16(u32 add, u16 value)
       default:
 	  if (add >= 0x1f801c00 && add < 0x1f801e00)
 	  {
-	      SPUwriteRegister(add, value);
+	      SPUwriteRegister(ins->spu, add, value);
 	      return;
 	  }
 
@@ -237,27 +237,27 @@ void upse_ps1_hal_write_16(u32 add, u16 value)
     psxHu16(add) = BFLIP16(value);
 }
 
-#define	DMA_INTERRUPT(n) \
+#define	DMA_INTERRUPT(ins, n) \
 	if (BFLIP32(HW_DMA_ICR) & (1 << (16 + n))) { \
 		HW_DMA_ICR|= BFLIP32(1 << (24 + n)); \
 		psxHu32(0x1070) |= BFLIP32(8); \
 	}
 
-#define DmaExec(n) { \
+#define DmaExec(ins, n) { \
 	if (BFLIP32(HW_DMA##n##_CHCR) & 0x01000000 && BFLIP32(HW_DMA_PCR) & (8 << (n * 4))) { \
-		psxDma##n(BFLIP32(HW_DMA##n##_MADR), BFLIP32(HW_DMA##n##_BCR), BFLIP32(HW_DMA##n##_CHCR)); \
+		psxDma##n(ins, BFLIP32(HW_DMA##n##_MADR), BFLIP32(HW_DMA##n##_BCR), BFLIP32(HW_DMA##n##_CHCR)); \
 		HW_DMA##n##_CHCR &= BFLIP32(~0x01000000); \
-		DMA_INTERRUPT(n); \
+		DMA_INTERRUPT(ins, n); \
 	} \
 }
 
-void upse_ps1_hal_write_32(u32 add, u32 value)
+void upse_ps1_hal_write_32(upse_module_instance_t *ins, u32 add, u32 value)
 {
     switch (add)
     {
       case 0x1f8010c8:
 	  HW_DMA4_CHCR = BFLIP32(value);	// DMA4 chcr (SPU DMA)
-	  DmaExec(4);
+	  DmaExec(ins, 4);
 	  return;
       case 0x1f8010f4:
       {

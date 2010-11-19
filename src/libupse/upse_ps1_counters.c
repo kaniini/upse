@@ -114,7 +114,7 @@ void psxRcntInit()
     last = 0;
 }
 
-void CounterDeadLoopSkip()
+void CounterDeadLoopSkip(upse_module_instance_t *ins)
 {
     s32 min, x, lmin;
 
@@ -135,7 +135,7 @@ void CounterDeadLoopSkip()
         upse_r3000_cpu_regs.cycle += lmin;
 }
 
-int CounterSPURun(void)
+int CounterSPURun(upse_module_instance_t *ins)
 {
     u32 cycles;
 
@@ -149,7 +149,7 @@ int CounterSPURun(void)
 
     if (cycles >= 16)
     {
-	if (!upse_ps1_spu_render(cycles))
+	if (!upse_ps1_spu_render(ins->spu, cycles))
 	    return (0);
 	last = upse_r3000_cpu_regs.cycle;
     }

@@ -35,8 +35,6 @@
 
 // psx buffer / addresses
 
-upse_spu_state_t *spu;
-
 // user settings          
 static int iVolume;
 
@@ -215,7 +213,7 @@ static const int noisetable[] = {
 // START SOUND... called by main thread to setup a new sound on a channel
 ////////////////////////////////////////////////////////////////////////
 
-static INLINE void StartSound(int ch)
+static INLINE void StartSound(upse_spu_state_t *spu, int ch)
 {
     StartADSR(spu, ch);
 
@@ -243,7 +241,7 @@ static INLINE void StartSound(int ch)
 ////////////////////////////////////////////////////////////////////////
 
 // Counting to 65536 results in full volume offage.
-void upse_ps1_spu_setlength(s32 stop, s32 fade)
+void upse_ps1_spu_setlength(upse_spu_state_t *spu, s32 stop, s32 fade)
 {
     _ENTER;
 
@@ -266,23 +264,31 @@ void upse_ps1_spu_setlength(s32 stop, s32 fade)
     _LEAVE;
 }
 
-void upse_ps1_spu_setvolume(int volume)
+void upse_ps1_spu_setvolume(upse_spu_state_t *spu, int volume)
 {
     _ENTER;
 
     _LEAVE;
 }
 
-int upse_seek(u32 t)
+int upse_ps1_spu_seek(upse_module_instance_t *ins, u32 t)
 {
+    upse_spu_state_t *spu = ins->spu;
+
+    _ENTER;
+
     spu->seektime = t * 441 / 10;
     if (spu->seektime > spu->sampcount)
-	return (1);
-    return (0);
+    {
+	_LEAVE 1;
+    }
+
+    _LEAVE 0;
 }
 
 #define CLIP(_x) {if(_x>32767) _x=32767; if(_x<-32767) _x=-32767;}
-int upse_ps1_spu_render(u32 cycles)
+
+int upse_ps1_spu_render(upse_spu_state_t *spu, u32 cycles)
 {
     s32 dosampies;
     s32 temp;
@@ -308,10 +314,9 @@ int upse_ps1_spu_render(u32 cycles)
 	    for (ch = 0; ch < MAXCHAN; ch++)	// loop em all.
 	    {
 		if (spu->s_chan[ch].bNew)
-		    StartSound(ch);	// start new sound
+		    StartSound(spu, ch);
 		if (!spu->s_chan[ch].bOn)
-		    continue;	// channel not playing? next
-
+		    continue;
 
 		if (spu->s_chan[ch].iActFreq != spu->s_chan[ch].iUsedFreq)	// new psx frequency?
 		{
@@ -545,14 +550,18 @@ int upse_ps1_spu_render(u32 cycles)
     return (1);
 }
 
-void upse_ps1_stop(void)
+void upse_ps1_spu_stop(upse_module_instance_t *ins)
 {
+    upse_spu_state_t *spu = ins->spu;
+
     spu->decaybegin = 1;
     spu->decayend = 0;
 }
 
-void upse_set_audio_callback(upse_audio_callback_func_t func, void *user_data)
+void upse_ps1_spu_set_audio_callback(upse_module_instance_t *ins, upse_audio_callback_func_t func, void *user_data)
 {
+    upse_spu_state_t *spu = ins->spu;
+
     _ENTER;
 
     spu->cb = func;
@@ -564,7 +573,7 @@ void upse_set_audio_callback(upse_audio_callback_func_t func, void *user_data)
     _LEAVE;
 }
 
-void upse_ps1_spu_finalize(void)
+void upse_ps1_spu_finalize(upse_spu_state_t *spu)
 {
     if ((spu->seektime != (u32) ~ 0) && spu->seektime > spu->sampcount)
     {
@@ -584,7 +593,7 @@ void upse_ps1_spu_finalize(void)
     }
 }
 
-int upse_ps1_spu_finalize_count(s16 ** s)
+int upse_ps1_spu_finalize_count(upse_spu_state_t *spu, s16 ** s)
 {
     if ((spu->seektime != (u32) ~ 0) && spu->seektime > spu->sampcount)
     {
@@ -610,22 +619,13 @@ int upse_ps1_spu_finalize_count(s16 ** s)
 // INIT/EXIT STUFF
 ////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////
-// SPUINIT: this func will be called first by the main emu
-////////////////////////////////////////////////////////////////////////
-
-int upse_ps1_spu_init(void)
-{
-    return 0;
-}
-
-////////////////////////////////////////////////////////////////////////
-// SETUPSTREAMS: init most of the spu buffers
-////////////////////////////////////////////////////////////////////////
-
-void SetupStreams(void)
+static void
+upse_ps1_spu_setup_streams(upse_spu_state_t *spu)
 {
     int i;
+
+    if (spu == NULL)
+        return;
 
     spu->pSpuBuffer = (u8 *) malloc(32768);	// alloc mixing buffer
     spu->pS = (s16 *) spu->pSpuBuffer;
@@ -640,35 +640,21 @@ void SetupStreams(void)
     }
 }
 
-////////////////////////////////////////////////////////////////////////
-// REMOVESTREAMS: free most buffer
-////////////////////////////////////////////////////////////////////////
-
-void RemoveStreams(void)
+static void
+upse_ps1_spu_remove_streams(upse_spu_state_t *spu)
 {
-    free(spu->pSpuBuffer);		// free mixing buffer
-    spu->pSpuBuffer = NULL;
+    if (spu == NULL)
+        return;
 
-#ifdef TIMEO
-    {
-	u64 tmp;
-	tmp = SexyTime64();
-	tmp -= begintime;
-	if (tmp)
-	    tmp = (u64) sampcount *1000000 / tmp;
-	printf("%lld samples per second\n", tmp);
-    }
-#endif
+    free(spu->pSpuBuffer);
+
+    spu->pSpuBuffer = NULL;
 }
 
-
-////////////////////////////////////////////////////////////////////////
-// SPUOPEN: called by main emu after init
-////////////////////////////////////////////////////////////////////////
-
-int upse_ps1_spu_open(void)
+upse_spu_state_t *
+upse_ps1_spu_open(void)
 {
-    spu = calloc(sizeof(upse_spu_state_t), 1);
+    upse_spu_state_t *spu = calloc(sizeof(upse_spu_state_t), 1);
 
     spu->spuMemC = (u8 *) spu->spuMem;	// just small setup
     memset((void *) spu->s_chan, 0, MAXCHAN * sizeof(SPUCHAN));
@@ -679,8 +665,6 @@ int upse_ps1_spu_open(void)
     spu->sampcount = spu->nextirq = 0;
     spu->seektime = (u32) ~ 0;
 
-    if (spu->bSPUIsOpen)
-	return 0;		// security for some stupid main emus
     spu->spuIrq = 0;
 
     spu->spuStat = spu->spuCtrl = 0;
@@ -691,38 +675,19 @@ int upse_ps1_spu_open(void)
     spu->pSpuIrq = 0;
 
     iVolume = 60;
-    SetupStreams();		// prepare streaming
+    upse_ps1_spu_setup_streams(spu);		// prepare streaming
 
     upse_spu_lowpass_filter_redesign(spu, 44100);
 
-    spu->bSPUIsOpen = 1;
-
-    return 1;
+    return spu;
 }
 
-////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////
-// SPUCLOSE: called before shutdown
-////////////////////////////////////////////////////////////////////////
-
-int upse_ps1_spu_close(void)
+void
+upse_ps1_spu_close(upse_spu_state_t *spu)
 {
     if (spu == NULL)
-	return 0;		// some security
+	return;
 
-    RemoveStreams();		// no more streaming
-
+    upse_ps1_spu_remove_streams(spu);
     free(spu);
-
-    return 0;
-}
-
-////////////////////////////////////////////////////////////////////////
-// SPUSHUTDOWN: called by main emu on final exit
-////////////////////////////////////////////////////////////////////////
-
-int SPUshutdown(void)
-{
-    return 0;
 }

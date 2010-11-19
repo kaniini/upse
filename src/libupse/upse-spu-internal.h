@@ -16,6 +16,9 @@
  *                                                                         *
  ***************************************************************************/
 
+#ifndef __UPSE_SPU_INTERNAL_H__
+#define __UPSE_SPU_INTERNAL_H__
+
 #include "upse-types.h"
 #include "upse-ps1-memory-manager.h"
 
@@ -234,3 +237,5 @@ typedef struct {
 extern void upse_spu_lowpass_filter_reset(upse_spu_state_t *spu);
 extern void upse_spu_lowpass_filter_redesign(upse_spu_state_t *spu, int samplerate);
 extern void upse_spu_lowpass_filter_process(upse_spu_state_t *spu, s16 *samplebuf, int samplecount);
+
+#endif

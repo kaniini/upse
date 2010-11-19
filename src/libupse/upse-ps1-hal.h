@@ -20,12 +20,12 @@
 #ifndef _UPSE__LIBUPSE__UPSE_PS1_HAL_H__GUARD
 #define _UPSE__LIBUPSE__UPSE_PS1_HAL_H__GUARD
 
-void upse_ps1_hal_reset();
-u8 upse_ps1_hal_read_8(u32 add);
-u16 upse_ps1_hal_read_16(u32 add);
-u32 upse_ps1_hal_read_32(u32 add);
-void upse_ps1_hal_write_8(u32 add, u8 value);
-void upse_ps1_hal_write_16(u32 add, u16 value);
-void upse_ps1_hal_write_32(u32 add, u32 value);
+void upse_ps1_hal_reset(upse_module_instance_t *ins);
+u8 upse_ps1_hal_read_8(upse_module_instance_t *ins, u32 add);
+u16 upse_ps1_hal_read_16(upse_module_instance_t *ins, u32 add);
+u32 upse_ps1_hal_read_32(upse_module_instance_t *ins, u32 add);
+void upse_ps1_hal_write_8(upse_module_instance_t *ins, u32 add, u8 value);
+void upse_ps1_hal_write_16(upse_module_instance_t *ins, u32 add, u16 value);
+void upse_ps1_hal_write_32(upse_module_instance_t *ins, u32 add, u32 value);
 
 #endif

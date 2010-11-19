@@ -19,6 +19,8 @@
     
 #ifndef __PSXHLE_H__
 #define __PSXHLE_H__
-extern void (*psxHLEt[256]) ();
-
+
+extern void (*psxHLEt[256]) (upse_module_instance_t *);
+
+
 #endif	/* __PSXHLE_H__ */

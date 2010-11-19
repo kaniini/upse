@@ -249,20 +249,23 @@ upse_load_psf(void *fp, const char *path, upse_iofuncs_t * iofuncs)
 
     _ENTER;
 
-    psxInit();
-    psxReset(UPSE_PSX_REV_PS1);
+    ret = (upse_module_t *) calloc(sizeof(upse_module_t), 1);
+
+    psxInit(&ret->instance);
+    psxReset(&ret->instance, UPSE_PSX_REV_PS1);
 
     if (!(psf = _upse_load_psf(fp, path, 0, 0, iofuncs)))
     {
-	psxShutdown();
+	psxShutdown(&ret->instance);
+        free(ret);
 	return NULL;
     }
 
     if (psf->stop == (u32) ~ 0)
 	psf->fade = 0;
 
-    upse_ps1_spu_setvolume(psf->volume);
-    upse_ps1_spu_setlength(psf->stop, psf->fade);
+    upse_ps1_spu_setvolume(ret->instance.spu, psf->volume);
+    upse_ps1_spu_setlength(ret->instance.spu, psf->stop, psf->fade);
     psf->length = psf->stop + psf->fade;
     psf->rate = 44100;
 
@@ -292,11 +295,11 @@ upse_load_psf(void *fp, const char *path, upse_iofuncs_t * iofuncs)
        PSXMu32(0x118b8) = BFLIP32(0);
     }
 
-    ret = (upse_module_t *) calloc(sizeof(upse_module_t), 1);
     ret->metadata = psf;
     ret->evloop_run = upse_r3000_cpu_execute;
-    ret->evloop_stop = upse_ps1_stop;
+    ret->evloop_stop = upse_ps1_spu_stop;
     ret->evloop_render = upse_r3000_cpu_execute_render;
+    ret->evloop_setcb = upse_ps1_spu_set_audio_callback;
 
     _LEAVE;
     return ret;

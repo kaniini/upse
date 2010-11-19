@@ -23,5 +23,7 @@
 void upse_eventloop_run(upse_module_t *mod);
 void upse_eventloop_stop(upse_module_t *mod);
 int upse_eventloop_render(upse_module_t *mod, s16 **samples);
+void upse_eventloop_set_audio_callback(upse_module_t *mod, upse_audio_callback_func_t func, void *user_data);
+int upse_eventloop_seek(upse_module_t *mod, u32 time);
 
 #endif

@@ -394,25 +394,25 @@ static u32 SysIntRP[8];
 static TCB Thread[8];
 static int CurThread;
 
-static INLINE void softCall(u32 pc)
+static INLINE void softCall(upse_module_instance_t *ins, u32 pc)
 {
     pc0 = pc;
     ra = 0x80001000;
     while (pc0 != 0x80001000)
-	upse_r3000_cpu_execute_block();
+	upse_r3000_cpu_execute_block(ins);
 }
 
-static INLINE void softCall2(u32 pc)
+static INLINE void softCall2(upse_module_instance_t *ins, u32 pc)
 {
     u32 sra = ra;
     pc0 = pc;
     ra = 0x80001000;
     while (pc0 != 0x80001000)
-	upse_r3000_cpu_execute_block();
+	upse_r3000_cpu_execute_block(ins);
     ra = sra;
 }
 
-static INLINE void DeliverEvent(u32 ev, u32 spec)
+static INLINE void DeliverEvent(upse_module_instance_t *ins, u32 ev, u32 spec)
 {
     if (Event[ev][spec].status != BFLIP32S(EvStACTIVE))
 	return;
@@ -420,7 +420,7 @@ static INLINE void DeliverEvent(u32 ev, u32 spec)
 //      Event[ev][spec].status = BFLIP32S(EvStALREADY);
     if (Event[ev][spec].mode == BFLIP32S(EvMdINTR))
     {
-	softCall2(BFLIP32S(Event[ev][spec].fhandler));
+	softCall2(ins, BFLIP32S(Event[ev][spec].fhandler));
     }
     else
 	Event[ev][spec].status = BFLIP32S(EvStALREADY);
@@ -433,7 +433,7 @@ static INLINE void DeliverEvent(u32 ev, u32 spec)
 
 /* Abs and labs do the same thing? */
 
-static void bios_abs()
+static void bios_abs(upse_module_instance_t *ins)
 {				// 0x0e
     if ((s32) a0 < 0)
 	v0 = 0 - (s32) a0;
@@ -443,7 +443,7 @@ static void bios_abs()
     pc0 = ra;
 }
 
-static void bios_labs()
+static void bios_labs(upse_module_instance_t *ins)
 {				// 0x0f
     if ((s32) a0 < 0)
 	v0 = 0 - (s32) a0;
@@ -453,21 +453,21 @@ static void bios_labs()
     pc0 = ra;
 }
 
-static void bios_atoi()
+static void bios_atoi(upse_module_instance_t *ins)
 {				// 0x10
     char *arg = Ra0;
     v0 = atoi(arg);
     pc0 = ra;
 }
 
-static void bios_atol()
+static void bios_atol(upse_module_instance_t *ins)
 {				// 0x11
     char *arg = Ra0;
     v0 = atol(arg);
     pc0 = ra;
 }
 
-static void bios_setjmp()
+static void bios_setjmp(upse_module_instance_t *ins)
 {				// 13
     u32 *jmp_buf = (u32 *) Ra0;
     int i;
@@ -483,7 +483,7 @@ static void bios_setjmp()
     pc0 = ra;
 }
 
-static void bios_longjmp()
+static void bios_longjmp(upse_module_instance_t *ins)
 {				//14
     u32 *jmp_buf = (u32 *) Ra0;
     int i;
@@ -499,7 +499,7 @@ static void bios_longjmp()
     pc0 = ra;
 }
 
-static void bios_strcat()
+static void bios_strcat(upse_module_instance_t *ins)
 {				// 0x15
     char *pcA0 = (char *) Ra0;
     char *pcA1 = (char *) Ra1;
@@ -513,7 +513,7 @@ static void bios_strcat()
 }
 
 /*0x16*/
-static void bios_strncat()
+static void bios_strncat(upse_module_instance_t *ins)
 {
     char *pcA0 = (char *) Ra0;
     char *pcA1 = (char *) Ra1;
@@ -526,7 +526,7 @@ static void bios_strncat()
     pc0 = ra;
 }
 
-static void bios_strcmp()
+static void bios_strcmp(upse_module_instance_t *ins)
 {				// 0x17
     char *pcA0 = (char *) Ra0;
     char *pcA1 = (char *) Ra1;
@@ -535,7 +535,7 @@ static void bios_strcmp()
     pc0 = ra;
 }
 
-static void bios_strncmp()
+static void bios_strncmp(upse_module_instance_t *ins)
 {				// 0x18
     u32 max = a2;
     u32 string1 = a0;
@@ -573,7 +573,7 @@ static void bios_strncmp()
 }
 
 /*0x19*/
-static void bios_strcpy()
+static void bios_strcpy(upse_module_instance_t *ins)
 {
     u32 src = a1, dest = a0;
     u8 val;
@@ -591,7 +591,7 @@ static void bios_strcpy()
 }
 
 /*0x1a*/
-static void bios_strncpy()
+static void bios_strncpy(upse_module_instance_t *ins)
 {
     u32 src = a1, dest = a0, max = a2;
     u8 val;
@@ -611,7 +611,7 @@ static void bios_strncpy()
 }
 
 /*0x1b*/
-static void bios_strlen()
+static void bios_strlen(upse_module_instance_t *ins)
 {
     u32 src = a0;
 
@@ -622,7 +622,7 @@ static void bios_strlen()
     pc0 = ra;
 }
 
-static void bios_index()
+static void bios_index(upse_module_instance_t *ins)
 {				// 0x1c
     char *pcA0 = (char *) Ra0;
     char *pcRet = strchr(pcA0, a1);
@@ -633,7 +633,7 @@ static void bios_index()
     pc0 = ra;
 }
 
-static void bios_rindex()
+static void bios_rindex(upse_module_instance_t *ins)
 {				// 0x1d
     char *pcA0 = (char *) Ra0;
     char *pcRet = strrchr(pcA0, a1);
@@ -644,7 +644,7 @@ static void bios_rindex()
     pc0 = ra;
 }
 
-static void bios_strchr()
+static void bios_strchr(upse_module_instance_t *ins)
 {				// 0x1e
     char *pcA0 = (char *) Ra0;
     char *pcRet = strchr(pcA0, a1);
@@ -655,7 +655,7 @@ static void bios_strchr()
     pc0 = ra;
 }
 
-static void bios_strrchr()
+static void bios_strrchr(upse_module_instance_t *ins)
 {				// 0x1f
     char *pcA0 = (char *) Ra0;
     char *pcRet = strrchr(pcA0, a1);
@@ -666,7 +666,7 @@ static void bios_strrchr()
     pc0 = ra;
 }
 
-static void bios_strpbrk()
+static void bios_strpbrk(upse_module_instance_t *ins)
 {				// 0x20
     char *pcA0 = (char *) Ra0;
     char *pcA1 = (char *) Ra1;
@@ -678,14 +678,14 @@ static void bios_strpbrk()
     pc0 = ra;
 }
 
-static void bios_strspn()
+static void bios_strspn(upse_module_instance_t *ins)
 {
     char *pcA0 = (char *) Ra0;
     char *pcA1 = (char *) Ra1;
     v0 = strspn(pcA0, pcA1);
     pc0 = ra;
 }				/*21 */
-static void bios_strcspn()
+static void bios_strcspn(upse_module_instance_t *ins)
 {
     char *pcA0 = (char *) Ra0;
     char *pcA1 = (char *) Ra1;
@@ -693,7 +693,7 @@ static void bios_strcspn()
     pc0 = ra;
 }				/*22 */
 
-static void bios_strtok()
+static void bios_strtok(upse_module_instance_t *ins)
 {				// 0x23
     char *pcA0 = (char *) Ra0;
     char *pcA1 = (char *) Ra1;
@@ -705,7 +705,7 @@ static void bios_strtok()
     pc0 = ra;
 }
 
-static void bios_strstr()
+static void bios_strstr(upse_module_instance_t *ins)
 {				// 0x24
     char *pcA0 = (char *) Ra0;
     char *pcA1 = (char *) Ra1;
@@ -720,21 +720,21 @@ static void bios_strstr()
 }
 
 /*0x25*/
-static void bios_toupper()
+static void bios_toupper(upse_module_instance_t *ins)
 {
     v0 = toupper(a0);
     pc0 = ra;
 }
 
 /*0x26*/
-static void bios_tolower()
+static void bios_tolower(upse_module_instance_t *ins)
 {
     v0 = tolower(a0);
     pc0 = ra;
 }
 
 /*0x27*/
-static void bios_bcopy()
+static void bios_bcopy(upse_module_instance_t *ins)
 {
     u32 dest = a1, src = a0, len = a2;
 
@@ -749,7 +749,7 @@ static void bios_bcopy()
 }
 
 /*0x28*/
-static void bios_bzero()
+static void bios_bzero(upse_module_instance_t *ins)
 {
     u32 dest = a0, len = a1;
 
@@ -764,7 +764,7 @@ static void bios_bzero()
 }
 
 /*0x29*/
-static void bios_bcmp()
+static void bios_bcmp(upse_module_instance_t *ins)
 {
     char *pcA0 = (char *) Ra0;
     char *pcA1 = (char *) Ra1;
@@ -774,7 +774,7 @@ static void bios_bcmp()
 }
 
 /*0x2a*/
-static void bios_memcpy()
+static void bios_memcpy(upse_module_instance_t *ins)
 {
     u32 dest = a0, src = a1, len = a2;
 
@@ -789,7 +789,7 @@ static void bios_memcpy()
     pc0 = ra;
 }
 
-static void bios_memset()	/*0x2b */
+static void bios_memset(upse_module_instance_t *ins)	/*0x2b */
 {
     u32 len = a2;
     u32 dest = a0;
@@ -805,7 +805,7 @@ static void bios_memset()	/*0x2b */
     pc0 = ra;
 }
 
-static void bios_memmove()
+static void bios_memmove(upse_module_instance_t *ins)
 {
     char *pcA0 = (char *) Ra0;
     char *pcA1 = (char *) Ra1;
@@ -816,7 +816,7 @@ static void bios_memmove()
 }
 
 /*0x2d*/
-static void bios_memcmp()
+static void bios_memcmp(upse_module_instance_t *ins)
 {
     char *pcA0 = (char *) Ra0;
     char *pcA1 = (char *) Ra1;
@@ -825,7 +825,7 @@ static void bios_memcmp()
     pc0 = ra;
 }
 
-static void bios_memchr()
+static void bios_memchr(upse_module_instance_t *ins)
 {				// 2e
     char *pcA0 = (char *) Ra0;
 
@@ -837,19 +837,19 @@ static void bios_memchr()
     pc0 = ra;
 }
 
-static void bios_rand()
+static void bios_rand(upse_module_instance_t *ins)
 {				// 2f
     v0 = 1 + (int) (32767.0 * rand() / (RAND_MAX + 1.0));
     pc0 = ra;
 }
 
-static void bios_srand()
+static void bios_srand(upse_module_instance_t *ins)
 {				// 30
     srand(a0);
     pc0 = ra;
 }
 
-static void bios_malloc()
+static void bios_malloc(upse_module_instance_t *ins)
 {				// 33
     u32 chunk;
     u32 fd;
@@ -883,7 +883,7 @@ static void bios_malloc()
     pc0 = ra;
 }
 
-static void bios_InitHeap()
+static void bios_InitHeap(upse_module_instance_t *ins)
 {				// 39
     malloc_chunk *chunk;
 
@@ -901,40 +901,40 @@ static void bios_InitHeap()
     pc0 = ra;
 }
 
-static void bios_printf()
+static void bios_printf(upse_module_instance_t *ins)
 {
     pc0 = ra;
 }
 
-static void bios_puts()
+static void bios_puts(upse_module_instance_t *ins)
 {
     pc0 = ra;
 
     _DEBUG("%s", Ra0);
 }
 
-static void bios_FlushCache()
+static void bios_FlushCache(upse_module_instance_t *ins)
 {				// 44
 
     pc0 = ra;
 }
 
-static void bios__bu_init()
+static void bios__bu_init(upse_module_instance_t *ins)
 {				// 70
 
-    DeliverEvent(0x11, 0x2);	// 0xf0000011, 0x0004
-    DeliverEvent(0x81, 0x2);	// 0xf4000001, 0x0004
+    DeliverEvent(ins, 0x11, 0x2);	// 0xf0000011, 0x0004
+    DeliverEvent(ins, 0x81, 0x2);	// 0xf4000001, 0x0004
 
     pc0 = ra;
 }
 
-static void bios__96_init()
+static void bios__96_init(upse_module_instance_t *ins)
 {				// 71
 
     pc0 = ra;
 }
 
-static void bios__96_remove()
+static void bios__96_remove(upse_module_instance_t *ins)
 {				// 72
 
     pc0 = ra;
@@ -942,7 +942,7 @@ static void bios__96_remove()
 
 /* System calls B0 */
 
-static void bios_SetRCnt()
+static void bios_SetRCnt(upse_module_instance_t *ins)
 {				// 02
 
     a0 &= 0x3;
@@ -973,7 +973,7 @@ static void bios_SetRCnt()
     pc0 = ra;
 }
 
-static void bios_GetRCnt()
+static void bios_GetRCnt(upse_module_instance_t *ins)
 {				// 03
 
     a0 &= 0x3;
@@ -984,7 +984,7 @@ static void bios_GetRCnt()
     pc0 = ra;
 }
 
-static void bios_StartRCnt()
+static void bios_StartRCnt(upse_module_instance_t *ins)
 {				// 04
 
     a0 &= 0x3;
@@ -996,7 +996,7 @@ static void bios_StartRCnt()
     pc0 = ra;
 }
 
-static void bios_StopRCnt()
+static void bios_StopRCnt(upse_module_instance_t *ins)
 {				// 05
 
     a0 &= 0x3;
@@ -1007,7 +1007,7 @@ static void bios_StopRCnt()
     pc0 = ra;
 }
 
-static void bios_ResetRCnt()
+static void bios_ResetRCnt(upse_module_instance_t *ins)
 {				// 06
 
     a0 &= 0x3;
@@ -1039,7 +1039,7 @@ static void bios_ResetRCnt()
 			break; \
 	}
 
-static void bios_DeliverEvent()
+static void bios_DeliverEvent(upse_module_instance_t *ins)
 {				// 07
     int ev, spec;
     int i;
@@ -1047,12 +1047,12 @@ static void bios_DeliverEvent()
     GetEv();
     GetSpec();
 
-    DeliverEvent(ev, spec);
+    DeliverEvent(ins, ev, spec);
 
     pc0 = ra;
 }
 
-static void bios_OpenEvent()
+static void bios_OpenEvent(upse_module_instance_t *ins)
 {				// 08
     int ev, spec;
     int i;
@@ -1068,7 +1068,7 @@ static void bios_OpenEvent()
     pc0 = ra;
 }
 
-static void bios_CloseEvent()
+static void bios_CloseEvent(upse_module_instance_t *ins)
 {				// 09
     int ev, spec;
 
@@ -1081,7 +1081,7 @@ static void bios_CloseEvent()
     pc0 = ra;
 }
 
-static void bios_WaitEvent()
+static void bios_WaitEvent(upse_module_instance_t *ins)
 {				// 0a
     int ev, spec;
 
@@ -1094,7 +1094,7 @@ static void bios_WaitEvent()
     pc0 = ra;
 }
 
-static void bios_TestEvent()
+static void bios_TestEvent(upse_module_instance_t *ins)
 {				// 0b
     int ev, spec;
 
@@ -1112,7 +1112,7 @@ static void bios_TestEvent()
     pc0 = ra;
 }
 
-static void bios_EnableEvent()
+static void bios_EnableEvent(upse_module_instance_t *ins)
 {				// 0c
     int ev, spec;
 
@@ -1125,7 +1125,7 @@ static void bios_EnableEvent()
     pc0 = ra;
 }
 
-static void bios_DisableEvent()
+static void bios_DisableEvent(upse_module_instance_t *ins)
 {				// 0d
     int ev, spec;
 
@@ -1142,7 +1142,7 @@ static void bios_DisableEvent()
  *	long OpenTh(long (*func)(), unsigned long sp, unsigned long gp);
  */
 
-static void bios_OpenTh()
+static void bios_OpenTh(upse_module_instance_t *ins)
 {				// 0e
     int th;
 
@@ -1163,7 +1163,7 @@ static void bios_OpenTh()
  *	int CloseTh(long thread);
  */
 
-static void bios_CloseTh()
+static void bios_CloseTh(upse_module_instance_t *ins)
 {				// 0f
     int th = a0 & 0xff;
 
@@ -1184,7 +1184,7 @@ static void bios_CloseTh()
  *	int ChangeTh(long thread);
  */
 
-static void bios_ChangeTh()
+static void bios_ChangeTh(upse_module_instance_t *ins)
 {				// 10
     int th = a0 & 0xff;
 
@@ -1212,7 +1212,7 @@ static void bios_ChangeTh()
     }
 }
 
-static void bios_ReturnFromException()
+static void bios_ReturnFromException(upse_module_instance_t *ins)
 {				// 17
     memcpy(upse_r3000_cpu_regs.GPR.r, regs, 32 * 4);
     upse_r3000_cpu_regs.GPR.n.lo = regs[32];
@@ -1225,21 +1225,21 @@ static void bios_ReturnFromException()
     upse_r3000_cpu_regs.CP0.n.Status = (upse_r3000_cpu_regs.CP0.n.Status & 0xfffffff0) | ((upse_r3000_cpu_regs.CP0.n.Status & 0x3c) >> 2);
 }
 
-static void bios_ResetEntryInt()
+static void bios_ResetEntryInt(upse_module_instance_t *ins)
 {				// 18
 
     jmp_int = NULL;
     pc0 = ra;
 }
 
-static void bios_HookEntryInt()
+static void bios_HookEntryInt(upse_module_instance_t *ins)
 {				// 19
 
     jmp_int = (u32 *) Ra0;
     pc0 = ra;
 }
 
-static void bios_UnDeliverEvent()
+static void bios_UnDeliverEvent(upse_module_instance_t *ins)
 {				// 0x20
     int ev, spec;
     int i;
@@ -1253,14 +1253,14 @@ static void bios_UnDeliverEvent()
     pc0 = ra;
 }
 
-static void bios_GetC0Table()
+static void bios_GetC0Table(upse_module_instance_t *ins)
 {				// 56
 
     v0 = 0x674;
     pc0 = ra;
 }
 
-static void bios_GetB0Table()
+static void bios_GetB0Table(upse_module_instance_t *ins)
 {				// 57
 
     v0 = 0x874;
@@ -1273,7 +1273,7 @@ static void bios_GetB0Table()
  * int SysEnqIntRP(int index , long *queue);
  */
 
-static void bios_SysEnqIntRP()
+static void bios_SysEnqIntRP(upse_module_instance_t *ins)
 {				// 02
 
     SysIntRP[a0] = a1;
@@ -1286,7 +1286,7 @@ static void bios_SysEnqIntRP()
  * int SysDeqIntRP(int index , long *queue);
  */
 
-static void bios_SysDeqIntRP()
+static void bios_SysDeqIntRP(upse_module_instance_t *ins)
 {				// 03
 
     SysIntRP[a0] = 0;
@@ -1295,7 +1295,7 @@ static void bios_SysDeqIntRP()
     pc0 = ra;
 }
 
-static void bios_ChangeClearRCnt()
+static void bios_ChangeClearRCnt(upse_module_instance_t *ins)
 {				// 0a
     u32 *ptr;
 
@@ -1307,7 +1307,7 @@ static void bios_ChangeClearRCnt()
     pc0 = ra;
 }
 
-static void bios_dummy()
+static void bios_dummy(upse_module_instance_t *ins)
 {
     u32 call = t1 & 0xff;
 
@@ -1317,9 +1317,9 @@ static void bios_dummy()
     _DEBUG("WTF: unknown bios call: %x", call);
 }
 
-void (*biosA0[256]) ();
-void (*biosB0[256]) ();
-void (*biosC0[256]) ();
+void (*biosA0[256]) (upse_module_instance_t *ins);
+void (*biosB0[256]) (upse_module_instance_t *ins);
+void (*biosC0[256]) (upse_module_instance_t *ins);
 
 void upse_ps1_bios_init()
 {
@@ -1614,14 +1614,14 @@ void upse_ps1_bios_shutdown()
 {
 }
 
-void biosInterrupt()
+void biosInterrupt(upse_module_instance_t *ins)
 {
     if (BFLIP32(psxHu32(0x1070)) & 0x1)
     {				// Vsync
 	if (RcEV[3][1].status == BFLIP32S(EvStACTIVE))
 	{
-	    softCall(BFLIP32(RcEV[3][1].fhandler));
-//                      hwwrite_32(0x1f801070, ~(1));
+	    softCall(ins, BFLIP32(RcEV[3][1].fhandler));
+//                        hwwrite_32(0x1f801070, ~(1));
 	}
     }
 
@@ -1635,15 +1635,15 @@ void biosInterrupt()
 	    {
 		if (RcEV[i][1].status == BFLIP32S(EvStACTIVE))
 		{
-		    softCall(BFLIP32(RcEV[i][1].fhandler));
-		    upse_ps1_hal_write_32(0x1f801070, ~(1 << (i + 4)));
+		    softCall(ins, BFLIP32(RcEV[i][1].fhandler));
+		    upse_ps1_hal_write_32(ins, 0x1f801070, ~(1 << (i + 4)));
 		}
 	    }
 	}
     }
 }
 
-static INLINE void SaveRegs()
+static INLINE void SaveRegs(upse_module_instance_t *ins)
 {
     memcpy(regs, upse_r3000_cpu_regs.GPR.r, 32 * 4);
     regs[32] = upse_r3000_cpu_regs.GPR.n.lo;
@@ -1651,7 +1651,7 @@ static INLINE void SaveRegs()
     regs[34] = upse_r3000_cpu_regs.pc;
 }
 
-void upse_ps1_bios_exception()
+void upse_ps1_bios_exception(upse_module_instance_t *ins)
 {
     int i;
 
@@ -1661,9 +1661,9 @@ void upse_ps1_bios_exception()
 #ifdef PSXCPU_LOG
 //                      PSXCPU_LOG("interrupt\n");
 #endif
-	  SaveRegs();
+	  SaveRegs(ins);
 
-	  biosInterrupt();
+	  biosInterrupt(ins);
 
 	  for (i = 0; i < 8; i++)
 	  {
@@ -1672,7 +1672,7 @@ void upse_ps1_bios_exception()
 		  u32 *queue = (u32 *) PSXM(SysIntRP[i]);
 
 		  s0 = BFLIP32(queue[2]);
-		  softCall(BFLIP32(queue[1]));
+		  softCall(ins, BFLIP32(queue[1]));
 	      }
 	  }
 
@@ -1680,7 +1680,7 @@ void upse_ps1_bios_exception()
 	  {
 	      int i;
 
-	      upse_ps1_hal_write_32(0x1f801070, 0xffffffff);
+	      upse_ps1_hal_write_32(ins, 0x1f801070, 0xffffffff);
 
 	      ra = BFLIP32(jmp_int[0]);
 	      sp = BFLIP32(jmp_int[1]);
@@ -1693,7 +1693,7 @@ void upse_ps1_bios_exception()
 	      pc0 = ra;
 	      return;
 	  }
-	  upse_ps1_hal_write_16(0x1f801070, 0);
+	  upse_ps1_hal_write_16(ins, 0x1f801070, 0);
 	  break;
       case 0x20:		// Syscall
 #ifdef PSXCPU_LOG

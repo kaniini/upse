@@ -24,8 +24,9 @@
 #include "upse-internal.h"
 
 upse_r3000_cpu_registers_t upse_r3000_cpu_regs;
+upse_spu_state_t *spu = NULL;
 
-int psxInit()
+int psxInit(upse_module_instance_t *ins)
 {
     int ret;
 
@@ -33,17 +34,16 @@ int psxInit()
 	return -1;
 
     ret = upse_r3000_cpu_init();
-    upse_ps1_spu_init();
 
     return ret;
 }
 
-void psxReset(upse_psx_revision_t rev)
+void psxReset(upse_module_instance_t *ins, upse_psx_revision_t rev)
 {
     upse_r3000_cpu_reset();
     upse_ps1_memory_reset();
 
-    upse_ps1_spu_open();
+    ins->spu = upse_ps1_spu_open();
 
     memset(&upse_r3000_cpu_regs, 0, sizeof(upse_r3000_cpu_regs));
 
@@ -60,24 +60,26 @@ void psxReset(upse_psx_revision_t rev)
         break;
     }
 
-    upse_ps1_hal_reset();
+    upse_ps1_hal_reset(ins);
     upse_ps1_bios_init();
 
     /* start up the bios */
     if (upse_has_custom_bios())
-        psxExecuteBios();
+        psxExecuteBios(ins);
 }
 
-void psxShutdown()
+void psxShutdown(upse_module_instance_t *ins)
 {
     upse_ps1_memory_shutdown();
     upse_ps1_bios_shutdown();
 
     upse_r3000_cpu_shutdown();
-    upse_ps1_spu_close();
+
+    upse_ps1_spu_close(ins->spu);
+    ins->spu = NULL;
 }
 
-void psxException(u32 code, u32 bd)
+void psxException(upse_module_instance_t *ins, u32 code, u32 bd)
 {
     _DEBUG("exception, code %d bd %d.", code, bd);
 
@@ -106,10 +108,10 @@ void psxException(u32 code, u32 bd)
     upse_r3000_cpu_regs.CP0.n.Status = (upse_r3000_cpu_regs.CP0.n.Status & ~0x3f) | ((upse_r3000_cpu_regs.CP0.n.Status & 0xf) << 2);
 
     if (!upse_has_custom_bios())
-        upse_ps1_bios_exception();
+        upse_ps1_bios_exception(ins);
 }
 
-void psxBranchTest()
+void psxBranchTest(upse_module_instance_t *ins)
 {
     if ((upse_r3000_cpu_regs.cycle - psxNextsCounter) >= psxNextCounter)
 	psxRcntUpdate();
@@ -118,14 +120,14 @@ void psxBranchTest()
     {
 	if ((upse_r3000_cpu_regs.CP0.n.Status & 0x401) == 0x401)
 	{
-	    psxException(0x400, 0);
+	    psxException(ins, 0x400, 0);
 	}
     }
 
 }
 
-void psxExecuteBios()
+void psxExecuteBios(upse_module_instance_t *ins)
 {
     while (upse_r3000_cpu_regs.pc != 0x80030000)
-        upse_r3000_cpu_execute_block();
+        upse_r3000_cpu_execute_block(ins);
 }

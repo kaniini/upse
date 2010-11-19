@@ -21,21 +21,37 @@ void
 upse_eventloop_run(upse_module_t *mod)
 {
     if (mod->evloop_run)
-        mod->evloop_run();
+        mod->evloop_run(&mod->instance);
 }
 
 void
 upse_eventloop_stop(upse_module_t *mod)
 {
     if (mod->evloop_stop)
-        mod->evloop_stop();
+        mod->evloop_stop(&mod->instance);
 }
 
 int
 upse_eventloop_render(upse_module_t *mod, s16 **samples)
 {
     if (mod->evloop_render)
-        return mod->evloop_render(samples);
+        return mod->evloop_render(&mod->instance, samples);
+
+    return 0;
+}
+
+void
+upse_eventloop_set_audio_callback(upse_module_t *mod, upse_audio_callback_func_t func, void *user_data)
+{
+    if (mod->evloop_setcb)
+        mod->evloop_setcb(&mod->instance, func, user_data);
+}
+
+int
+upse_eventloop_seek(upse_module_t *mod, u32 time)
+{
+    if (mod->evloop_seek)
+        return mod->evloop_seek(&mod->instance, time);
 
     return 0;
 }

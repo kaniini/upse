@@ -166,7 +166,7 @@ void upse_ps1_memory_shutdown()
     upse_ps1_memory_LUT = NULL;
 }
 
-u8 upse_ps1_memory_read_8(u32 mem)
+u8 upse_ps1_memory_read_8(upse_module_instance_t *ins, u32 mem)
 {
     char *p;
     u32 t;
@@ -177,7 +177,7 @@ u8 upse_ps1_memory_read_8(u32 mem)
 	if (mem < 0x1f801000)
 	    return psxHu8(mem);
 	else
-	    return upse_ps1_hal_read_8(mem);
+	    return upse_ps1_hal_read_8(ins, mem);
     }
     else
     {
@@ -193,7 +193,7 @@ u8 upse_ps1_memory_read_8(u32 mem)
     }
 }
 
-u16 upse_ps1_memory_read_16(u32 mem)
+u16 upse_ps1_memory_read_16(upse_module_instance_t *ins, u32 mem)
 {
     char *p;
     u32 t;
@@ -204,7 +204,7 @@ u16 upse_ps1_memory_read_16(u32 mem)
 	if (mem < 0x1f801000)
 	    return BFLIP16(psxHu16(mem));
 	else
-	    return upse_ps1_hal_read_16(mem);
+	    return upse_ps1_hal_read_16(ins, mem);
     }
     else
     {
@@ -220,7 +220,7 @@ u16 upse_ps1_memory_read_16(u32 mem)
     }
 }
 
-u32 upse_ps1_memory_read_32(u32 mem)
+u32 upse_ps1_memory_read_32(upse_module_instance_t *ins, u32 mem)
 {
     char *p;
     u32 t;
@@ -231,7 +231,7 @@ u32 upse_ps1_memory_read_32(u32 mem)
 	if (mem < 0x1f801000)
 	    return BFLIP32(psxHu32(mem));
 	else
-	    return upse_ps1_hal_read_32(mem);
+	    return upse_ps1_hal_read_32(ins, mem);
     }
     else
     {
@@ -247,7 +247,7 @@ u32 upse_ps1_memory_read_32(u32 mem)
     }
 }
 
-void upse_ps1_memory_write_8(u32 mem, u8 value)
+void upse_ps1_memory_write_8(upse_module_instance_t *ins, u32 mem, u8 value)
 {
     char *p;
     u32 t;
@@ -258,7 +258,7 @@ void upse_ps1_memory_write_8(u32 mem, u8 value)
 	if (mem < 0x1f801000)
 	    psxHu8(mem) = value;
 	else
-	    upse_ps1_hal_write_8(mem, value);
+	    upse_ps1_hal_write_8(ins, mem, value);
     }
     else
     {
@@ -270,7 +270,7 @@ void upse_ps1_memory_write_8(u32 mem, u8 value)
     }
 }
 
-void upse_ps1_memory_write_16(u32 mem, u16 value)
+void upse_ps1_memory_write_16(upse_module_instance_t *ins, u32 mem, u16 value)
 {
     char *p;
     u32 t;
@@ -281,7 +281,7 @@ void upse_ps1_memory_write_16(u32 mem, u16 value)
 	if (mem < 0x1f801000)
 	    psxHu16(mem) = BFLIP16(value);
 	else
-	    upse_ps1_hal_write_16(mem, value);
+	    upse_ps1_hal_write_16(ins, mem, value);
     }
     else
     {
@@ -293,7 +293,7 @@ void upse_ps1_memory_write_16(u32 mem, u16 value)
     }
 }
 
-void upse_ps1_memory_write_32(u32 mem, u32 value)
+void upse_ps1_memory_write_32(upse_module_instance_t *ins, u32 mem, u32 value)
 {
     char *p;
     u32 t;
@@ -304,7 +304,7 @@ void upse_ps1_memory_write_32(u32 mem, u32 value)
 	if (mem < 0x1f801000)
 	    psxHu32(mem) = BFLIP32(value);
 	else
-	    upse_ps1_hal_write_32(mem, value);
+	    upse_ps1_hal_write_32(ins, mem, value);
     }
     else
     {

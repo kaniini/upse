@@ -27,10 +27,10 @@ extern char *biosC0n[256];
 
 void upse_ps1_bios_init(void);
 void upse_ps1_bios_shutdown(void);
-void upse_ps1_bios_exception(void);
+void upse_ps1_bios_exception(upse_module_instance_t *ins);
 
-extern void (*biosA0[256]) (void);
-extern void (*biosB0[256]) (void);
-extern void (*biosC0[256]) (void);
+extern void (*biosA0[256]) (upse_module_instance_t *ins);
+extern void (*biosB0[256]) (upse_module_instance_t *ins);
+extern void (*biosC0[256]) (upse_module_instance_t *ins);
 
 #endif

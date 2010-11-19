@@ -84,7 +84,7 @@ void upse_aud_update(unsigned char *buffer, long count, gpointer data)
 
     if (seek)
     {
-        if(upse_seek(seek))
+        if(upse_eventloop_seek(playback_mod, seek))
         {
             playback->output->flush(seek);
             seek = 0;
@@ -122,7 +122,7 @@ static gboolean upse_aud_play(InputPlayback *playback, const gchar * filename, V
         return FALSE;
     }
 
-    upse_set_audio_callback(upse_aud_update, playback);
+    upse_eventloop_set_audio_callback(playback_mod, upse_aud_update, playback);
 
     stop_flag = FALSE;
     playback->set_pb_ready(playback);

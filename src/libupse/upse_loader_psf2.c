@@ -312,6 +312,8 @@ upse_load_psf2(void *fp, const char *path, upse_iofuncs_t *iofuncs)
     upse_module_t *ret;
     char curdir[4096] = "";
 
+    ret = calloc(sizeof(upse_module_t), 1);
+
     /* XXX: this is a magic value in HE.  who knows where Neill got it from... */
     loadAddr = 0x23f00;
 
@@ -360,8 +362,8 @@ upse_load_psf2(void *fp, const char *path, upse_iofuncs_t *iofuncs)
     if (buf == NULL)
         return NULL;
 
-    psxInit();
-    psxReset(UPSE_PSX_REV_PS2_IOP);
+    psxInit(&ret->instance);
+    psxReset(&ret->instance, UPSE_PSX_REV_PS2_IOP);
 
     initialPC = upse_parse_psf2_elf(buf, buflen);
     initialSP = 0x801ffff0;
@@ -389,17 +391,17 @@ upse_load_psf2(void *fp, const char *path, upse_iofuncs_t *iofuncs)
     psfi->game = xsf->inf_game;
     psfi->year = xsf->inf_year;
 
-    upse_ps1_spu_setvolume(psfi->volume);
-    upse_ps1_spu_setlength(psfi->stop, psfi->fade);
+    upse_ps1_spu_setvolume(ret->instance.spu, psfi->volume);
+    upse_ps1_spu_setlength(ret->instance.spu, psfi->stop, psfi->fade);
     psfi->length = psfi->stop + psfi->fade;
     psfi->rate = 44100;
 
-    ret = calloc(sizeof(upse_module_t), 1);
     ret->metadata = psfi;
     ret->opaque = fs;
     ret->evloop_run = upse_r3000_cpu_execute;
-    ret->evloop_stop = upse_ps1_stop;
+    ret->evloop_stop = upse_ps1_spu_stop;
     ret->evloop_render = upse_r3000_cpu_execute_render;
+    ret->evloop_setcb = upse_ps1_spu_set_audio_callback;
 
     return ret;
 }

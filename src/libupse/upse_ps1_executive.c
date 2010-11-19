@@ -26,53 +26,43 @@
 # define _TRACE(...) {}
 #endif
 
-#define _CALL(id, idN) do { _TRACE("call<%s> %s<%p> [0x%x]", #id, idN[call], id[call], call); id[call](); } while(0)
-#define _UNIMPLEMENTED(id, idN) do { _WARN("call<%s> %s<%p> [0x%x]", #id, idN[call], id[call], call); } while(0)
+#define _CALL(ins, id, idN) do { _TRACE("call<%s> %s<%p> [0x%x]", #id, idN[call], id[call], call); id[call](ins); } while(0)
 
-static void upse_ps1_executive_dummy(void)
+static void upse_ps1_executive_dummy(upse_module_instance_t *ins)
 {
     upse_r3000_cpu_regs.pc = upse_r3000_cpu_regs.GPR.n.ra;
 
-    psxBranchTest();
+    psxBranchTest(ins);
 }
 
-static void upse_ps1_executive_run_bios_A0(void)
+static void upse_ps1_executive_run_bios_A0(upse_module_instance_t *ins)
 {
     u32 call = upse_r3000_cpu_regs.GPR.n.t1 & 0xff;
 
-    if (biosA0[call])
-	_CALL(biosA0, biosA0n);
-    else
-	_UNIMPLEMENTED(biosA0, biosA0n);
+    _CALL(ins, biosA0, biosA0n);
 
-    psxBranchTest();
+    psxBranchTest(ins);
 }
 
-static void upse_ps1_executive_run_bios_B0(void)
+static void upse_ps1_executive_run_bios_B0(upse_module_instance_t *ins)
 {
     u32 call = upse_r3000_cpu_regs.GPR.n.t1 & 0xff;
 
-    if (biosB0[call])
-	_CALL(biosB0, biosB0n);
-    else
-	_UNIMPLEMENTED(biosB0, biosB0n);
+    _CALL(ins, biosB0, biosB0n);
 
-    psxBranchTest();
+    psxBranchTest(ins);
 }
 
-static void upse_ps1_executive_run_bios_C0()
+static void upse_ps1_executive_run_bios_C0(upse_module_instance_t *ins)
 {
     u32 call = upse_r3000_cpu_regs.GPR.n.t1 & 0xff;
 
-    if (biosC0[call])
-	_CALL(biosC0, biosC0n);
-    else
-	_UNIMPLEMENTED(biosC0, biosC0n);
+    _CALL(ins, biosC0, biosC0n);
 
-    psxBranchTest();
+    psxBranchTest(ins);
 }
 
-static void upse_ps1_executive_bootstrap(void)
+static void upse_ps1_executive_bootstrap(upse_module_instance_t *ins)
 {				// 0xbfc00000
 }
 
@@ -91,7 +81,7 @@ typedef struct
     u32 _sp, _fp, _gp, ret, base;
 } upse_packed_t upse_ps1_executive_exec_record_t;
 
-static void upse_ps1_executive_task_switch(void)
+static void upse_ps1_executive_task_switch(upse_module_instance_t *ins)
 {
     upse_ps1_executive_exec_record_t *header = (upse_ps1_executive_exec_record_t *) PSXM(upse_r3000_cpu_regs.GPR.n.s0);
 
@@ -107,7 +97,7 @@ static void upse_ps1_executive_task_switch(void)
     upse_r3000_cpu_regs.pc = upse_r3000_cpu_regs.GPR.n.ra;
 }
 
-void (*psxHLEt[256])(void) =
+void (*psxHLEt[256])(upse_module_instance_t *ins) =
 {
     upse_ps1_executive_dummy,
     upse_ps1_executive_run_bios_A0,

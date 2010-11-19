@@ -4,7 +4,7 @@
  * Filename: upse-module.h
  * Purpose: libupse: Module loading and probing.
  *
- * Copyright (c) 2008 William Pitcock <nenolod@dereferenced.org>
+ * Copyright (c) 2008, 2010 William Pitcock <nenolod@dereferenced.org>
  *
  * UPSE is free software, released under the GNU General Public License,
  * version 2.
@@ -18,8 +18,14 @@
 #ifndef __UPSE__LIBUPSE__UPSE_MODULE_H__GUARD
 #define __UPSE__LIBUPSE__UPSE_MODULE_H__GUARD
 
-typedef void (*upse_eventloop_func_t)(void);
-typedef int (*upse_eventloop_render_func_t)(s16 **samples);
+typedef struct {
+    void *spu;
+} upse_module_instance_t;
+
+typedef void (*upse_eventloop_func_t)(upse_module_instance_t *ins);
+typedef int (*upse_eventloop_render_func_t)(upse_module_instance_t *ins, s16 **samples);
+typedef void (*upse_eventloop_setcb_func_t)(upse_module_instance_t *ins, upse_audio_callback_func_t func, void *user_data);
+typedef int (*upse_eventloop_seek_func_t)(upse_module_instance_t *ins, u32 t);
 
 typedef struct {
     void *opaque;
@@ -27,6 +33,9 @@ typedef struct {
     upse_eventloop_func_t evloop_run;
     upse_eventloop_func_t evloop_stop;
     upse_eventloop_render_func_t evloop_render;
+    upse_eventloop_setcb_func_t evloop_setcb;
+    upse_eventloop_seek_func_t evloop_seek;
+    upse_module_instance_t instance;
 } upse_module_t;
 
 typedef upse_module_t *(*upse_loader_func_t)(void *fileptr, const char *path, upse_iofuncs_t *iofuncs);
