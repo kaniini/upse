@@ -21,111 +21,117 @@
 
 #include "upse-internal.h"
 
-psxCounter psxCounters[5];
-
-u32 psxNextCounter, psxNextsCounter;
-
 static int cnts = 4;
 static u32 last = 0;
 
-static void psxRcntUpd(u32 index)
+static void psxRcntUpd(upse_module_instance_t *ins, u32 index)
 {
-    psxCounters[index].sCycle = upse_r3000_cpu_regs.cycle;
-    if (((!(psxCounters[index].mode & 1)) || (index != 2)) && psxCounters[index].mode & 0x30)
+    upse_psx_counter_state_t *ctrstate = ins->ctrstate;
+
+    ctrstate->psxCounters[index].sCycle = upse_r3000_cpu_regs.cycle;
+    if (((!(ctrstate->psxCounters[index].mode & 1)) || (index != 2)) && ctrstate->psxCounters[index].mode & 0x30)
     {
-	if (psxCounters[index].mode & 0x10)
+	if (ctrstate->psxCounters[index].mode & 0x10)
 	{			// Interrupt on target
-	    psxCounters[index].Cycle = ((psxCounters[index].target - psxCounters[index].count) * psxCounters[index].rate) / BIAS;
+	    ctrstate->psxCounters[index].Cycle = ((ctrstate->psxCounters[index].target - ctrstate->psxCounters[index].count) * ctrstate->psxCounters[index].rate) / BIAS;
 	}
 	else
 	{			// Interrupt on 0xffff
-	    psxCounters[index].Cycle = ((0xffff - psxCounters[index].count) * psxCounters[index].rate) / BIAS;
+	    ctrstate->psxCounters[index].Cycle = ((0xffff - ctrstate->psxCounters[index].count) * ctrstate->psxCounters[index].rate) / BIAS;
 	}
     }
     else
-	psxCounters[index].Cycle = 0xffffffff;
+	ctrstate->psxCounters[index].Cycle = 0xffffffff;
 }
 
-static void psxRcntReset(u32 index)
+static void psxRcntReset(upse_module_instance_t *ins, u32 index)
 {
-    psxCounters[index].count = 0;
-    psxRcntUpd(index);
+    upse_psx_counter_state_t *ctrstate = ins->ctrstate;
 
-    psxHu32(0x1070) |= BFLIP32(psxCounters[index].interrupt);
-    if (!(psxCounters[index].mode & 0x40))
+    ctrstate->psxCounters[index].count = 0;
+    psxRcntUpd(ins, index);
+
+    psxHu32(0x1070) |= BFLIP32(ctrstate->psxCounters[index].interrupt);
+    if (!(ctrstate->psxCounters[index].mode & 0x40))
     {				// Only 1 interrupt
-	psxCounters[index].Cycle = 0xffffffff;
+	ctrstate->psxCounters[index].Cycle = 0xffffffff;
     }
 }
 
-static void psxRcntSet()
+static void psxRcntSet(upse_module_instance_t *ins)
 {
     int i;
+    upse_psx_counter_state_t *ctrstate = ins->ctrstate;
 
-    psxNextCounter = 0x7fffffff;
-    psxNextsCounter = upse_r3000_cpu_regs.cycle;
+    ctrstate->psxNextCounter = 0x7fffffff;
+    ctrstate->psxNextsCounter = upse_r3000_cpu_regs.cycle;
 
     for (i = 0; i < cnts; i++)
     {
 	s32 count;
 
-	if (psxCounters[i].Cycle == 0xffffffff)
+	if (ctrstate->psxCounters[i].Cycle == 0xffffffff)
 	    continue;
 
-	count = psxCounters[i].Cycle - (upse_r3000_cpu_regs.cycle - psxCounters[i].sCycle);
+	count = ctrstate->psxCounters[i].Cycle - (upse_r3000_cpu_regs.cycle - ctrstate->psxCounters[i].sCycle);
 
 	if (count < 0)
 	{
-	    psxNextCounter = 0;
+	    ctrstate->psxNextCounter = 0;
 	    break;
 	}
 
-	if (count < (s32) psxNextCounter)
+	if (count < (s32) ctrstate->psxNextCounter)
 	{
-	    psxNextCounter = count;
+	    ctrstate->psxNextCounter = count;
 	}
     }
 }
 
-void psxRcntInit()
+void psxRcntInit(upse_module_instance_t *ins)
 {
+    upse_psx_counter_state_t *ctrstate;
 
-    memset(psxCounters, 0, sizeof(psxCounters));
+    ctrstate = calloc(sizeof(upse_psx_counter_state_t), 1);
 
-    psxCounters[0].rate = 1;
-    psxCounters[0].interrupt = 0x10;
-    psxCounters[1].rate = 1;
-    psxCounters[1].interrupt = 0x20;
-    psxCounters[2].rate = 1;
-    psxCounters[2].interrupt = 64;
+    ctrstate->psxCounters[0].rate = 1;
+    ctrstate->psxCounters[0].interrupt = 0x10;
+    ctrstate->psxCounters[1].rate = 1;
+    ctrstate->psxCounters[1].interrupt = 0x20;
+    ctrstate->psxCounters[2].rate = 1;
+    ctrstate->psxCounters[2].interrupt = 64;
 
-    psxCounters[3].interrupt = 1;
-    psxCounters[3].mode = 0x58;	// The VSync counter mode
-    psxCounters[3].target = 1;
-    psxUpdateVSyncRate();
+    ctrstate->psxCounters[3].interrupt = 1;
+    ctrstate->psxCounters[3].mode = 0x58;	// The VSync counter mode
+    ctrstate->psxCounters[3].target = 1;
+
+    ins->ctrstate = ctrstate;
+
+    psxUpdateVSyncRate(ins);
 
     cnts = 4;
 
-    psxRcntUpd(0);
-    psxRcntUpd(1);
-    psxRcntUpd(2);
-    psxRcntUpd(3);
-    psxRcntSet();
+    psxRcntUpd(ins, 0);
+    psxRcntUpd(ins, 1);
+    psxRcntUpd(ins, 2);
+    psxRcntUpd(ins, 3);
+    psxRcntSet(ins);
     last = 0;
 }
 
 void CounterDeadLoopSkip(upse_module_instance_t *ins)
 {
     s32 min, x, lmin;
+    upse_psx_counter_state_t *ctrstate = ins->ctrstate;
 
     lmin = 0x7FFFFFFF;
 
     for (x = 0; x < 4; x++)
     {
-	if (psxCounters[x].Cycle != 0xffffffff)
+	if (ctrstate->psxCounters[x].Cycle != 0xffffffff)
         {
-            min = psxCounters[x].Cycle;
-            min -= (upse_r3000_cpu_regs.cycle - psxCounters[x].sCycle);
+            min = ctrstate->psxCounters[x].Cycle;
+            min -= (upse_r3000_cpu_regs.cycle - ctrstate->psxCounters[x].sCycle);
             if (min < lmin)
                 lmin = min;
         }
@@ -156,58 +162,65 @@ int CounterSPURun(upse_module_instance_t *ins)
     return (1);
 }
 
-void psxUpdateVSyncRate()
+void psxUpdateVSyncRate(upse_module_instance_t *ins)
 {
-    psxCounters[3].rate = (PSXCLK / 60);
+    upse_psx_counter_state_t *ctrstate = ins->ctrstate;
+
+    ctrstate->psxCounters[3].rate = (PSXCLK / 60);
 }
 
-void psxRcntUpdate()
+void psxRcntUpdate(upse_module_instance_t *ins)
 {
-    if ((upse_r3000_cpu_regs.cycle - psxCounters[3].sCycle) >= psxCounters[3].Cycle)
+    upse_psx_counter_state_t *ctrstate = ins->ctrstate;
+
+    if ((upse_r3000_cpu_regs.cycle - ctrstate->psxCounters[3].sCycle) >= ctrstate->psxCounters[3].Cycle)
     {
-	//printf("%d\n",(upse_r3000_cpu_regs.cycle - psxCounters[3].sCycle)- psxCounters[3].Cycle);
-	psxRcntUpd(3);
+	psxRcntUpd(ins, 3);
 	psxHu32(0x1070) |= BFLIP32(1);
     }
-    if ((upse_r3000_cpu_regs.cycle - psxCounters[0].sCycle) >= psxCounters[0].Cycle)
+    if ((upse_r3000_cpu_regs.cycle - ctrstate->psxCounters[0].sCycle) >= ctrstate->psxCounters[0].Cycle)
     {
-	psxRcntReset(0);
+	psxRcntReset(ins, 0);
     }
 
-    if ((upse_r3000_cpu_regs.cycle - psxCounters[1].sCycle) >= psxCounters[1].Cycle)
+    if ((upse_r3000_cpu_regs.cycle - ctrstate->psxCounters[1].sCycle) >= ctrstate->psxCounters[1].Cycle)
     {
-	psxRcntReset(1);
+	psxRcntReset(ins, 1);
     }
 
-    if ((upse_r3000_cpu_regs.cycle - psxCounters[2].sCycle) >= psxCounters[2].Cycle)
+    if ((upse_r3000_cpu_regs.cycle - ctrstate->psxCounters[2].sCycle) >= ctrstate->psxCounters[2].Cycle)
     {
-	psxRcntReset(2);
+	psxRcntReset(ins, 2);
     }
 
-    psxRcntSet();
+    psxRcntSet(ins);
 }
 
-void psxRcntWcount(u32 index, u32 value)
+void psxRcntWcount(upse_module_instance_t *ins, u32 index, u32 value)
 {
-    psxCounters[index].count = value;
-    psxRcntUpd(index);
-    psxRcntSet();
+    upse_psx_counter_state_t *ctrstate = ins->ctrstate;
+
+    ctrstate->psxCounters[index].count = value;
+    psxRcntUpd(ins, index);
+    psxRcntSet(ins);
 }
 
-void psxRcntWmode(u32 index, u32 value)
+void psxRcntWmode(upse_module_instance_t *ins, u32 index, u32 value)
 {
-    psxCounters[index].mode = value;
-    psxCounters[index].count = 0;
+    upse_psx_counter_state_t *ctrstate = ins->ctrstate;
+
+    ctrstate->psxCounters[index].mode = value;
+    ctrstate->psxCounters[index].count = 0;
 
     if (index == 0)
     {
 	switch (value & 0x300)
 	{
 	  case 0x100:
-	      psxCounters[index].rate = ((psxCounters[3].rate /** BIAS*/ ) / 386) / 262;	// seems ok
+	      ctrstate->psxCounters[index].rate = ((ctrstate->psxCounters[3].rate /** BIAS*/ ) / 386) / 262;	// seems ok
 	      break;
 	  default:
-	      psxCounters[index].rate = 1;
+	      ctrstate->psxCounters[index].rate = 1;
 	}
     }
     else if (index == 1)
@@ -215,12 +228,12 @@ void psxRcntWmode(u32 index, u32 value)
 	switch (value & 0x300)
 	{
 	  case 0x100:
-	      psxCounters[index].rate = (psxCounters[3].rate /** BIAS*/ ) / 262;	// seems ok
-	      //psxCounters[index].rate = (PSXCLK / 60)/262; //(psxCounters[3].rate*16/262);
-	      //printf("%d\n",psxCounters[index].rate);
+	      ctrstate->psxCounters[index].rate = (ctrstate->psxCounters[3].rate /** BIAS*/ ) / 262;	// seems ok
+	      //ctrstate->psxCounters[index].rate = (PSXCLK / 60)/262; //(ctrstate->psxCounters[3].rate*16/262);
+	      //printf("%d\n",ctrstate->psxCounters[index].rate);
 	      break;
 	  default:
-	      psxCounters[index].rate = 1;
+	      ctrstate->psxCounters[index].rate = 1;
 	}
     }
     else if (index == 2)
@@ -228,50 +241,40 @@ void psxRcntWmode(u32 index, u32 value)
 	switch (value & 0x300)
 	{
 	  case 0x200:
-	      psxCounters[index].rate = 8;	// 1/8 speed
+	      ctrstate->psxCounters[index].rate = 8;	// 1/8 speed
 	      break;
 	  default:
-	      psxCounters[index].rate = 1;	// normal speed
+	      ctrstate->psxCounters[index].rate = 1;	// normal speed
 	}
     }
 
     // Need to set a rate and target
-    psxRcntUpd(index);
-    psxRcntSet();
+    psxRcntUpd(ins, index);
+    psxRcntSet(ins);
 }
 
-void psxRcntWtarget(u32 index, u32 value)
+void psxRcntWtarget(upse_module_instance_t *ins, u32 index, u32 value)
 {
-//      SysPrintf("writeCtarget[%ld] = %lx\n", index, value);
-    psxCounters[index].target = value;
-    psxRcntUpd(index);
-    psxRcntSet();
+    upse_psx_counter_state_t *ctrstate = ins->ctrstate;
+
+    ctrstate->psxCounters[index].target = value;
+    psxRcntUpd(ins, index);
+    psxRcntSet(ins);
 }
 
-u32 psxRcntRcount(u32 index)
+u32 psxRcntRcount(upse_module_instance_t *ins, u32 index)
 {
     u32 ret;
+    upse_psx_counter_state_t *ctrstate = ins->ctrstate;
 
-//      if ((!(psxCounters[index].mode & 1)) || (index!=2)) {
-    if (psxCounters[index].mode & 0x08)
+    if (ctrstate->psxCounters[index].mode & 0x08)
     {				// Wrap at target
-	//if (Config.RCntFix) { // Parasite Eve 2
-	//      ret = (psxCounters[index].count + /*BIAS **/ ((upse_r3000_cpu_regs.cycle - psxCounters[index].sCycle) / psxCounters[index].rate)) & 0xffff;
-	//} else {
-	ret = (psxCounters[index].count + BIAS * ((upse_r3000_cpu_regs.cycle - psxCounters[index].sCycle) / psxCounters[index].rate)) & 0xffff;
-	//}
+	ret = (ctrstate->psxCounters[index].count + BIAS * ((upse_r3000_cpu_regs.cycle - ctrstate->psxCounters[index].sCycle) / ctrstate->psxCounters[index].rate)) & 0xffff;
     }
     else
     {				// Wrap at 0xffff
-	ret = (psxCounters[index].count + BIAS * (upse_r3000_cpu_regs.cycle / psxCounters[index].rate)) & 0xffff;
-	//if (Config.RCntFix) { // Vandal Hearts 1/2
-	//      ret/= 16;
-	//}
+	ret = (ctrstate->psxCounters[index].count + BIAS * (upse_r3000_cpu_regs.cycle / ctrstate->psxCounters[index].rate)) & 0xffff;
     }
-//              return (psxCounters[index].count + BIAS * ((upse_r3000_cpu_regs.cycle - psxCounters[index].sCycle) / psxCounters[index].rate)) & 0xffff;
-//      } else return 0;
-
-//      SysPrintf("readCcount[%ld] = %lx (mode %lx, target %lx, cycle %lx)\n", index, ret, psxCounters[index].mode, psxCounters[index].target, upse_r3000_cpu_regs.cycle);
 
     return ret;
 }

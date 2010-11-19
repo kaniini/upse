@@ -950,7 +950,7 @@ static void bios_SetRCnt(upse_module_instance_t *ins)
     {
 	u32 mode = 0;
 
-	psxRcntWtarget(a0, a1);
+	psxRcntWtarget(ins, a0, a1);
 	if (a2 & 0x1000)
 	    mode |= 0x050;	// Interrupt Mode
 	if (a2 & 0x0100)
@@ -968,7 +968,7 @@ static void bios_SetRCnt(upse_module_instance_t *ins)
 		mode |= 0x100;
 	}			// System Clock mode
 
-	psxRcntWmode(a0, mode);
+	psxRcntWmode(ins, a0, mode);
     }
     pc0 = ra;
 }
@@ -978,7 +978,7 @@ static void bios_GetRCnt(upse_module_instance_t *ins)
 
     a0 &= 0x3;
     if (a0 != 3)
-	v0 = psxRcntRcount(a0);
+	v0 = psxRcntRcount(ins, a0);
     else
 	v0 = 0;
     pc0 = ra;
@@ -1013,9 +1013,9 @@ static void bios_ResetRCnt(upse_module_instance_t *ins)
     a0 &= 0x3;
     if (a0 != 3)
     {
-	psxRcntWmode(a0, 0);
-	psxRcntWtarget(a0, 0);
-	psxRcntWcount(a0, 0);
+	psxRcntWmode(ins, a0, 0);
+	psxRcntWtarget(ins, a0, 0);
+	psxRcntWcount(ins, a0, 0);
     }
     pc0 = ra;
 }

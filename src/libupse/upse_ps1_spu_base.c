@@ -280,10 +280,13 @@ int upse_ps1_spu_seek(upse_module_instance_t *ins, u32 t)
     spu->seektime = t * 441 / 10;
     if (spu->seektime > spu->sampcount)
     {
-	_LEAVE 1;
+        _LEAVE;
+	return 1;
     }
 
-    _LEAVE 0;
+    _LEAVE;
+
+    return 0;
 }
 
 #define CLIP(_x) {if(_x>32767) _x=32767; if(_x<-32767) _x=-32767;}

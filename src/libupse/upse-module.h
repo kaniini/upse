@@ -20,6 +20,7 @@
 
 typedef struct {
     void *spu;
+    void *ctrstate;
 } upse_module_instance_t;
 
 typedef void (*upse_eventloop_func_t)(upse_module_instance_t *ins);

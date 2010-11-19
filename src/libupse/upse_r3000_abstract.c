@@ -113,8 +113,12 @@ void psxException(upse_module_instance_t *ins, u32 code, u32 bd)
 
 void psxBranchTest(upse_module_instance_t *ins)
 {
-    if ((upse_r3000_cpu_regs.cycle - psxNextsCounter) >= psxNextCounter)
-	psxRcntUpdate();
+    upse_psx_counter_state_t *ctrstate = ins->ctrstate;
+
+    _ENTER;
+
+    if ((upse_r3000_cpu_regs.cycle - ctrstate->psxNextsCounter) >= ctrstate->psxNextCounter)
+	psxRcntUpdate(ins);
 
     if (psxHu32(0x1070) & psxHu32(0x1074))
     {
@@ -124,6 +128,7 @@ void psxBranchTest(upse_module_instance_t *ins)
 	}
     }
 
+    _LEAVE;
 }
 
 void psxExecuteBios(upse_module_instance_t *ins)

@@ -32,7 +32,7 @@
 void upse_ps1_hal_reset(upse_module_instance_t *ins)
 {
     memset(psxH, 0, 0x10000);
-    psxRcntInit();
+    psxRcntInit(ins);
 }
 
 u8 upse_ps1_hal_read_8(upse_module_instance_t *ins, u32 add)
@@ -51,35 +51,36 @@ u8 upse_ps1_hal_read_8(upse_module_instance_t *ins, u32 add)
 u16 upse_ps1_hal_read_16(upse_module_instance_t *ins, u32 add)
 {
     u16 hard;
+    upse_psx_counter_state_t *ctrstate = ins->ctrstate;
 
     switch (add)
     {
       case 0x1f801100:
-	  hard = psxRcntRcount(0);
+	  hard = psxRcntRcount(ins, 0);
 	  return hard;
       case 0x1f801104:
-	  hard = psxCounters[0].mode;
+	  hard = ctrstate->psxCounters[0].mode;
 	  return hard;
       case 0x1f801108:
-	  hard = psxCounters[0].target;
+	  hard = ctrstate->psxCounters[0].target;
 	  return hard;
       case 0x1f801110:
-	  hard = psxRcntRcount(1);
+	  hard = psxRcntRcount(ins, 1);
 	  return hard;
       case 0x1f801114:
-	  hard = psxCounters[1].mode;
+	  hard = ctrstate->psxCounters[1].mode;
 	  return hard;
       case 0x1f801118:
-	  hard = psxCounters[1].target;
+	  hard = ctrstate->psxCounters[1].target;
 	  return hard;
       case 0x1f801120:
-	  hard = psxRcntRcount(2);
+	  hard = psxRcntRcount(ins, 2);
 	  return hard;
       case 0x1f801124:
-	  hard = psxCounters[2].mode;
+	  hard = ctrstate->psxCounters[2].mode;
 	  return hard;
       case 0x1f801128:
-	  hard = psxCounters[2].target;
+	  hard = ctrstate->psxCounters[2].target;
 	  return hard;
       case 0x1f801070:
           hard = psxHu16(0x1070);
@@ -111,6 +112,7 @@ u16 upse_ps1_hal_read_16(upse_module_instance_t *ins, u32 add)
 u32 upse_ps1_hal_read_32(upse_module_instance_t *ins, u32 add)
 {
     u32 hard;
+    upse_psx_counter_state_t *ctrstate = ins->ctrstate;
 
     switch (add)
     {
@@ -119,31 +121,31 @@ u32 upse_ps1_hal_read_32(upse_module_instance_t *ins, u32 add)
           return hard;
 	  // time for rootcounters :)
       case 0x1f801100:
-	  hard = psxRcntRcount(0);
+	  hard = psxRcntRcount(ins, 0);
 	  return hard;
       case 0x1f801104:
-	  hard = psxCounters[0].mode;
+	  hard = ctrstate->psxCounters[0].mode;
 	  return hard;
       case 0x1f801108:
-	  hard = psxCounters[0].target;
+	  hard = ctrstate->psxCounters[0].target;
 	  return hard;
       case 0x1f801110:
-	  hard = psxRcntRcount(1);
+	  hard = psxRcntRcount(ins, 1);
 	  return hard;
       case 0x1f801114:
-	  hard = psxCounters[1].mode;
+	  hard = ctrstate->psxCounters[1].mode;
 	  return hard;
       case 0x1f801118:
-	  hard = psxCounters[1].target;
+	  hard = ctrstate->psxCounters[1].target;
 	  return hard;
       case 0x1f801120:
-	  hard = psxRcntRcount(2);
+	  hard = psxRcntRcount(ins, 2);
 	  return hard;
       case 0x1f801124:
-	  hard = psxCounters[2].mode;
+	  hard = ctrstate->psxCounters[2].mode;
 	  return hard;
       case 0x1f801128:
-	  hard = psxCounters[2].target;
+	  hard = ctrstate->psxCounters[2].target;
 	  return hard;
       case 0x1f801070:
           hard = psxHu32(0x1070);
@@ -184,33 +186,33 @@ void upse_ps1_hal_write_16(upse_module_instance_t *ins, u32 add, u16 value)
     switch (add)
     {
       case 0x1f801100:
-	  psxRcntWcount(0, value);
+	  psxRcntWcount(ins, 0, value);
 	  return;
       case 0x1f801104:
-	  psxRcntWmode(0, value);
+	  psxRcntWmode(ins, 0, value);
 	  return;
       case 0x1f801108:
-	  psxRcntWtarget(0, value);
+	  psxRcntWtarget(ins, 0, value);
 	  return;
 
       case 0x1f801110:
-	  psxRcntWcount(1, value);
+	  psxRcntWcount(ins, 1, value);
 	  return;
       case 0x1f801114:
-	  psxRcntWmode(1, value);
+	  psxRcntWmode(ins, 1, value);
 	  return;
       case 0x1f801118:
-	  psxRcntWtarget(1, value);
+	  psxRcntWtarget(ins, 1, value);
 	  return;
 
       case 0x1f801120:
-	  psxRcntWcount(2, value);
+	  psxRcntWcount(ins, 2, value);
 	  return;
       case 0x1f801124:
-	  psxRcntWmode(2, value);
+	  psxRcntWmode(ins, 2, value);
 	  return;
       case 0x1f801128:
-	  psxRcntWtarget(2, value);
+	  psxRcntWtarget(ins, 2, value);
 	  return;
 
       case 0x1f801070:
@@ -267,34 +269,34 @@ void upse_ps1_hal_write_32(upse_module_instance_t *ins, u32 add, u32 value)
       }
 
       case 0x1f801100:
-	  psxRcntWcount(0, value & 0xffff);
+	  psxRcntWcount(ins, 0, value & 0xffff);
 	  return;
       case 0x1f801104:
-	  psxRcntWmode(0, value);
+	  psxRcntWmode(ins, 0, value);
 	  return;
       case 0x1f801108:
-	  psxRcntWtarget(0, value & 0xffff);
+	  psxRcntWtarget(ins, 0, value & 0xffff);
 	  return;
 	  //  HW_DMA_ICR&= (~value)&0xff000000;
 
       case 0x1f801110:
-	  psxRcntWcount(1, value & 0xffff);
+	  psxRcntWcount(ins, 1, value & 0xffff);
 	  return;
       case 0x1f801114:
-	  psxRcntWmode(1, value);
+	  psxRcntWmode(ins, 1, value);
 	  return;
       case 0x1f801118:
-	  psxRcntWtarget(1, value & 0xffff);
+	  psxRcntWtarget(ins, 1, value & 0xffff);
 	  return;
 
       case 0x1f801120:
-	  psxRcntWcount(2, value & 0xffff);
+	  psxRcntWcount(ins, 2, value & 0xffff);
 	  return;
       case 0x1f801124:
-	  psxRcntWmode(2, value);
+	  psxRcntWmode(ins, 2, value);
 	  return;
       case 0x1f801128:
-	  psxRcntWtarget(2, value & 0xffff);
+	  psxRcntWtarget(ins, 2, value & 0xffff);
 	  return;
 
       case 0x1f8010c0:

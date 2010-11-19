@@ -24,20 +24,22 @@ typedef struct
 {
     u32 count, mode, target;
     u32 sCycle, Cycle, rate, interrupt;
-} psxCounter;
+} upse_psx_counter_t;
 
-extern psxCounter psxCounters[5];
+typedef struct
+{
+    upse_psx_counter_t psxCounters[5];
+    u32 psxNextCounter, psxNextsCounter;
+} upse_psx_counter_state_t;
 
-extern u32 psxNextCounter, psxNextsCounter;
+void psxRcntInit(upse_module_instance_t *ins);
+void psxRcntUpdate(upse_module_instance_t *ins);
+void psxRcntWcount(upse_module_instance_t *ins, u32 index, u32 value);
+void psxRcntWmode(upse_module_instance_t *ins, u32 index, u32 value);
+void psxRcntWtarget(upse_module_instance_t *ins, u32 index, u32 value);
+u32 psxRcntRcount(upse_module_instance_t *ins, u32 index);
 
-void psxRcntInit();
-void psxRcntUpdate();
-void psxRcntWcount(u32 index, u32 value);
-void psxRcntWmode(u32 index, u32 value);
-void psxRcntWtarget(u32 index, u32 value);
-u32 psxRcntRcount(u32 index);
-
-void psxUpdateVSyncRate();
+void psxUpdateVSyncRate(upse_module_instance_t *ins);
 
 int CounterSPURun(upse_module_instance_t *ins);
 void CounterDeadLoopSkip(upse_module_instance_t *ins);
