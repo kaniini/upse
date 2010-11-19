@@ -27,5 +27,11 @@ Thanks to:
     enjoyed without the use of Highly Experimental. Check out his archive
     at <http://tzone.org/~llin/psf/>.
 
+    Kiyoshi Aman (Aerdan), grinvader and pagefault for pointing out many
+    bugs and testing fixes.
+
+    kode54 for contributing many API changes and improvements, as well as
+    working through some bugs during the API redesign.
+
     If I missed somebody, I'm sorry, and you should consider yourself
     thanked too.
