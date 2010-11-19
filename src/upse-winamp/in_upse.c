@@ -259,7 +259,7 @@ void upse_winamp_update_cb(unsigned char *buffer, long count, void *data)
 
 	if (seekTime)
 	{
-		if (upse_seek(seekTime))
+		if (upse_eventloop_seek(data, seekTime))
 		{
 			mod.outMod->Flush(seekTime);
 			seekTime = 0;
@@ -294,7 +294,7 @@ DWORD WINAPI __stdcall PlayThread(void *b)
 
 	length = module->length;
 
-	upse_set_audio_callback(upse_winamp_update_cb, module);
+	upse_eventloop_set_audio_callback(module, upse_winamp_update_cb, module);
 
 	paused=0;
 	
@@ -327,7 +327,7 @@ DWORD WINAPI __stdcall PlayThread(void *b)
 			if (!(module = upse_module_open(lastfn, &upse_winamp_iofuncs)))
 				break;
 
-			upse_seek(seekTime);
+			upse_eventloop_seek(module, seekTime);
 			seekTime = 0;
 			
 			continue;
