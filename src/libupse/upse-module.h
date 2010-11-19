@@ -56,6 +56,7 @@ typedef struct
 typedef struct {
     void *spu;
     void *ctrstate;
+    void *biosstate;
 
     char *psxM;
     char *psxP;

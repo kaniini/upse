@@ -377,22 +377,18 @@ typedef struct
     u32 func;
 } upse_packed_t TCB;
 
-static u32 *jmp_int;
+typedef struct
+{
+    u32 *jmp_int;
+    u32 regs[35];
+    EvCB *Event;
+    EvCB *RcEV;		// 0xf2
 
-static u32 regs[35];
-static EvCB *Event;
-
-//static EvCB *HwEV; // 0xf0
-//static EvCB *EvEV; // 0xf1
-static EvCB *RcEV;		// 0xf2
-//static EvCB *UeEV; // 0xf3
-//static EvCB *SwEV; // 0xf4
-//static EvCB *ThEV; // 0xff
-
-static u32 heap_addr;
-static u32 SysIntRP[8];
-static TCB Thread[8];
-static int CurThread;
+    u32 heap_addr;
+    u32 SysIntRP[8];
+    TCB Thread[8];
+    int CurThread;
+} upse_ps1_bios_state_t;
 
 static INLINE void softCall(upse_module_instance_t *ins, u32 pc)
 {
@@ -414,16 +410,18 @@ static INLINE void softCall2(upse_module_instance_t *ins, u32 pc)
 
 static INLINE void DeliverEvent(upse_module_instance_t *ins, u32 ev, u32 spec)
 {
-    if (Event[ev][spec].status != BFLIP32S(EvStACTIVE))
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
+
+    if (biosstate->Event[ev][spec].status != BFLIP32S(EvStACTIVE))
 	return;
 
-//      Event[ev][spec].status = BFLIP32S(EvStALREADY);
-    if (Event[ev][spec].mode == BFLIP32S(EvMdINTR))
+//      biosstate->Event[ev][spec].status = BFLIP32S(EvStALREADY);
+    if (biosstate->Event[ev][spec].mode == BFLIP32S(EvMdINTR))
     {
-	softCall2(ins, BFLIP32S(Event[ev][spec].fhandler));
+	softCall2(ins, BFLIP32S(biosstate->Event[ev][spec].fhandler));
     }
     else
-	Event[ev][spec].status = BFLIP32S(EvStALREADY);
+	biosstate->Event[ev][spec].status = BFLIP32S(EvStALREADY);
 }
 
 /*                                           *
@@ -853,10 +851,11 @@ static void bios_malloc(upse_module_instance_t *ins)
 {				// 33
     u32 chunk;
     u32 fd;
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
 
     /* a0:  Number of bytes to allocate. */
 
-    chunk = heap_addr;
+    chunk = biosstate->heap_addr;
 
     /* Search for first chunk that's large enough and not currently
        being used.
@@ -886,10 +885,11 @@ static void bios_malloc(upse_module_instance_t *ins)
 static void bios_InitHeap(upse_module_instance_t *ins)
 {				// 39
     malloc_chunk *chunk;
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
 
-    heap_addr = a0;		// Ra0
+    biosstate->heap_addr = a0;		// Ra0
 
-    chunk = (malloc_chunk *) PSXM(ins, heap_addr);
+    chunk = (malloc_chunk *) PSXM(ins, biosstate->heap_addr);
     chunk->stat = 0;
     if (((a0 & 0x1fffff) + a1) >= 0x200000)
 	chunk->size = BFLIP32(0x1ffffc - (a0 & 0x1fffff));
@@ -1056,13 +1056,14 @@ static void bios_OpenEvent(upse_module_instance_t *ins)
 {				// 08
     int ev, spec;
     int i;
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
 
     GetEv();
     GetSpec();
 
-    Event[ev][spec].status = BFLIP32S(EvStWAIT);
-    Event[ev][spec].mode = BFLIP32(a2);
-    Event[ev][spec].fhandler = BFLIP32(a3);
+    biosstate->Event[ev][spec].status = BFLIP32S(EvStWAIT);
+    biosstate->Event[ev][spec].mode = BFLIP32(a2);
+    biosstate->Event[ev][spec].fhandler = BFLIP32(a3);
 
     v0 = ev | (spec << 8);
     pc0 = ra;
@@ -1071,11 +1072,12 @@ static void bios_OpenEvent(upse_module_instance_t *ins)
 static void bios_CloseEvent(upse_module_instance_t *ins)
 {				// 09
     int ev, spec;
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
 
     ev = a0 & 0xff;
     spec = (a0 >> 8) & 0xff;
 
-    Event[ev][spec].status = BFLIP32S(EvStUNUSED);
+    biosstate->Event[ev][spec].status = BFLIP32S(EvStUNUSED);
 
     v0 = 1;
     pc0 = ra;
@@ -1084,11 +1086,12 @@ static void bios_CloseEvent(upse_module_instance_t *ins)
 static void bios_WaitEvent(upse_module_instance_t *ins)
 {				// 0a
     int ev, spec;
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
 
     ev = a0 & 0xff;
     spec = (a0 >> 8) & 0xff;
 
-    Event[ev][spec].status = BFLIP32S(EvStACTIVE);
+    biosstate->Event[ev][spec].status = BFLIP32S(EvStACTIVE);
 
     v0 = 1;
     pc0 = ra;
@@ -1097,13 +1100,14 @@ static void bios_WaitEvent(upse_module_instance_t *ins)
 static void bios_TestEvent(upse_module_instance_t *ins)
 {				// 0b
     int ev, spec;
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
 
     ev = a0 & 0xff;
     spec = (a0 >> 8) & 0xff;
 
-    if (Event[ev][spec].status == BFLIP32S(EvStALREADY))
+    if (biosstate->Event[ev][spec].status == BFLIP32S(EvStALREADY))
     {
-	Event[ev][spec].status = BFLIP32S(EvStACTIVE);
+	biosstate->Event[ev][spec].status = BFLIP32S(EvStACTIVE);
 	v0 = 1;
     }
     else
@@ -1115,11 +1119,12 @@ static void bios_TestEvent(upse_module_instance_t *ins)
 static void bios_EnableEvent(upse_module_instance_t *ins)
 {				// 0c
     int ev, spec;
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
 
     ev = a0 & 0xff;
     spec = (a0 >> 8) & 0xff;
 
-    Event[ev][spec].status = BFLIP32S(EvStACTIVE);
+    biosstate->Event[ev][spec].status = BFLIP32S(EvStACTIVE);
 
     v0 = 1;
     pc0 = ra;
@@ -1128,11 +1133,12 @@ static void bios_EnableEvent(upse_module_instance_t *ins)
 static void bios_DisableEvent(upse_module_instance_t *ins)
 {				// 0d
     int ev, spec;
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
 
     ev = a0 & 0xff;
     spec = (a0 >> 8) & 0xff;
 
-    Event[ev][spec].status = BFLIP32S(EvStWAIT);
+    biosstate->Event[ev][spec].status = BFLIP32S(EvStWAIT);
 
     v0 = 1;
     pc0 = ra;
@@ -1145,15 +1151,16 @@ static void bios_DisableEvent(upse_module_instance_t *ins)
 static void bios_OpenTh(upse_module_instance_t *ins)
 {				// 0e
     int th;
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
 
     for (th = 1; th < 8; th++)
-	if (Thread[th].status == 0)
+	if (biosstate->Thread[th].status == 0)
 	    break;
 
-    Thread[th].status = BFLIP32(1);
-    Thread[th].func = BFLIP32(a0);
-    Thread[th].reg[29] = BFLIP32(a1);
-    Thread[th].reg[28] = BFLIP32(a2);
+    biosstate->Thread[th].status = BFLIP32(1);
+    biosstate->Thread[th].func = BFLIP32(a0);
+    biosstate->Thread[th].reg[29] = BFLIP32(a1);
+    biosstate->Thread[th].reg[28] = BFLIP32(a2);
 
     v0 = th;
     pc0 = ra;
@@ -1166,14 +1173,15 @@ static void bios_OpenTh(upse_module_instance_t *ins)
 static void bios_CloseTh(upse_module_instance_t *ins)
 {				// 0f
     int th = a0 & 0xff;
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
 
-    if (Thread[th].status == 0)
+    if (biosstate->Thread[th].status == 0)
     {
 	v0 = 0;
     }
     else
     {
-	Thread[th].status = 0;
+	biosstate->Thread[th].status = 0;
 	v0 = 1;
     }
 
@@ -1187,8 +1195,9 @@ static void bios_CloseTh(upse_module_instance_t *ins)
 static void bios_ChangeTh(upse_module_instance_t *ins)
 {				// 10
     int th = a0 & 0xff;
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
 
-    if (Thread[th].status == 0 || CurThread == th)
+    if (biosstate->Thread[th].status == 0 || biosstate->CurThread == th)
     {
 	v0 = 0;
 
@@ -1198,25 +1207,27 @@ static void bios_ChangeTh(upse_module_instance_t *ins)
     {
 	v0 = 1;
 
-	if (Thread[CurThread].status == BFLIP32S(2))
+	if (biosstate->Thread[biosstate->CurThread].status == BFLIP32S(2))
 	{
-	    Thread[CurThread].status = BFLIP32S(1);
-	    Thread[CurThread].func = BFLIP32(ra);
-	    memcpy(Thread[CurThread].reg, ins->cpustate.GPR.r, 32 * 4);
+	    biosstate->Thread[biosstate->CurThread].status = BFLIP32S(1);
+	    biosstate->Thread[biosstate->CurThread].func = BFLIP32(ra);
+	    memcpy(biosstate->Thread[biosstate->CurThread].reg, ins->cpustate.GPR.r, 32 * 4);
 	}
 
-	memcpy(ins->cpustate.GPR.r, Thread[th].reg, 32 * 4);
-	pc0 = BFLIP32(Thread[th].func);
-	Thread[th].status = BFLIP32(2);
-	CurThread = th;
+	memcpy(ins->cpustate.GPR.r, biosstate->Thread[th].reg, 32 * 4);
+	pc0 = BFLIP32(biosstate->Thread[th].func);
+	biosstate->Thread[th].status = BFLIP32(2);
+	biosstate->CurThread = th;
     }
 }
 
 static void bios_ReturnFromException(upse_module_instance_t *ins)
 {				// 17
-    memcpy(ins->cpustate.GPR.r, regs, 32 * 4);
-    ins->cpustate.GPR.n.lo = regs[32];
-    ins->cpustate.GPR.n.hi = regs[33];
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
+
+    memcpy(ins->cpustate.GPR.r, biosstate->regs, 32 * 4);
+    ins->cpustate.GPR.n.lo = biosstate->regs[32];
+    ins->cpustate.GPR.n.hi = biosstate->regs[33];
 
     pc0 = ins->cpustate.CP0.n.EPC;
     if (ins->cpustate.CP0.n.Cause & 0x80000000)
@@ -1227,15 +1238,17 @@ static void bios_ReturnFromException(upse_module_instance_t *ins)
 
 static void bios_ResetEntryInt(upse_module_instance_t *ins)
 {				// 18
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
 
-    jmp_int = NULL;
+    biosstate->jmp_int = NULL;
     pc0 = ra;
 }
 
 static void bios_HookEntryInt(upse_module_instance_t *ins)
 {				// 19
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
 
-    jmp_int = (u32 *) Ra0;
+    biosstate->jmp_int = (u32 *) Ra0;
     pc0 = ra;
 }
 
@@ -1243,12 +1256,13 @@ static void bios_UnDeliverEvent(upse_module_instance_t *ins)
 {				// 0x20
     int ev, spec;
     int i;
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
 
     GetEv();
     GetSpec();
 
-    if (Event[ev][spec].status == BFLIP32S(EvStALREADY) && Event[ev][spec].mode == BFLIP32S(EvMdNOINTR))
-	Event[ev][spec].status = BFLIP32S(EvStACTIVE);
+    if (biosstate->Event[ev][spec].status == BFLIP32S(EvStALREADY) && biosstate->Event[ev][spec].mode == BFLIP32S(EvMdNOINTR))
+	biosstate->Event[ev][spec].status = BFLIP32S(EvStACTIVE);
 
     pc0 = ra;
 }
@@ -1275,8 +1289,9 @@ static void bios_GetB0Table(upse_module_instance_t *ins)
 
 static void bios_SysEnqIntRP(upse_module_instance_t *ins)
 {				// 02
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
 
-    SysIntRP[a0] = a1;
+    biosstate->SysIntRP[a0] = a1;
 
     v0 = 0;
     pc0 = ra;
@@ -1288,8 +1303,9 @@ static void bios_SysEnqIntRP(upse_module_instance_t *ins)
 
 static void bios_SysDeqIntRP(upse_module_instance_t *ins)
 {				// 03
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
 
-    SysIntRP[a0] = 0;
+    biosstate->SysIntRP[a0] = 0;
 
     v0 = 0;
     pc0 = ra;
@@ -1326,13 +1342,15 @@ void upse_ps1_bios_init(upse_module_instance_t *ins)
     u32 base, size;
     u32 *ptr;
     int i;
+    upse_ps1_bios_state_t *biosstate;
 
     if (upse_has_custom_bios())
         return;
 
-    heap_addr = 0;
-    CurThread = 0;
-    jmp_int = NULL;
+    biosstate = calloc(sizeof(upse_ps1_bios_state_t), 1);
+    biosstate->heap_addr = 0;
+    biosstate->CurThread = 0;
+    biosstate->jmp_int = NULL;
 
     for (i = 0; i < 256; i++)
     {
@@ -1566,15 +1584,10 @@ void upse_ps1_bios_init(upse_module_instance_t *ins)
 
     base = 0x1000;
     size = sizeof(EvCB) * 32;
-    Event = (void *) &ins->psxR[base];
+    biosstate->Event = (void *) &ins->psxR[base];
     base += size * 6;
-    memset(Event, 0, size * 6);
-    //HwEV = Event;
-    //EvEV = Event + 32;
-    RcEV = Event + 32 * 2;
-    //UeEV = Event + 32*3;
-    //SwEV = Event + 32*4;
-    //ThEV = Event + 32*5;
+    memset(biosstate->Event, 0, size * 6);
+    biosstate->RcEV = biosstate->Event + 32 * 2;
 
     ptr = (u32 *) & ins->psxM[0x0874];	// b0 table
     ptr[0] = BFLIP32(0x4c54 - 0x884);
@@ -1582,9 +1595,9 @@ void upse_ps1_bios_init(upse_module_instance_t *ins)
     ptr = (u32 *) & ins->psxM[0x0674];	// c0 table
     ptr[6] = BFLIP32(0xc80);
 
-    memset(SysIntRP, 0, sizeof(SysIntRP));
-    memset(Thread, 0, sizeof(Thread));
-    Thread[0].status = BFLIP32(2);	// main thread
+    memset(biosstate->SysIntRP, 0, sizeof(biosstate->SysIntRP));
+    memset(biosstate->Thread, 0, sizeof(biosstate->Thread));
+    biosstate->Thread[0].status = BFLIP32(2);	// main thread
 
     PSXMu32(ins, 0x0150) = BFLIP32(0x160);
     PSXMu32(ins, 0x0154) = BFLIP32(0x320);
@@ -1608,19 +1621,24 @@ void upse_ps1_bios_init(upse_module_instance_t *ins)
     PSXMu32(ins, 0x07a0) = BFLIP32((0x3b << 26) | 0);
     PSXMu32(ins, 0x0884) = BFLIP32((0x3b << 26) | 0);
     PSXMu32(ins, 0x0894) = BFLIP32((0x3b << 26) | 0);
+
+    ins->biosstate = biosstate;
 }
 
 void upse_ps1_bios_shutdown(upse_module_instance_t *ins)
 {
+    free(ins->biosstate);
 }
 
 void biosInterrupt(upse_module_instance_t *ins)
 {
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
+
     if (BFLIP32(psxHu32(ins, 0x1070)) & 0x1)
     {				// Vsync
-	if (RcEV[3][1].status == BFLIP32S(EvStACTIVE))
+	if (biosstate->RcEV[3][1].status == BFLIP32S(EvStACTIVE))
 	{
-	    softCall(ins, BFLIP32(RcEV[3][1].fhandler));
+	    softCall(ins, BFLIP32(biosstate->RcEV[3][1].fhandler));
 //                        hwwrite_32(0x1f801070, ~(1));
 	}
     }
@@ -1633,9 +1651,9 @@ void biosInterrupt(upse_module_instance_t *ins)
 	{
 	    if (BFLIP32(psxHu32(ins, 0x1070)) & (1 << (i + 4)))
 	    {
-		if (RcEV[i][1].status == BFLIP32S(EvStACTIVE))
+		if (biosstate->RcEV[i][1].status == BFLIP32S(EvStACTIVE))
 		{
-		    softCall(ins, BFLIP32(RcEV[i][1].fhandler));
+		    softCall(ins, BFLIP32(biosstate->RcEV[i][1].fhandler));
 		    upse_ps1_hal_write_32(ins, 0x1f801070, ~(1 << (i + 4)));
 		}
 	    }
@@ -1645,15 +1663,18 @@ void biosInterrupt(upse_module_instance_t *ins)
 
 static INLINE void SaveRegs(upse_module_instance_t *ins)
 {
-    memcpy(regs, ins->cpustate.GPR.r, 32 * 4);
-    regs[32] = ins->cpustate.GPR.n.lo;
-    regs[33] = ins->cpustate.GPR.n.hi;
-    regs[34] = ins->cpustate.pc;
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
+
+    memcpy(biosstate->regs, ins->cpustate.GPR.r, 32 * 4);
+    biosstate->regs[32] = ins->cpustate.GPR.n.lo;
+    biosstate->regs[33] = ins->cpustate.GPR.n.hi;
+    biosstate->regs[34] = ins->cpustate.pc;
 }
 
 void upse_ps1_bios_exception(upse_module_instance_t *ins)
 {
     int i;
+    upse_ps1_bios_state_t *biosstate = ins->biosstate;
 
     switch (ins->cpustate.CP0.n.Cause & 0x3c)
     {
@@ -1667,27 +1688,27 @@ void upse_ps1_bios_exception(upse_module_instance_t *ins)
 
 	  for (i = 0; i < 8; i++)
 	  {
-	      if (SysIntRP[i])
+	      if (biosstate->SysIntRP[i])
 	      {
-		  u32 *queue = (u32 *) PSXM(ins, SysIntRP[i]);
+		  u32 *queue = (u32 *) PSXM(ins, biosstate->SysIntRP[i]);
 
 		  s0 = BFLIP32(queue[2]);
 		  softCall(ins, BFLIP32(queue[1]));
 	      }
 	  }
 
-	  if (jmp_int != NULL)
+	  if (biosstate->jmp_int != NULL)
 	  {
 	      int i;
 
 	      upse_ps1_hal_write_32(ins, 0x1f801070, 0xffffffff);
 
-	      ra = BFLIP32(jmp_int[0]);
-	      sp = BFLIP32(jmp_int[1]);
-	      fp = BFLIP32(jmp_int[2]);
+	      ra = BFLIP32(biosstate->jmp_int[0]);
+	      sp = BFLIP32(biosstate->jmp_int[1]);
+	      fp = BFLIP32(biosstate->jmp_int[2]);
 	      for (i = 0; i < 8; i++)	// s0-s7
-		  ins->cpustate.GPR.r[16 + i] = BFLIP32(jmp_int[3 + i]);
-	      gp = BFLIP32(jmp_int[11]);
+		  ins->cpustate.GPR.r[16 + i] = BFLIP32(biosstate->jmp_int[3 + i]);
+	      gp = BFLIP32(biosstate->jmp_int[11]);
 
 	      v0 = 1;
 	      pc0 = ra;
