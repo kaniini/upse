@@ -36,9 +36,6 @@
 
 // psx buffer / addresses
 
-// user settings          
-static int iVolume;
-
 // MAIN infos struct for each channel
 static const int f[5][2] = {
     {0, 0},
@@ -643,7 +640,6 @@ upse_ps1_spu_setup_streams(upse_spu_state_t *spu)
     if (spu == NULL)
         return;
 
-    spu->pSpuBuffer = (u8 *) malloc(32768);	// alloc mixing buffer
     spu->pS = (s16 *) spu->pSpuBuffer;
 
     for (i = 0; i < MAXCHAN; i++)	// loop sound channels
@@ -654,17 +650,6 @@ upse_ps1_spu_setup_streams(upse_spu_state_t *spu)
 	spu->s_chan[i].pStart = spu->spuMemC;
 	spu->s_chan[i].pCurr = spu->spuMemC;
     }
-}
-
-static void
-upse_ps1_spu_remove_streams(upse_spu_state_t *spu)
-{
-    if (spu == NULL)
-        return;
-
-    free(spu->pSpuBuffer);
-
-    spu->pSpuBuffer = NULL;
 }
 
 upse_spu_state_t *
@@ -691,7 +676,6 @@ upse_ps1_spu_open(upse_module_instance_t *ins)
     memset((void *) spu->s_chan, 0, (MAXCHAN + 1) * sizeof(SPUCHAN));
     spu->pSpuIrq = 0;
 
-    iVolume = 60;
     upse_ps1_spu_setup_streams(spu);		// prepare streaming
 
     upse_spu_lowpass_filter_redesign(spu, 44100);
@@ -705,6 +689,5 @@ upse_ps1_spu_close(upse_spu_state_t *spu)
     if (spu == NULL)
 	return;
 
-    upse_ps1_spu_remove_streams(spu);
     free(spu);
 }

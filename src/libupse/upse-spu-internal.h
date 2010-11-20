@@ -212,7 +212,7 @@ typedef struct {
     u16 spuMem[256 * 1024];
     u8 *spuMemC;
     u8 *pSpuIrq;
-    u8 *pSpuBuffer;
+    u8 pSpuBuffer[32770];
 
     u16 spuCtrl;		// some vars to store psx reg infos
     u16 spuStat;
