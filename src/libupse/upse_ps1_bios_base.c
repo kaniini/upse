@@ -4,7 +4,7 @@
  * Filename: upse_ps1_bios_base.c
  * Purpose: libupse: UPSE PS1 FakeBIOS base code
  *
- * Copyright (c) 2007 William Pitcock <nenolod@sacredspiral.co.uk>
+ * Copyright (c) 2007 - 2010 William Pitcock <nenolod@dereferenced.org>
  * Portions copyright (c) 1999-2002 Pcsx Team
  * Portions copyright (c) 2004 "Xodnizel"
  *
