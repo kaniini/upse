@@ -152,6 +152,9 @@ static gboolean upse_aud_play(InputPlayback *playback, const gchar * filename, V
 
     upse_module_close(playback_mod);
 
+    while (!stop_flag && playback->output->buffer_playing())
+        g_usleep(10000);
+
     playback->output->close_audio();
     stop_flag = FALSE;
 
