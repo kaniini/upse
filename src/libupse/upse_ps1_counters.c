@@ -85,7 +85,6 @@ static void psxRcntSet(upse_module_instance_t *ins)
     }
 }
 
-int didit = 0;
 void psxRcntInit(upse_module_instance_t *ins)
 {
     upse_psx_counter_state_t *ctrstate;

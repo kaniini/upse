@@ -236,9 +236,6 @@ upse_get_psf_metadata(const char *path, upse_iofuncs_t * iofuncs)
 
     _ENTER;
 
-    psxInit(&mod.instance);
-    psxReset(&mod.instance, UPSE_PSX_REV_PS1);
-
     if (!(fp = iofuncs->open_impl(path, "rb")))
     {
 	_ERROR("path %s failed to load\n", path);
