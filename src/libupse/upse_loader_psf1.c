@@ -225,23 +225,45 @@ void upse_free_psf_metadata(upse_psf_t * info)
 upse_psf_t *
 upse_get_psf_metadata(const char *path, upse_iofuncs_t * iofuncs)
 {
+    void *fp;
     upse_psf_t *ret;
-    upse_module_t mod;
+    u8 *in;
+    u8 *out;
+    uLongf outlen;
+    upse_xsf_t *xsf;
+    u32 inlen;
 
     _ENTER;
 
-    psxInit(&mod.instance);
-    psxReset(&mod.instance, UPSE_PSX_REV_PS1);
-
-    if (!(ret = _upse_load_psf_from_file(&mod.instance, path, 0, 1, iofuncs)))
+    if (!(fp = iofuncs->open_impl(path, "rb")))
+    {
+	_ERROR("path %s failed to load\n", path);
 	return NULL;
+    }
+
+    in = upse_get_buffer(fp, iofuncs, &inlen);
+    xsf = upse_xsf_decode(in, inlen, &out, &outlen);
+
+    iofuncs->close_impl(fp);
+
+    ret = calloc(sizeof(upse_psf_t), 1);
+    ret->xsf = xsf;
+    ret->volume = upse_strtof(xsf->inf_volume) * 32;
+    ret->fade = upse_time_to_ms(xsf->inf_fade);
+    ret->stop = upse_time_to_ms(xsf->inf_length);
+    ret->title = xsf->inf_title;
+    ret->artist = xsf->inf_artist;
+    ret->copyright = xsf->inf_copy;
+    ret->game = xsf->inf_game;
+    ret->year = xsf->inf_year;
 
     if (ret->stop == (u32) ~ 0)
 	ret->fade = 0;
 
     ret->length = ret->stop + ret->fade;
 
-    psxShutdown(&mod.instance);
+    free(in);
+    free(out);;
 
     _LEAVE;
     return ret;
