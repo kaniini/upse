@@ -75,7 +75,7 @@ upse_module_t *playback_mod = NULL;
 
 void upse_aud_update(unsigned char *buffer, long count, gconstpointer data)
 {
-    InputPlayback *playback = data;
+    const InputPlayback *playback = data;
 
     if (stop_flag)
         upse_eventloop_stop(playback_mod);
