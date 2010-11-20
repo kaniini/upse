@@ -15,7 +15,7 @@ void upse_ps1_spu_stop(upse_module_instance_t *ins);
 
 int upse_ps1_spu_finalize_count(upse_spu_state_t *spu, s16 **s);
 
-void upse_ps1_spu_set_audio_callback(upse_module_instance_t *ins, upse_audio_callback_func_t func, void *user_data);
+void upse_ps1_spu_set_audio_callback(upse_module_instance_t *ins, upse_audio_callback_func_t func, const void *user_data);
 int upse_ps1_spu_seek(upse_module_instance_t *ins, u32 t);
 
 #endif

@@ -59,7 +59,7 @@ typedef struct
 upse_psf_t *upse_get_psf_metadata(const char *path, upse_iofuncs_t * iofuncs);
 void upse_free_psf_metadata(upse_psf_t * info);
 
-typedef void (*upse_audio_callback_func_t) (unsigned char *, long, void *);
+typedef void (*upse_audio_callback_func_t) (unsigned char *, long, const void *);
 
 /*
  * Set the interpolation mode.

@@ -69,7 +69,7 @@ typedef struct {
 
 typedef void (*upse_eventloop_func_t)(upse_module_instance_t *ins);
 typedef int (*upse_eventloop_render_func_t)(upse_module_instance_t *ins, s16 **samples);
-typedef void (*upse_eventloop_setcb_func_t)(upse_module_instance_t *ins, upse_audio_callback_func_t func, void *user_data);
+typedef void (*upse_eventloop_setcb_func_t)(upse_module_instance_t *ins, upse_audio_callback_func_t func, const void *user_data);
 typedef int (*upse_eventloop_seek_func_t)(upse_module_instance_t *ins, u32 t);
 
 typedef struct {

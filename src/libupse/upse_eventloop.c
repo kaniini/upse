@@ -41,7 +41,7 @@ upse_eventloop_render(upse_module_t *mod, s16 **samples)
 }
 
 void
-upse_eventloop_set_audio_callback(upse_module_t *mod, upse_audio_callback_func_t func, void *user_data)
+upse_eventloop_set_audio_callback(upse_module_t *mod, upse_audio_callback_func_t func, const void *user_data)
 {
     if (mod->evloop_setcb)
         mod->evloop_setcb(&mod->instance, func, user_data);

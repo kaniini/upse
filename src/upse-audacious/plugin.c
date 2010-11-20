@@ -73,7 +73,7 @@ static int is_our_fd(const gchar *filename, VFSFile *file) {
 gboolean stop_flag = FALSE;
 upse_module_t *playback_mod = NULL;
 
-void upse_aud_update(unsigned char *buffer, long count, gpointer data)
+void upse_aud_update(unsigned char *buffer, long count, gconstpointer data)
 {
     InputPlayback *playback = data;
 

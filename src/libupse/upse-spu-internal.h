@@ -224,7 +224,7 @@ typedef struct {
     REVERBInfo rvb;
 
     upse_audio_callback_func_t cb;
-    void *cb_userdata;
+    const void *cb_userdata;
 
     u32 sampcount;
     u32 decaybegin;
