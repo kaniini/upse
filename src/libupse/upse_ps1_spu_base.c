@@ -453,8 +453,12 @@ int upse_ps1_spu_render(upse_spu_state_t *spu, u32 cycles)
 		}		//----------------------------------------
 		else		// NO NOISE (NORMAL SAMPLE DATA) HERE 
 		{
-		    int vl, vr, gpos;
+		    unsigned int vl;
+                    int vr, gpos;
+
 		    vl = (spu->s_chan[ch].spos >> 6) & ~3;
+                    vl %= sizeof(gauss);
+
 		    gpos = spu->s_chan[ch].SB[28];
 
 		    vr = (gauss[vl]) * gval0;
@@ -662,7 +666,7 @@ upse_ps1_spu_open(upse_module_instance_t *ins)
     memset((void *) &spu->rvb, 0, sizeof(REVERBInfo));
     memset(spu->regArea, 0, sizeof(spu->regArea));
     memset(spu->spuMem, 0, sizeof(spu->spuMem));
-    InitADSR();
+    InitADSR(spu);
     spu->sampcount = spu->nextirq = 0;
     spu->seektime = (u32) ~ 0;
 

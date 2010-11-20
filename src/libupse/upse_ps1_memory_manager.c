@@ -72,21 +72,14 @@ void ClearPSXMem(upse_module_instance_t *ins, u32 address, s32 length)
     }
 }
 
-static int writeok;
 int upse_ps1_memory_init(upse_module_instance_t *ins)
 {
     int i;
 
-    writeok = 1;
-
-    ins->upse_ps1_memory_LUT = malloc(0x10000 * sizeof *ins->upse_ps1_memory_LUT);
+    ins->writeok = 1;
     memset(ins->upse_ps1_memory_LUT, 0, 0x10000 * sizeof *ins->upse_ps1_memory_LUT);
 
-    ins->psxM = (char *) malloc(0x00200000);
-    ins->psxP = (char *) malloc(0x00010000);
-    ins->psxH = (char *) malloc(0x00010000);
-    ins->psxR = (char *) malloc(0x00080000);
-    if (ins->upse_ps1_memory_LUT == NULL || ins->psxM == NULL || ins->psxP == NULL || ins->psxH == NULL || ins->psxR == NULL)
+    if (ins->upse_ps1_memory_LUT == NULL)
     {
 	printf("Error allocating memory");
 	return -1;
@@ -135,23 +128,6 @@ void upse_ps1_memory_reset(upse_module_instance_t *ins)
 
 void upse_ps1_memory_shutdown(upse_module_instance_t *ins)
 {
-    if (ins->psxM)
-	free(ins->psxM);
-
-    if (ins->psxP)
-	free(ins->psxP);
-
-    if (ins->psxH)
-	free(ins->psxH);
-
-    if (ins->psxR)
-	free(ins->psxR);
-
-    if (ins->upse_ps1_memory_LUT)
-	free(ins->upse_ps1_memory_LUT);
-
-    ins->psxM = ins->psxP = ins->psxH = ins->psxR = NULL;
-    ins->upse_ps1_memory_LUT = NULL;
 }
 
 u8 upse_ps1_memory_read_8(upse_module_instance_t *ins, u32 mem)
@@ -315,17 +291,17 @@ void upse_ps1_memory_write_32(upse_module_instance_t *ins, u32 mem, u32 value)
 		{
 		  case 0x800:
 		  case 0x804:
-		      if (writeok == 0)
+		      if (ins->writeok == 0)
 			  break;
-		      writeok = 0;
+		      ins->writeok = 0;
 		      memset(ins->upse_ps1_memory_LUT + 0x0000, 0, 0x80 * sizeof *ins->upse_ps1_memory_LUT);
 		      memset(ins->upse_ps1_memory_LUT + 0x8000, 0, 0x80 * sizeof *ins->upse_ps1_memory_LUT);
 		      memset(ins->upse_ps1_memory_LUT + 0xa000, 0, 0x80 * sizeof *ins->upse_ps1_memory_LUT);
 		      break;
 		  case 0x1e988:
-		      if (writeok == 1)
+		      if (ins->writeok == 1)
 			  break;
-		      writeok = 1;
+		      ins->writeok = 1;
 		      for (i = 0; i < 0x80; i++)
 			  ins->upse_ps1_memory_LUT[i + 0x0000] = &ins->psxM[(i & 0x1f) << 16];
 		      memcpy(ins->upse_ps1_memory_LUT + 0x8000, ins->upse_ps1_memory_LUT, 0x80 * sizeof *ins->upse_ps1_memory_LUT);

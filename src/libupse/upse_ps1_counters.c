@@ -21,9 +21,6 @@
 
 #include "upse-internal.h"
 
-static int cnts = 4;
-static u32 last = 0;
-
 static void psxRcntUpd(upse_module_instance_t *ins, u32 index)
 {
     upse_psx_counter_state_t *ctrstate = ins->ctrstate;
@@ -66,7 +63,7 @@ static void psxRcntSet(upse_module_instance_t *ins)
     ctrstate->psxNextCounter = 0x7fffffff;
     ctrstate->psxNextsCounter = ins->cpustate.cycle;
 
-    for (i = 0; i < cnts; i++)
+    for (i = 0; i < 4; i++)
     {
 	s32 count;
 
@@ -88,6 +85,7 @@ static void psxRcntSet(upse_module_instance_t *ins)
     }
 }
 
+int didit = 0;
 void psxRcntInit(upse_module_instance_t *ins)
 {
     upse_psx_counter_state_t *ctrstate;
@@ -109,14 +107,12 @@ void psxRcntInit(upse_module_instance_t *ins)
 
     psxUpdateVSyncRate(ins);
 
-    cnts = 4;
-
     psxRcntUpd(ins, 0);
     psxRcntUpd(ins, 1);
     psxRcntUpd(ins, 2);
     psxRcntUpd(ins, 3);
     psxRcntSet(ins);
-    last = 0;
+    ctrstate->last = 0;
 }
 
 void CounterDeadLoopSkip(upse_module_instance_t *ins)
@@ -144,20 +140,21 @@ void CounterDeadLoopSkip(upse_module_instance_t *ins)
 int CounterSPURun(upse_module_instance_t *ins)
 {
     u32 cycles;
+    upse_psx_counter_state_t *ctrstate = ins->ctrstate;
 
-    if (ins->cpustate.cycle < last)
+    if (ins->cpustate.cycle < ctrstate->last)
     {
-	cycles = 0xFFFFFFFF - last;
+	cycles = 0xFFFFFFFF - ctrstate->last;
 	cycles += ins->cpustate.cycle;
     }
     else
-	cycles = ins->cpustate.cycle - last;
+	cycles = ins->cpustate.cycle - ctrstate->last;
 
     if (cycles >= 16)
     {
 	if (!upse_ps1_spu_render(ins->spu, cycles))
 	    return (0);
-	last = ins->cpustate.cycle;
+	ctrstate->last = ins->cpustate.cycle;
     }
     return (1);
 }

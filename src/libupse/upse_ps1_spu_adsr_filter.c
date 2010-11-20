@@ -23,14 +23,12 @@
 // ADSR func
 ////////////////////////////////////////////////////////////////////////
 
-static u32 RateTable[160];
-
-void InitADSR(void)		// INIT ADSR
+void InitADSR(upse_spu_state_t *spu)		// INIT ADSR
 {
     u32 r, rs, rd;
     int i;
 
-    memset(RateTable, 0, sizeof(u32) * 160);	// build the rate table according to Neill's rules (see at bottom of file)
+    memset(spu->RateTable, 0, sizeof(u32) * 160);	// build the rate table according to Neill's rules (see at bottom of file)
 
     r = 3;
     rs = 1;
@@ -51,7 +49,7 @@ void InitADSR(void)		// INIT ADSR
 	if (r > 0x3FFFFFFF)
 	    r = 0x3FFFFFFF;
 
-	RateTable[i] = r;
+	spu->RateTable[i] = r;
     }
 }
 
@@ -74,11 +72,11 @@ int MixADSR(upse_spu_state_t *spu, int ch)		// MIX ADSR
     {				// do release
 	if (spu->s_chan[ch].ADSRX.ReleaseModeExp)
 	{
-	    spu->s_chan[ch].ADSRX.EnvelopeVol -= RateTable[(4 * (spu->s_chan[ch].ADSRX.ReleaseRate ^ 0x1F)) - 0x18 + 32 + sexytable[(spu->s_chan[ch].ADSRX.EnvelopeVol >> 28) & 0x7]];
+	    spu->s_chan[ch].ADSRX.EnvelopeVol -= spu->RateTable[(4 * (spu->s_chan[ch].ADSRX.ReleaseRate ^ 0x1F)) - 0x18 + 32 + sexytable[(spu->s_chan[ch].ADSRX.EnvelopeVol >> 28) & 0x7]];
 	}
 	else
 	{
-	    spu->s_chan[ch].ADSRX.EnvelopeVol -= RateTable[(4 * (spu->s_chan[ch].ADSRX.ReleaseRate ^ 0x1F)) - 0x0C + 32];
+	    spu->s_chan[ch].ADSRX.EnvelopeVol -= spu->RateTable[(4 * (spu->s_chan[ch].ADSRX.ReleaseRate ^ 0x1F)) - 0x0C + 32];
 	}
 
 	if (spu->s_chan[ch].ADSRX.EnvelopeVol < 0)
@@ -98,13 +96,13 @@ int MixADSR(upse_spu_state_t *spu, int ch)		// MIX ADSR
 	    if (spu->s_chan[ch].ADSRX.AttackModeExp)
 	    {
 		if (spu->s_chan[ch].ADSRX.EnvelopeVol < 0x60000000)
-		    spu->s_chan[ch].ADSRX.EnvelopeVol += RateTable[(spu->s_chan[ch].ADSRX.AttackRate ^ 0x7F) - 0x10 + 32];
+		    spu->s_chan[ch].ADSRX.EnvelopeVol += spu->RateTable[(spu->s_chan[ch].ADSRX.AttackRate ^ 0x7F) - 0x10 + 32];
 		else
-		    spu->s_chan[ch].ADSRX.EnvelopeVol += RateTable[(spu->s_chan[ch].ADSRX.AttackRate ^ 0x7F) - 0x18 + 32];
+		    spu->s_chan[ch].ADSRX.EnvelopeVol += spu->RateTable[(spu->s_chan[ch].ADSRX.AttackRate ^ 0x7F) - 0x18 + 32];
 	    }
 	    else
 	    {
-		spu->s_chan[ch].ADSRX.EnvelopeVol += RateTable[(spu->s_chan[ch].ADSRX.AttackRate ^ 0x7F) - 0x10 + 32];
+		spu->s_chan[ch].ADSRX.EnvelopeVol += spu->RateTable[(spu->s_chan[ch].ADSRX.AttackRate ^ 0x7F) - 0x10 + 32];
 	    }
 
 	    if (spu->s_chan[ch].ADSRX.EnvelopeVol < 0)
@@ -119,7 +117,7 @@ int MixADSR(upse_spu_state_t *spu, int ch)		// MIX ADSR
 	//--------------------------------------------------//
 	if (spu->s_chan[ch].ADSRX.State == 1)	// -> decay
 	{
-	    spu->s_chan[ch].ADSRX.EnvelopeVol -= RateTable[(4 * (spu->s_chan[ch].ADSRX.DecayRate ^ 0x1F)) - 0x18 + 32 + sexytable[(spu->s_chan[ch].ADSRX.EnvelopeVol >> 28) & 0x7]];
+	    spu->s_chan[ch].ADSRX.EnvelopeVol -= spu->RateTable[(4 * (spu->s_chan[ch].ADSRX.DecayRate ^ 0x1F)) - 0x18 + 32 + sexytable[(spu->s_chan[ch].ADSRX.EnvelopeVol >> 28) & 0x7]];
 
 	    if (spu->s_chan[ch].ADSRX.EnvelopeVol < 0)
 		spu->s_chan[ch].ADSRX.EnvelopeVol = 0;
@@ -139,13 +137,13 @@ int MixADSR(upse_spu_state_t *spu, int ch)		// MIX ADSR
 		if (spu->s_chan[ch].ADSRX.SustainModeExp)
 		{
 		    if (spu->s_chan[ch].ADSRX.EnvelopeVol < 0x60000000)
-			spu->s_chan[ch].ADSRX.EnvelopeVol += RateTable[(spu->s_chan[ch].ADSRX.SustainRate ^ 0x7F) - 0x10 + 32];
+			spu->s_chan[ch].ADSRX.EnvelopeVol += spu->RateTable[(spu->s_chan[ch].ADSRX.SustainRate ^ 0x7F) - 0x10 + 32];
 		    else
-			spu->s_chan[ch].ADSRX.EnvelopeVol += RateTable[(spu->s_chan[ch].ADSRX.SustainRate ^ 0x7F) - 0x18 + 32];
+			spu->s_chan[ch].ADSRX.EnvelopeVol += spu->RateTable[(spu->s_chan[ch].ADSRX.SustainRate ^ 0x7F) - 0x18 + 32];
 		}
 		else
 		{
-		    spu->s_chan[ch].ADSRX.EnvelopeVol += RateTable[(spu->s_chan[ch].ADSRX.SustainRate ^ 0x7F) - 0x10 + 32];
+		    spu->s_chan[ch].ADSRX.EnvelopeVol += spu->RateTable[(spu->s_chan[ch].ADSRX.SustainRate ^ 0x7F) - 0x10 + 32];
 		}
 
 		if (spu->s_chan[ch].ADSRX.EnvelopeVol < 0)
@@ -156,9 +154,9 @@ int MixADSR(upse_spu_state_t *spu, int ch)		// MIX ADSR
 	    else
 	    {
 		if (spu->s_chan[ch].ADSRX.SustainModeExp)
-		    spu->s_chan[ch].ADSRX.EnvelopeVol -= RateTable[((spu->s_chan[ch].ADSRX.SustainRate ^ 0x7F)) - 0x1B + 32 + sexytable[(spu->s_chan[ch].ADSRX.EnvelopeVol >> 28) & 0x7]];
+		    spu->s_chan[ch].ADSRX.EnvelopeVol -= spu->RateTable[((spu->s_chan[ch].ADSRX.SustainRate ^ 0x7F)) - 0x1B + 32 + sexytable[(spu->s_chan[ch].ADSRX.EnvelopeVol >> 28) & 0x7]];
 		else
-		    spu->s_chan[ch].ADSRX.EnvelopeVol -= RateTable[((spu->s_chan[ch].ADSRX.SustainRate ^ 0x7F)) - 0x0F + 32];
+		    spu->s_chan[ch].ADSRX.EnvelopeVol -= spu->RateTable[((spu->s_chan[ch].ADSRX.SustainRate ^ 0x7F)) - 0x0F + 32];
 
 		if (spu->s_chan[ch].ADSRX.EnvelopeVol < 0)
 		{

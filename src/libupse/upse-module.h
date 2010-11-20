@@ -58,11 +58,12 @@ typedef struct {
     void *ctrstate;
     void *biosstate;
 
-    char *psxM;
-    char *psxP;
-    char *psxR;
-    char *psxH;
-    char **upse_ps1_memory_LUT;
+    char psxM[0x200000];
+    char psxP[0x10000];
+    char psxR[0x10000];
+    char psxH[0x80000];
+    char *upse_ps1_memory_LUT[0x10000];
+    int writeok;
 
     upse_r3000_cpu_registers_t cpustate;
 } upse_module_instance_t;

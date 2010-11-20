@@ -98,15 +98,10 @@ void upse_set_reverb_no_downsample(u32 setting)
     _LEAVE;
 }
 
+static const s32 downcoeffs[8] = { 1283, 5344, 10895, 15243, 15243, 10895, 5344, 1283 };
+
 void MixREVERBLeftRight(upse_spu_state_t *spu, s32 * oleft, s32 * oright, s32 inleft, s32 inright)
 {
-    static s32 downbuf[2][8];
-    static s32 upbuf[2][8];
-    static int dbpos = 0, ubpos = 0;
-    static s32 downcoeffs[8] = {	/* Symmetry is sexy. */
-	1283, 5344, 10895, 15243,
-	15243, 10895, 5344, 1283
-    };
     int x;
 
     if (!spu->rvb.StartAddr || !_do_reverb)	// reverb is off or forcefully disabled
@@ -117,11 +112,11 @@ void MixREVERBLeftRight(upse_spu_state_t *spu, s32 * oleft, s32 * oright, s32 in
 
     //if(inleft<-32767 || inleft>32767) printf("%d\n",inleft);
     //if(inright<-32767 || inright>32767) printf("%d\n",inright);
-    downbuf[0][dbpos] = inleft;
-    downbuf[1][dbpos] = inright;
-    dbpos = (dbpos + 1) & 7;
+    spu->downbuf[0][spu->dbpos] = inleft;
+    spu->downbuf[1][spu->dbpos] = inright;
+    spu->dbpos = (spu->dbpos + 1) & 7;
 
-    if (dbpos & 1 || _reverb_no_downsample)	// we work on every second left value: downsample to 22 khz
+    if (spu->dbpos & 1 || _reverb_no_downsample)	// we work on every second left value: downsample to 22 khz
     {
 	if (spu->spuCtrl & 0x80)	// -> reverb on? oki
 	{
@@ -131,10 +126,10 @@ void MixREVERBLeftRight(upse_spu_state_t *spu, s32 * oleft, s32 * oright, s32 in
 
 	    for (x = 0; x < 8; x++)
 	    {
-		INPUT_SAMPLE_L += (downbuf[0][(dbpos + x) & 7] * downcoeffs[x]) >> 8;	/* Lose insignificant
+		INPUT_SAMPLE_L += (spu->downbuf[0][(spu->dbpos + x) & 7] * downcoeffs[x]) >> 8;	/* Lose insignificant
 											   digits to prevent
 											   overflow(check this) */
-		INPUT_SAMPLE_R += (downbuf[1][(dbpos + x) & 7] * downcoeffs[x]) >> 8;
+		INPUT_SAMPLE_R += (spu->downbuf[1][(spu->dbpos + x) & 7] * downcoeffs[x]) >> 8;
 	    }
 
 	    INPUT_SAMPLE_L >>= (16 - 8);
@@ -177,9 +172,9 @@ void MixREVERBLeftRight(upse_spu_state_t *spu, s32 * oleft, s32 * oright, s32 in
 		spu->rvb.iRVBLeft = ((s64) spu->rvb.iRVBLeft * spu->rvb.VolLeft) >> 14;
 		spu->rvb.iRVBRight = ((s64) spu->rvb.iRVBRight * spu->rvb.VolRight) >> 14;
 
-		upbuf[0][ubpos] = spu->rvb.iRVBLeft;
-		upbuf[1][ubpos] = spu->rvb.iRVBRight;
-		ubpos = (ubpos + 1) & 7;
+		spu->upbuf[0][spu->ubpos] = spu->rvb.iRVBLeft;
+		spu->upbuf[1][spu->ubpos] = spu->rvb.iRVBRight;
+		spu->ubpos = (spu->ubpos + 1) & 7;
 	    }
 	}
 	else			// -> reverb off
@@ -193,16 +188,16 @@ void MixREVERBLeftRight(upse_spu_state_t *spu, s32 * oleft, s32 * oright, s32 in
     }
     else
     {
-	upbuf[0][ubpos] = 0;
-	upbuf[1][ubpos] = 0;
-	ubpos = (ubpos + 1) & 7;
+	spu->upbuf[0][spu->ubpos] = 0;
+	spu->upbuf[1][spu->ubpos] = 0;
+	spu->ubpos = (spu->ubpos + 1) & 7;
     }
     {
 	s32 retl = 0, retr = 0;
 	for (x = 0; x < 8; x++)
 	{
-	    retl += (upbuf[0][(ubpos + x) & 7] * downcoeffs[x]) >> 8;
-	    retr += (upbuf[1][(ubpos + x) & 7] * downcoeffs[x]) >> 8;
+	    retl += (spu->upbuf[0][(spu->ubpos + x) & 7] * downcoeffs[x]) >> 8;
+	    retr += (spu->upbuf[1][(spu->ubpos + x) & 7] * downcoeffs[x]) >> 8;
 	}
 	retl >>= (16 - 8 - 1);	/* -1 To adjust for the null padding. */
 	retr >>= (16 - 8 - 1);

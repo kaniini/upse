@@ -29,7 +29,7 @@ typedef struct
 typedef struct
 {
     upse_psx_counter_t psxCounters[5];
-    u32 psxNextCounter, psxNextsCounter;
+    u32 psxNextCounter, psxNextsCounter, last;
 } upse_psx_counter_state_t;
 
 void psxRcntInit(upse_module_instance_t *ins);

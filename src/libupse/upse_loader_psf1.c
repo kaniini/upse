@@ -232,8 +232,12 @@ upse_get_psf_metadata(const char *path, upse_iofuncs_t * iofuncs)
     uLongf outlen;
     upse_xsf_t *xsf;
     u32 inlen;
+    upse_module_t mod;
 
     _ENTER;
+
+    psxInit(&mod.instance);
+    psxReset(&mod.instance, UPSE_PSX_REV_PS1);
 
     if (!(fp = iofuncs->open_impl(path, "rb")))
     {
@@ -263,7 +267,7 @@ upse_get_psf_metadata(const char *path, upse_iofuncs_t * iofuncs)
     ret->length = ret->stop + ret->fade;
 
     free(in);
-    free(out);;
+    free(out);
 
     _LEAVE;
     return ret;

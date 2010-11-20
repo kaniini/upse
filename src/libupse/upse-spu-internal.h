@@ -239,6 +239,12 @@ typedef struct {
     upse_spu_nyquist_info_t nyquist;
 
     upse_module_instance_t *ins;
+
+    s32 downbuf[2][8];
+    s32 upbuf[2][8];
+    int dbpos, ubpos;
+
+    u32 RateTable[160];
 } upse_spu_state_t;
 
 extern void upse_spu_lowpass_filter_reset(upse_spu_state_t *spu);
