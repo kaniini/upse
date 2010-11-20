@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT([upse], [1.0.0], [nenolod+upse@sacredspiral.co.uk])
+AC_INIT([upse], [1.9.0], [nenolod+upse@sacredspiral.co.uk])
 AC_PREREQ([2.59])
 
 AC_CANONICAL_HOST
