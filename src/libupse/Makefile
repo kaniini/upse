@@ -27,6 +27,7 @@ SRCS = upse_string.c			\
        upse_ps1_spu_reverb.c		\
        upse_ps1_spu_adsr_filter.c	\
        upse_ps1_spu_lowpass_filter.c	\
+       upse_ps1_spu_nyquist_filter.c	\
        upse_ps2_iop_base.c
 
 INCLUDES = upse.h upse-types.h upse-module.h upse-eventloop.h upse-container-xsf.h

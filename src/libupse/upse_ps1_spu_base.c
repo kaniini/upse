@@ -25,6 +25,7 @@
 #include "upse-ps1-spu-register-io.h"
 #include "upse-ps1-spu-reverb.h"
 #include "upse-ps1-spu-adsr-filter.h"
+#include "upse-ps1-spu-features.h"
 
 #include "upse.h"
 #include "upse-ps1-memory-manager.h"
@@ -587,7 +588,13 @@ void upse_ps1_spu_finalize(upse_spu_state_t *spu)
     }
     else if ((u8 *) spu->pS > ((u8 *) spu->pSpuBuffer + 1024))
     {
+#ifdef FEAT_NYQUIST_MODULATION
+        upse_spu_nyquist_filter_process(spu, (s16 *) spu->pSpuBuffer, ((u8 *) spu->pS - (u8 *) spu->pSpuBuffer) / 4);
+#endif
+
+#ifdef FEAT_CORLETT_IIR_FILTERS
         upse_spu_lowpass_filter_process(spu, (s16 *) spu->pSpuBuffer, ((u8 *) spu->pS - (u8 *) spu->pSpuBuffer) / 4);
+#endif
 
 	if (spu->cb != NULL)
 	    spu->cb((u8 *) spu->pSpuBuffer, (u8 *) spu->pS - (u8 *) spu->pSpuBuffer, spu->cb_userdata);
@@ -608,7 +615,13 @@ int upse_ps1_spu_finalize_count(upse_spu_state_t *spu, s16 ** s)
     {
         unsigned samples_rendered = ( (u8 *) spu->pS - (u8 *) spu->pSpuBuffer ) / 4;
 
+#ifdef FEAT_NYQUIST_MODULATION
+        upse_spu_nyquist_filter_process(spu, (s16 *) spu->pSpuBuffer, ((u8 *) spu->pS - (u8 *) spu->pSpuBuffer) / 4);
+#endif
+
+#ifdef FEAT_CORLETT_IIR_FILTERS
         upse_spu_lowpass_filter_process(spu, (s16 *) spu->pSpuBuffer, samples_rendered);
+#endif
 
         spu->pS = (s16 *) spu->pSpuBuffer;
         *s = spu->pS;

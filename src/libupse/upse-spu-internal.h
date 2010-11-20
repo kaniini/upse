@@ -204,6 +204,10 @@ typedef struct {
 } upse_spu_lowpass_info_t;
 
 typedef struct {
+    s16 hist[2];
+} upse_spu_nyquist_info_t;
+
+typedef struct {
     u16 regArea[0x200];
     u16 spuMem[256 * 1024];
     u8 *spuMemC;
@@ -232,6 +236,7 @@ typedef struct {
     s32 nextirq;
 
     upse_spu_lowpass_info_t lowpass;
+    upse_spu_nyquist_info_t nyquist;
 
     upse_module_instance_t *ins;
 } upse_spu_state_t;
@@ -239,5 +244,7 @@ typedef struct {
 extern void upse_spu_lowpass_filter_reset(upse_spu_state_t *spu);
 extern void upse_spu_lowpass_filter_redesign(upse_spu_state_t *spu, int samplerate);
 extern void upse_spu_lowpass_filter_process(upse_spu_state_t *spu, s16 *samplebuf, int samplecount);
+
+extern void upse_spu_nyquist_filter_process(upse_spu_state_t *spu, s16 *samplebuf, int samplecount);
 
 #endif
