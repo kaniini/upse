@@ -45,7 +45,7 @@ upse_spu_nyquist_filter_process(upse_spu_state_t *spu, s16 *samplebuf, int sampl
         r = samplebuf[1];
 
         l += (l - spu->nyquist.hist[0]);
-        r += (r - spu->nyquist.hist[0]);
+        r += (r - spu->nyquist.hist[1]);
 
         CLIP(l);
         CLIP(r);
