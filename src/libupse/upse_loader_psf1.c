@@ -232,7 +232,6 @@ upse_get_psf_metadata(const char *path, upse_iofuncs_t * iofuncs)
     uLongf outlen;
     upse_xsf_t *xsf;
     u32 inlen;
-    upse_module_t mod;
 
     _ENTER;
 
