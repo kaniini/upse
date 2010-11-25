@@ -87,4 +87,6 @@ void upse_r3000_cpu_execute_block(upse_module_instance_t *ins);
 void upse_r3000_cpu_clear(upse_module_instance_t *ins, u32 Addr, u32 Size);
 void upse_r3000_cpu_shutdown(upse_module_instance_t *ins);
 
+int upse_r3000_disassemble_insn(char *buf, int bufsize, u32 pc, u32 insn);
+
 #endif /* __R3000A_H__ */

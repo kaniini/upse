@@ -14,6 +14,7 @@ SRCS = upse_string.c			\
        upse_bios_manager.c 		\
        upse_r3000_bytecode_evaluator.c	\
        upse_r3000_abstract.c		\
+       upse_r3000_disassemble.c		\
        upse_ps1_executive.c		\
        upse_ps1_counters.c		\
        upse_ps1_gpu.c			\
